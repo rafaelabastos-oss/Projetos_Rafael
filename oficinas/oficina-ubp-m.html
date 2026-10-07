@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Oficina UBP-M — Rota da Tilápia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EAEFEE; --surface:#FFFFFF; --surface-2:#F5F8F7; --surface-3:#E4ECEA;
+  --ink:#0C2429; --ink-2:#41585E; --ink-3:#7B9095;
+  --line:#D2DEDC; --line-2:#B4C6C4;
+  --accent:#0F6F7A; --accent-ink:#0A4F58; --accent-soft:#D6EAEC;
+  --start:#2E7D5B; --end:#A33A2E; --gate:#A8760F; --ext:#5B6E7A;
+  --ok:#2E7D5B; --warn:#A8760F; --bad:#A33A2E;
+  --shadow:0 1px 2px rgba(12,36,41,.06), 0 8px 24px -12px rgba(12,36,41,.18);
+  --on-accent:#FFFFFF;
+  --ui:1;
+  --f-display:'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --f-body:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --f-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#081316; --surface:#0E1F24; --surface-2:#132A30; --surface-3:#19353C;
+    --ink:#E2EDEB; --ink-2:#A6BEBE; --ink-3:#72908F;
+    --line:#1E393F; --line-2:#2D5159;
+    --accent:#4FBCC3; --accent-ink:#9EE3E7; --accent-soft:#103238;
+    --start:#52B489; --end:#E38173; --gate:#DBAA43; --ext:#8CA6B1;
+    --ok:#52B489; --warn:#DBAA43; --bad:#E38173;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+    --on-accent:#04191C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#081316; --surface:#0E1F24; --surface-2:#132A30; --surface-3:#19353C;
+  --ink:#E2EDEB; --ink-2:#A6BEBE; --ink-3:#72908F;
+  --line:#1E393F; --line-2:#2D5159;
+  --accent:#4FBCC3; --accent-ink:#9EE3E7; --accent-soft:#103238;
+  --start:#52B489; --end:#E38173; --gate:#DBAA43; --ext:#8CA6B1;
+  --ok:#52B489; --warn:#DBAA43; --bad:#E38173;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+    --on-accent:#04191C;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);
+  font-size:calc(15px * var(--ui));line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.app{display:flex;flex-direction:column;height:100%;min-height:0}
+
+/* ---------- top bar ---------- */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));
+  background:var(--surface);border-bottom:1px solid var(--line);position:relative;z-index:6}
+.brand{display:flex;align-items:baseline;gap:8px;cursor:pointer;background:none;border:0;padding:4px 6px;margin-left:-6px;border-radius:6px}
+.brand:hover{background:var(--surface-2)}
+.brand b{font-family:var(--f-display);font-weight:800;letter-spacing:-.02em;font-size:1.12em}
+.brand span{font-size:.78em;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.bar .sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+.bar .grow{flex:1 1 auto}
+.phase-chip{font-family:var(--f-mono);font-size:.74em;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft);
+  padding:4px 9px;border-radius:999px;white-space:nowrap}
+select.pick{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+  padding:6px 10px;max-width:min(46vw,420px);font-size:.92em;font-weight:500}
+.btn{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+  padding:6px 11px;cursor:pointer;font-size:.88em;font-weight:500;white-space:nowrap;
+  transition:background .15s,border-color .15s}
+.btn:hover{background:var(--surface-3);border-color:var(--line-2)}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.icon{font-family:var(--f-mono);font-weight:600;padding:6px 9px}
+
+/* ---------- home ---------- */
+.scroll{flex:1 1 auto;min-height:0;overflow-y:auto}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px;padding-block:clamp(24px,5vh,56px)}
+.hero{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:28px}
+.kicker{font-family:var(--f-mono);font-size:.76em;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;margin-bottom:12px}
+h1{font-family:var(--f-display);font-weight:800;letter-spacing:-.03em;line-height:1.04;
+  font-size:clamp(2rem,5.4vw,3.4rem);margin:0 0 12px;text-wrap:balance}
+.lede{font-size:clamp(1rem,2vw,1.2rem);color:var(--ink-2);max-width:60ch;margin:0 0 18px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--f-mono);font-size:.8em;color:var(--ink-2)}
+.facts span{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 9px;
+  font-variant-numeric:tabular-nums}
+.phases{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(248px,1fr))}
+.pcard{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;
+  padding:18px;cursor:pointer;box-shadow:var(--shadow);transition:transform .16s,border-color .16s}
+.pcard:hover{transform:translateY(-2px);border-color:var(--line-2);border-left-color:var(--accent)}
+.pcard .num{font-family:var(--f-mono);font-size:.74em;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600}
+.pcard h3{font-family:var(--f-display);font-weight:700;font-size:1.16em;margin:0;letter-spacing:-.015em}
+.pcard p{margin:0;font-size:.92em;color:var(--ink-2)}
+.pcard .meta{margin-top:auto;padding-top:8px;font-family:var(--f-mono);font-size:.76em;color:var(--ink-3)}
+h2.sec{font-family:var(--f-display);font-weight:700;letter-spacing:-.02em;font-size:1.5rem;
+  margin:34px 0 4px}
+.sec-note{color:var(--ink-2);margin:0 0 16px;font-size:.95em;max-width:62ch}
+
+/* process grid */
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(232px,1fr))}
+.dcard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:13px 14px;cursor:pointer;
+  transition:border-color .15s,background .15s}
+.dcard:hover{border-color:var(--accent);background:var(--surface-2)}
+.dcard .code{font-family:var(--f-mono);font-size:.76em;font-weight:600;color:var(--accent);letter-spacing:.04em}
+.dcard b{font-family:var(--f-display);font-weight:600;font-size:1em;line-height:1.25;letter-spacing:-.01em}
+.dcard .meta{font-family:var(--f-mono);font-size:.74em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:5px;
+  vertical-align:middle}
+
+/* ---------- player ---------- */
+.stage{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.95fr)}
+.canvas-wrap{position:relative;min-width:0;min-height:0;background:var(--surface-2);
+  border-right:1px solid var(--line);overflow:hidden}
+svg.diagram{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+svg.diagram.drag{cursor:grabbing}
+.canvas-tools{position:absolute;right:12px;bottom:12px;display:flex;gap:6px;z-index:3}
+.canvas-tools .btn{background:var(--surface);box-shadow:var(--shadow)}
+.canvas-title{position:absolute;left:14px;top:12px;z-index:3;pointer-events:none;
+  font-family:var(--f-display);font-weight:700;font-size:.96em;letter-spacing:-.01em;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);border:1px solid var(--line);
+  padding:5px 10px;border-radius:7px;max-width:60%}
+
+/* shapes */
+.lane-band{fill:var(--surface);stroke:var(--line-2)}
+.lane-band.alt{fill:var(--surface-2)}
+.pool-frame{fill:none;stroke:var(--line-2);stroke-width:1.2}
+.pool-head{fill:var(--surface-3);stroke:var(--line-2)}
+.xpool{fill:var(--surface-3);stroke:var(--ext);stroke-width:1}
+.lane-name,.pool-name{font-family:var(--f-body);font-weight:600;fill:var(--ink-2)}
+.node{transition:opacity .38s ease}
+.node .body{fill:var(--surface);stroke:var(--line-2);stroke-width:1.1}
+.node.task .body{fill:var(--surface)}
+.node.subprocess .body{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.2}
+.node.start .body{fill:none;stroke:var(--start);stroke-width:1.6}
+.node.end .body{fill:none;stroke:var(--end);stroke-width:2.6}
+.node.intermediate .body,.node.boundary .body{fill:none;stroke:var(--gate);stroke-width:1.4}
+.node.gateway .body{fill:var(--surface);stroke:var(--gate);stroke-width:1.4}
+.node .glyph{fill:none;stroke:var(--ink-2);stroke-width:1.1;stroke-linecap:round}
+.node text{font-family:var(--f-body);fill:var(--ink);font-weight:500}
+.node.dim{opacity:.13}
+.node.cur .body{stroke:var(--accent);stroke-width:2.4}
+.node.cur text{font-weight:700}
+.halo{fill:none;stroke:var(--accent);stroke-width:3;opacity:.28}
+.edge{fill:none;stroke:var(--ink-3);stroke-width:1.1;transition:opacity .38s ease}
+.edge.msg{stroke:var(--ext);stroke-dasharray:4 3}
+.edge.dim{opacity:.1}
+.edge-label{font-family:var(--f-body);font-size:6px;fill:var(--ink-2);font-weight:600}
+.note-txt{font-family:var(--f-body);fill:var(--ink-3)}
+
+/* ---------- side panel ---------- */
+.side{display:flex;flex-direction:column;min-height:0;background:var(--surface);overflow:hidden}
+.side-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 20px;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.lane-tag{display:inline-flex;align-items:center;gap:7px;font-size:.82em;font-weight:600;
+  color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);
+  border-radius:999px;padding:4px 11px;max-width:100%}
+.lane-tag i{width:8px;height:8px;border-radius:2px;background:var(--accent);flex:none}
+.step-head{display:flex;align-items:baseline;gap:10px;margin:14px 0 6px;flex-wrap:wrap}
+.step-n{font-family:var(--f-mono);font-size:.82em;font-weight:600;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.kind{font-family:var(--f-mono);font-size:.72em;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 8px;border-radius:5px;border:1px solid currentColor}
+.kind.task{color:var(--ink-2)} .kind.subprocess{color:var(--accent)}
+.kind.start{color:var(--start)} .kind.end{color:var(--end)}
+.kind.gateway,.kind.intermediate,.kind.boundary{color:var(--gate)}
+h2.step-title{font-family:var(--f-display);font-weight:700;letter-spacing:-.025em;line-height:1.12;
+  font-size:clamp(1.35rem,2.4vw,2rem);margin:0 0 10px;text-wrap:balance}
+.step-doc{color:var(--ink-2);font-size:1.02em;margin:0 0 14px;max-width:58ch}
+.step-doc.empty{color:var(--ink-3);font-style:italic}
+.branches{display:flex;flex-direction:column;gap:7px;margin:0 0 16px}
+.branch{display:flex;gap:9px;align-items:flex-start;background:var(--surface-2);
+  border:1px solid var(--line);border-left:3px solid var(--gate);border-radius:7px;padding:8px 11px;font-size:.94em}
+.branch b{font-family:var(--f-mono);font-size:.84em;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gate);flex:none;padding-top:1px}
+.msgs{display:flex;flex-direction:column;gap:6px;margin:0 0 16px}
+.msg{display:flex;gap:8px;align-items:flex-start;font-size:.9em;color:var(--ink-2);
+  border-left:3px solid var(--ext);padding:4px 0 4px 10px}
+.msg b{color:var(--ext);font-weight:600;flex:none}
+.block-label{font-family:var(--f-mono);font-size:.72em;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;margin:20px 0 9px;padding-top:16px;border-top:1px solid var(--line)}
+.marks{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.mark{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;
+  padding:6px 13px;cursor:pointer;font-size:.88em;font-weight:500;transition:all .14s}
+.mark:hover{border-color:var(--line-2)}
+.mark[aria-pressed="true"]{color:var(--on-accent);border-color:transparent}
+.mark.ok[aria-pressed="true"]{background:var(--ok)}
+.mark.warn[aria-pressed="true"]{background:var(--warn)}
+.mark.bad[aria-pressed="true"]{background:var(--bad)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.88em;font-weight:600;color:var(--ink-2);margin-bottom:5px}
+.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+  padding:9px 11px;resize:vertical;min-height:62px;font-size:.96em}
+.field textarea:focus{border-color:var(--accent);background:var(--surface)}
+
+/* ---------- rail ---------- */
+.rail{display:flex;align-items:center;gap:10px;padding:9px 16px;
+  padding-bottom:calc(9px + env(safe-area-inset-bottom,0px));
+  background:var(--surface);border-top:1px solid var(--line)}
+.rail .nav{display:flex;gap:6px;flex:none}
+.ticks{flex:1 1 auto;display:flex;align-items:center;gap:3px;overflow-x:auto;padding:4px 0}
+.tick{flex:none;width:13px;height:13px;border-radius:4px;border:1px solid var(--line-2);
+  background:var(--surface-2);cursor:pointer;position:relative;transition:all .15s}
+.tick:hover{border-color:var(--accent)}
+.tick.done{background:var(--accent-soft);border-color:var(--accent)}
+.tick.cur{background:var(--accent);border-color:var(--accent);transform:scale(1.22)}
+.tick.ok{background:var(--ok);border-color:var(--ok)}
+.tick.warn{background:var(--warn);border-color:var(--warn)}
+.tick.bad{background:var(--bad);border-color:var(--bad)}
+.tick.flowstart{margin-left:12px;box-shadow:-7px 0 0 -3px var(--line-2)}
+.count{font-family:var(--f-mono);font-size:.84em;color:var(--ink-2);flex:none;font-variant-numeric:tabular-nums}
+
+/* ---------- closing ---------- */
+.note-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:16px 18px;margin-bottom:12px}
+.note-card h4{font-family:var(--f-display);font-weight:700;margin:0 0 3px;font-size:1.05em}
+.note-card .src{font-family:var(--f-mono);font-size:.75em;color:var(--ink-3);margin-bottom:9px}
+.note-card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.94em}
+.note-card dt{font-weight:600;color:var(--ink-3);font-size:.9em}
+.note-card dd{margin:0;color:var(--ink-2)}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:.72em;font-weight:600;
+  padding:2px 8px;border-radius:999px;color:var(--on-accent);letter-spacing:.04em}
+.pill.ok{background:var(--ok)} .pill.warn{background:var(--warn)} .pill.bad{background:var(--bad)}
+.empty-state{color:var(--ink-3);border:1px dashed var(--line-2);border-radius:10px;padding:26px;text-align:center}
+
+/* ---------- legend modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(8,20,22,.55);display:flex;align-items:center;
+  justify-content:center;padding:16px;z-index:40}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:660px;
+  width:100%;max-height:86vh;overflow-y:auto;padding:24px;box-shadow:var(--shadow)}
+.modal h3{font-family:var(--f-display);font-weight:700;margin:0 0 4px;font-size:1.3em;letter-spacing:-.02em}
+.leg{display:grid;grid-template-columns:52px 1fr;gap:12px 14px;align-items:center;margin-top:18px}
+.leg svg{display:block}
+.leg p{margin:0;font-size:.95em;color:var(--ink-2)}
+.leg b{color:var(--ink);font-weight:600}
+
+@media (max-width: 900px){
+  .stage{grid-template-columns:1fr;grid-template-rows:minmax(190px,40vh) minmax(0,1fr)}
+  .canvas-wrap{border-right:0;border-bottom:1px solid var(--line)}
+  .canvas-title{font-size:.84em;max-width:72%}
+  .side-scroll{padding:14px 16px}
+}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script id="model" type="application/json">{"id":"ubpm","short":"UBP-M","place":"Oficina de processos","name":"Unidade de Beneficiamento de Pescado","homeLede":"Como funciona, passo a passo, a unidade que beneficia o pescado da pesca artesanal — 5 t por turno, da descarga na doca ao congelado com nota fiscal, além do gelo que abastece as embarcações. Este roteiro existe para ser conferido com quem trabalha nela.","title":"Modelagem BPMN — UBP-M","subtitle":"Unidade de Beneficiamento de Pescado de Médio Porte (UBP-M)","source":"Fonte: Estudo de Viabilidade UBP-M Campos dos Goytacazes — Rev. 0 (EVTEAS / PEA Pescarte)","stats":"22 diagramas · 301 elementos de fluxo · 282 fluxos de sequência · 34 fluxos de mensagem","diagrams":[{"id":"N0","ord":1,"title":"Nível 0 — Cadeia de Valor da UBP-M","pool":"UBP-M — Unidade de Beneficiamento de Pescado (Cooperativa)","lanes":["Processos Gerenciais","Processos Finalísticos (Cadeia de Valor)","Processos de Apoio"],"externals":[],"objective":"Cadeia de valor da UBP-M: beneficiamento de até 5 t/turno de pescado da pesca artesanal (2 t de camarão e 3 t de peixes), com produtos frescos e congelados, carne mecanicamente separada (CMS) e fornecimento de gelo às embarcações da região.","decisions":[],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":46.6,"y":360.0,"w":1097.3,"h":210.3,"name":"UBP-M — Unidade de Beneficiamento de Pescado (Cooperativa)","collapsed":false}],"lanesGeo":[{"x":62.6,"y":360.0,"w":1081.3,"h":70.2,"name":"Processos Gerenciais"},{"x":62.6,"y":430.2,"w":1081.3,"h":70.1,"name":"Processos Finalísticos (Cadeia de Valor)"},{"x":62.6,"y":500.3,"w":1081.3,"h":70.0,"name":"Processos de Apoio"}],"shapes":[{"id":"s0","kind":"event","x":106.1,"y":455.6,"w":19.1,"h":19.1,"label":"Ciclo produtivo da UBP-M"},{"id":"s1","kind":"task","x":175.2,"y":446.1,"w":70.1,"h":38.2,"label":"Planejar a Produção (PCP)"},{"id":"s2","kind":"task","x":269.7,"y":446.1,"w":70.1,"h":38.2,"label":"Adquirir Pescado e Insumos"},{"id":"s3","kind":"task","x":364.2,"y":446.1,"w":70.1,"h":38.2,"label":"Receber e Inspecionar"},{"id":"s4","kind":"task","x":458.8,"y":446.1,"w":70.1,"h":38.2,"label":"Lavar, Degelar e Manter em Espera"},{"id":"s5","kind":"task","x":553.3,"y":446.1,"w":70.1,"h":38.2,"label":"Beneficiar Camarão"},{"id":"s6","kind":"task","x":647.9,"y":446.1,"w":70.1,"h":38.2,"label":"Beneficiar Peixes"},{"id":"s7","kind":"task","x":742.4,"y":446.1,"w":70.1,"h":38.2,"label":"Congelar e Embalar"},{"id":"s8","kind":"task","x":836.9,"y":446.1,"w":70.1,"h":38.2,"label":"Armazenar e Expedir"},{"id":"s9","kind":"task","x":931.5,"y":446.1,"w":70.1,"h":38.2,"label":"Comercializar e Faturar"},{"id":"s10","kind":"event","x":1051.5,"y":455.6,"w":19.1,"h":19.1,"label":"Produtos entregues e receita realizada"},{"id":"s11","kind":"task","x":458.8,"y":376.0,"w":70.1,"h":38.2,"label":"Governança e Gestão da Cooperativa"},{"id":"s12","kind":"task","x":553.3,"y":376.0,"w":70.1,"h":38.2,"label":"Controle de Qualidade e Rastreabilidade"},{"id":"s13","kind":"task","x":647.9,"y":376.0,"w":70.1,"h":38.2,"label":"Gestão Ambiental e Licenciamento"},{"id":"s14","kind":"task","x":742.4,"y":376.0,"w":70.1,"h":38.2,"label":"Gestão Econômico-Financeira e Tributária"},{"id":"s15","kind":"task","x":269.7,"y":516.2,"w":70.1,"h":38.2,"label":"Comercialização de Frescos e Loja Local"},{"id":"s16","kind":"task","x":364.2,"y":516.2,"w":70.1,"h":38.2,"label":"Logística e Frota"},{"id":"s17","kind":"task","x":458.8,"y":516.2,"w":70.1,"h":38.2,"label":"Fabricação e Fornecimento de Gelo"},{"id":"s18","kind":"task","x":553.3,"y":516.2,"w":70.1,"h":38.2,"label":"Caixas Limpas e Higienização"},{"id":"s19","kind":"task","x":647.9,"y":516.2,"w":70.1,"h":38.2,"label":"Água e Efluentes (ETA/ETE)"},{"id":"s20","kind":"task","x":742.4,"y":516.2,"w":70.1,"h":38.2,"label":"Gestão de Resíduos"},{"id":"s21","kind":"task","x":836.9,"y":516.2,"w":70.1,"h":38.2,"label":"Energia e Manutenção"},{"id":"s22","kind":"task","x":931.5,"y":516.2,"w":70.1,"h":38.2,"label":"Gestão de Pessoas e Cooperados"}],"edges":[{"pts":[[125.2,465.2],[175.2,465.2]],"from":"s0","to":"s1","label":""},{"pts":[[245.3,465.2],[269.7,465.2]],"from":"s1","to":"s2","label":""},{"pts":[[339.8,465.2],[364.2,465.2]],"from":"s2","to":"s3","label":""},{"pts":[[434.3,465.2],[458.8,465.2]],"from":"s3","to":"s4","label":""},{"pts":[[528.9,465.2],[553.3,465.2]],"from":"s4","to":"s5","label":""},{"pts":[[623.4,465.2],[647.9,465.2]],"from":"s5","to":"s6","label":""},{"pts":[[718.0,465.2],[742.4,465.2]],"from":"s6","to":"s7","label":""},{"pts":[[812.5,465.2],[836.9,465.2]],"from":"s7","to":"s8","label":""},{"pts":[[907.0,465.2],[931.5,465.2]],"from":"s8","to":"s9","label":""},{"pts":[[1001.6,465.2],[1051.5,465.2]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Ciclo produtivo da UBP-M","type":"Evento de início","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Programação semanal por safra e defeso, em até dois turnos.","shape":"s0"},{"n":2,"name":"Planejar a Produção (PCP)","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Mix por linha, safra e defeso, gelo e escala de turnos. Detalhado no diagrama P01.","shape":"s1"},{"n":3,"name":"Adquirir Pescado e Insumos","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Compra do pescado artesanal e de embalagens e insumos. Detalhado no diagrama P02.","shape":"s2"},{"n":4,"name":"Receber e Inspecionar","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Inspeção, pesagem, etiquetagem e acondicionamento com gelo. Detalhado no diagrama P03.","shape":"s3"},{"n":5,"name":"Lavar, Degelar e Manter em Espera","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Lavadoras e câmaras de espera de 60 t. Detalhado no diagrama P04.","shape":"s4"},{"n":6,"name":"Beneficiar Camarão","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Classificação, descabeçamento e descasque. Detalhado no diagrama P05.","shape":"s5"},{"n":7,"name":"Beneficiar Peixes","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Evisceração, escamação, postas, filetagem e CMS. Detalhado no diagrama P06.","shape":"s6"},{"n":8,"name":"Congelar e Embalar","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Túneis de congelamento, vácuo e masterização. Detalhado no diagrama P07.","shape":"s7"},{"n":9,"name":"Armazenar e Expedir","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Câmaras de 328 t e expedição. Detalhado no diagrama P09.","shape":"s8"},{"n":10,"name":"Comercializar e Faturar","type":"Subprocesso reutilizável","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"Vendas, NF-e e cobrança. Detalhado no diagrama P11.","shape":"s9"},{"n":11,"name":"Produtos entregues e receita realizada","type":"Evento de fim","lane":"Processos Finalísticos (Cadeia de Valor)","doc":"—","shape":"s10"},{"n":12,"name":"Governança e Gestão da Cooperativa","type":"Tarefa","lane":"Processos Gerenciais","doc":"Assembleia, conselhos e prestação de contas aos 153 cooperados.","shape":"s11"},{"n":13,"name":"Controle de Qualidade e Rastreabilidade","type":"Subprocesso reutilizável","lane":"Processos Gerenciais","doc":"Laboratório, inspeção e rastreio por lote. Detalhado no diagrama P14.","shape":"s12"},{"n":14,"name":"Gestão Ambiental e Licenciamento","type":"Subprocesso reutilizável","lane":"Processos Gerenciais","doc":"Licenças municipais e outorgas. Detalhado no diagrama P18.","shape":"s13"},{"n":15,"name":"Gestão Econômico-Financeira e Tributária","type":"Subprocesso reutilizável","lane":"Processos Gerenciais","doc":"Custos, tributos, DRE e indicadores. Detalhado no diagrama P20.","shape":"s14"},{"n":16,"name":"Comercialização de Frescos e Loja Local","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P08.","shape":"s15"},{"n":17,"name":"Logística e Frota","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Quatro caminhões baú refrigerados. Detalhado no diagrama P10.","shape":"s16"},{"n":18,"name":"Fabricação e Fornecimento de Gelo","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P12.","shape":"s17"},{"n":19,"name":"Caixas Limpas e Higienização","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P13.","shape":"s18"},{"n":20,"name":"Água e Efluentes (ETA/ETE)","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P15.","shape":"s19"},{"n":21,"name":"Gestão de Resíduos","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P16.","shape":"s20"},{"n":22,"name":"Energia e Manutenção","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P17.","shape":"s21"},{"n":23,"name":"Gestão de Pessoas e Cooperados","type":"Subprocesso reutilizável","lane":"Processos de Apoio","doc":"Detalhado no diagrama P19.","shape":"s22"}],"notes":[]},{"id":"N1","ord":2,"title":"Nível 1 — Processo Integrado de Beneficiamento da UBP-M","pool":"UBP-M — Cooperativa de Beneficiamento de Pescado","lanes":["Gestão e Comercial","Recepção e Preparação","Beneficiamento (Cooperados)","Congelamento, Armazenagem e Expedição","Suprimentos e Ambiental"],"externals":["Pescadores artesanais, aquicultura e outros PGTRs","Clientes (peixarias, supermercados, restaurantes, indústrias)","Embarcações da pesca artesanal","Fábrica de Ração, Farinha e Conchas / Receptor licenciado","Órgão ambiental municipal / INEA"],"objective":"Visão end-to-end da UBP-M, do planejamento à receita, com as interfaces de pescadores, embarcações, clientes, receptor de resíduos e órgão ambiental.","decisions":[{"name":"Tipo de matéria-prima?","paths":[{"label":"Camarão","target":"Beneficiar camarão"},{"label":"Peixe","target":"Beneficiar peixes"}]},{"name":"Venda fresca ou congelada?","paths":[{"label":"Congelado","target":"Congelar e embalar"},{"label":"Fresco","target":"Comercializar produtos frescos"}]}],"messages":[{"from":"Pescadores artesanais, aquicultura e outros PGTRs","to":"Receber e inspecionar pescado e camarão","msg":"Pescado e camarão"},{"from":"Adquirir pescado e insumos","to":"Pescadores artesanais, aquicultura e outros PGTRs","msg":"Pagamento"},{"from":"Clientes (peixarias, supermercados, restaurantes, indústrias)","to":"Comercializar e faturar","msg":"Pedido e pagamento"},{"from":"Comercializar e faturar","to":"Clientes (peixarias, supermercados, restaurantes, indústrias)","msg":"NF-e"},{"from":"Fabricar e fornecer gelo","to":"Embarcações da pesca artesanal","msg":"Gelo para a pescaria"},{"from":"Gerir resíduos","to":"Fábrica de Ração, Farinha e Conchas / Receptor licenciado","msg":"Resíduos e MTR"},{"from":"Manter licenças e outorgas","to":"Órgão ambiental municipal / INEA","msg":"Requerimento"},{"from":"Órgão ambiental municipal / INEA","to":"Manter licenças e outorgas","msg":"Licença ou exigência"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":45.8,"y":238.1,"w":1099.0,"h":452.5,"name":"UBP-M — Cooperativa de Beneficiamento de Pescado","collapsed":false},{"x":229.9,"y":168.6,"w":194.9,"h":27.4,"name":"Pescadores artesanais, aquicultura e outros PGTRs","collapsed":true},{"x":889.0,"y":168.6,"w":184.4,"h":27.4,"name":"Clientes (peixarias, supermercados, restaurantes, indústrias)","collapsed":true},{"x":115.8,"y":732.7,"w":161.6,"h":27.4,"name":"Embarcações da pesca artesanal","collapsed":true},{"x":367.1,"y":732.7,"w":182.0,"h":27.4,"name":"Fábrica de Ração, Farinha e Conchas / Receptor licenciado","collapsed":true},{"x":900.4,"y":732.7,"w":161.6,"h":27.4,"name":"Órgão ambiental municipal / INEA","collapsed":true}],"lanesGeo":[{"x":60.5,"y":238.1,"w":1084.3,"h":64.7,"name":"Gestão e Comercial"},{"x":60.5,"y":302.8,"w":1084.3,"h":64.6,"name":"Recepção e Preparação"},{"x":60.5,"y":367.4,"w":1084.3,"h":129.3,"name":"Beneficiamento (Cooperados)"},{"x":60.5,"y":496.7,"w":1084.3,"h":129.3,"name":"Congelamento, Armazenagem e Expedição"},{"x":60.5,"y":626.0,"w":1084.3,"h":64.6,"name":"Suprimentos e Ambiental"}],"shapes":[{"id":"s0","kind":"event","x":100.6,"y":261.6,"w":17.6,"h":17.6,"label":"Início do turno de produção"},{"id":"s1","kind":"task","x":164.3,"y":252.8,"w":64.6,"h":35.3,"label":"Planejar a produção (PCP)"},{"id":"s2","kind":"task","x":251.5,"y":252.8,"w":64.6,"h":35.3,"label":"Adquirir pescado e insumos"},{"id":"s3","kind":"task","x":338.7,"y":317.5,"w":64.6,"h":35.3,"label":"Receber e inspecionar pescado e camarão"},{"id":"s4","kind":"task","x":425.8,"y":317.5,"w":64.6,"h":35.3,"label":"Lavar, degelar e manter em espera"},{"id":"s5","kind":"gateway","x":533.1,"y":419.8,"w":24.5,"h":24.5,"label":"Tipo de matéria-prima?"},{"id":"s6","kind":"task","x":600.2,"y":382.1,"w":64.6,"h":35.3,"label":"Beneficiar camarão"},{"id":"s7","kind":"task","x":600.2,"y":446.7,"w":64.6,"h":35.3,"label":"Beneficiar peixes"},{"id":"s8","kind":"gateway","x":707.4,"y":419.8,"w":24.5,"h":24.5,"label":"Venda fresca ou congelada?"},{"id":"s9","kind":"task","x":774.5,"y":511.4,"w":64.6,"h":35.3,"label":"Congelar e embalar"},{"id":"s10","kind":"task","x":774.5,"y":576.0,"w":64.6,"h":35.3,"label":"Comercializar produtos frescos"},{"id":"s11","kind":"task","x":861.7,"y":543.7,"w":64.6,"h":35.3,"label":"Armazenar e expedir"},{"id":"s12","kind":"task","x":948.9,"y":252.8,"w":64.6,"h":35.3,"label":"Comercializar e faturar"},{"id":"s13","kind":"event","x":1059.5,"y":261.6,"w":17.6,"h":17.6,"label":"Produtos entregues e receita realizada"},{"id":"s14","kind":"event","x":100.6,"y":649.5,"w":17.6,"h":17.6,"label":"Programação de gelo"},{"id":"s15","kind":"task","x":164.3,"y":640.7,"w":64.6,"h":35.3,"label":"Fabricar e fornecer gelo"},{"id":"s16","kind":"event","x":275.0,"y":649.5,"w":17.6,"h":17.6,"label":"Gelo fornecido"},{"id":"s17","kind":"event","x":362.2,"y":649.5,"w":17.6,"h":17.6,"label":"Resíduos gerados"},{"id":"s18","kind":"task","x":425.8,"y":640.7,"w":64.6,"h":35.3,"label":"Gerir resíduos"},{"id":"s19","kind":"event","x":536.5,"y":649.5,"w":17.6,"h":17.6,"label":"Resíduos destinados"},{"id":"s20","kind":"event","x":623.7,"y":649.5,"w":17.6,"h":17.6,"label":"Efluente gerado"},{"id":"s21","kind":"task","x":687.3,"y":640.7,"w":64.6,"h":35.3,"label":"Tratar água e efluentes"},{"id":"s22","kind":"event","x":798.0,"y":649.5,"w":17.6,"h":17.6,"label":"Efluente em conformidade"},{"id":"s23","kind":"event","x":885.2,"y":649.5,"w":17.6,"h":17.6,"label":"Exigência legal ou condicionante"},{"id":"s24","kind":"task","x":948.9,"y":640.7,"w":64.6,"h":35.3,"label":"Manter licenças e outorgas"},{"id":"s25","kind":"event","x":1059.5,"y":649.5,"w":17.6,"h":17.6,"label":"Conformidade ambiental mantida"}],"edges":[{"pts":[[316.1,270.4],[327.9,270.4],[327.9,335.1],[338.7,335.1]],"from":"s2","to":"s3","label":""},{"pts":[[490.5,335.1],[502.2,335.1],[502.2,432.1],[533.1,432.1]],"from":"s4","to":"s5","label":""},{"pts":[[545.3,419.8],[545.3,399.7],[600.2,399.7]],"from":"s5","to":"s6","label":""},{"pts":[[545.3,444.3],[545.3,464.4],[600.2,464.4]],"from":"s5","to":"s7","label":""},{"pts":[[664.8,399.7],[676.6,399.7],[676.6,432.1],[707.4,432.1]],"from":"s6","to":"s8","label":""},{"pts":[[664.8,464.4],[676.6,464.4],[676.6,432.1],[707.4,432.1]],"from":"s7","to":"s8","label":""},{"pts":[[719.7,444.3],[719.7,529.0],[774.5,529.0]],"from":"s8","to":"s9","label":""},{"pts":[[731.9,432.1],[743.7,432.1],[743.7,593.7],[774.5,593.7]],"from":"s8","to":"s10","label":""},{"pts":[[839.2,529.0],[850.9,529.0],[850.9,561.3],[861.7,561.3]],"from":"s9","to":"s11","label":""},{"pts":[[839.2,593.7],[850.9,593.7],[850.9,561.3],[861.7,561.3]],"from":"s10","to":"s11","label":""},{"pts":[[926.3,561.3],[938.1,561.3],[938.1,270.4],[948.9,270.4]],"from":"s11","to":"s12","label":""},{"pts":[[371.0,197.7],[371.0,315.3]],"from":null,"to":"s3","label":""},{"pts":[[283.8,251.1],[283.8,198.2]],"from":"s2","to":null,"label":""},{"pts":[[974.8,197.7],[974.8,250.6]],"from":null,"to":"s12","label":""},{"pts":[[987.5,251.1],[987.5,198.2]],"from":"s12","to":null,"label":""},{"pts":[[196.6,677.7],[196.6,730.5]],"from":"s15","to":null,"label":""},{"pts":[[458.1,677.7],[458.1,730.5]],"from":"s18","to":null,"label":""},{"pts":[[974.8,677.7],[974.8,730.5]],"from":"s24","to":null,"label":""},{"pts":[[987.5,731.0],[987.5,678.1]],"from":null,"to":"s24","label":""},{"pts":[[118.3,270.4],[164.3,270.4]],"from":"s0","to":"s1","label":""},{"pts":[[229.0,270.4],[251.5,270.4]],"from":"s1","to":"s2","label":""},{"pts":[[403.3,335.1],[425.8,335.1]],"from":"s3","to":"s4","label":""},{"pts":[[1013.5,270.4],[1059.5,270.4]],"from":"s12","to":"s13","label":""},{"pts":[[118.3,658.3],[164.3,658.3]],"from":"s14","to":"s15","label":""},{"pts":[[229.0,658.3],[275.0,658.3]],"from":"s15","to":"s16","label":""},{"pts":[[379.8,658.3],[425.8,658.3]],"from":"s17","to":"s18","label":""},{"pts":[[490.5,658.3],[536.5,658.3]],"from":"s18","to":"s19","label":""},{"pts":[[641.3,658.3],[687.3,658.3]],"from":"s20","to":"s21","label":""},{"pts":[[752.0,658.3],[798.0,658.3]],"from":"s21","to":"s22","label":""},{"pts":[[902.8,658.3],[948.9,658.3]],"from":"s23","to":"s24","label":""},{"pts":[[1013.5,658.3],[1059.5,658.3]],"from":"s24","to":"s25","label":""}],"elements":[{"n":1,"name":"Início do turno de produção","type":"Evento de início (temporizador)","lane":"Gestão e Comercial","doc":"—","shape":"s0"},{"n":2,"name":"Planejar a produção (PCP)","type":"Subprocesso reutilizável","lane":"Gestão e Comercial","doc":"Detalhado no diagrama P01.","shape":"s1"},{"n":3,"name":"Adquirir pescado e insumos","type":"Subprocesso reutilizável","lane":"Gestão e Comercial","doc":"Detalhado no diagrama P02.","shape":"s2"},{"n":4,"name":"Receber e inspecionar pescado e camarão","type":"Subprocesso reutilizável","lane":"Recepção e Preparação","doc":"Detalhado no diagrama P03.","shape":"s3"},{"n":5,"name":"Lavar, degelar e manter em espera","type":"Subprocesso reutilizável","lane":"Recepção e Preparação","doc":"Detalhado no diagrama P04.","shape":"s4"},{"n":6,"name":"Tipo de matéria-prima?","type":"Gateway exclusivo (XOR)","lane":"Beneficiamento (Cooperados)","doc":"—","shape":"s5"},{"n":7,"name":"Beneficiar camarão","type":"Subprocesso reutilizável","lane":"Beneficiamento (Cooperados)","doc":"Detalhado no diagrama P05.","shape":"s6"},{"n":8,"name":"Beneficiar peixes","type":"Subprocesso reutilizável","lane":"Beneficiamento (Cooperados)","doc":"Detalhado no diagrama P06.","shape":"s7"},{"n":9,"name":"Venda fresca ou congelada?","type":"Gateway exclusivo (XOR)","lane":"Beneficiamento (Cooperados)","doc":"—","shape":"s8"},{"n":10,"name":"Congelar e embalar","type":"Subprocesso reutilizável","lane":"Congelamento, Armazenagem e Expedição","doc":"Detalhado no diagrama P07.","shape":"s9"},{"n":11,"name":"Comercializar produtos frescos","type":"Subprocesso reutilizável","lane":"Congelamento, Armazenagem e Expedição","doc":"Detalhado no diagrama P08.","shape":"s10"},{"n":12,"name":"Armazenar e expedir","type":"Subprocesso reutilizável","lane":"Congelamento, Armazenagem e Expedição","doc":"Detalhado no diagrama P09.","shape":"s11"},{"n":13,"name":"Comercializar e faturar","type":"Subprocesso reutilizável","lane":"Gestão e Comercial","doc":"Detalhado no diagrama P11.","shape":"s12"},{"n":14,"name":"Produtos entregues e receita realizada","type":"Evento de fim","lane":"Gestão e Comercial","doc":"—","shape":"s13"},{"n":15,"name":"Programação de gelo","type":"Evento de início (temporizador)","lane":"Suprimentos e Ambiental","doc":"—","shape":"s14"},{"n":16,"name":"Fabricar e fornecer gelo","type":"Subprocesso reutilizável","lane":"Suprimentos e Ambiental","doc":"Detalhado no diagrama P12.","shape":"s15"},{"n":17,"name":"Gelo fornecido","type":"Evento de fim","lane":"Suprimentos e Ambiental","doc":"—","shape":"s16"},{"n":18,"name":"Resíduos gerados","type":"Evento de início","lane":"Suprimentos e Ambiental","doc":"—","shape":"s17"},{"n":19,"name":"Gerir resíduos","type":"Subprocesso reutilizável","lane":"Suprimentos e Ambiental","doc":"Detalhado no diagrama P16.","shape":"s18"},{"n":20,"name":"Resíduos destinados","type":"Evento de fim","lane":"Suprimentos e Ambiental","doc":"—","shape":"s19"},{"n":21,"name":"Efluente gerado","type":"Evento de início","lane":"Suprimentos e Ambiental","doc":"—","shape":"s20"},{"n":22,"name":"Tratar água e efluentes","type":"Subprocesso reutilizável","lane":"Suprimentos e Ambiental","doc":"Detalhado no diagrama P15.","shape":"s21"},{"n":23,"name":"Efluente em conformidade","type":"Evento de fim","lane":"Suprimentos e Ambiental","doc":"—","shape":"s22"},{"n":24,"name":"Exigência legal ou condicionante","type":"Evento de início","lane":"Suprimentos e Ambiental","doc":"—","shape":"s23"},{"n":25,"name":"Manter licenças e outorgas","type":"Subprocesso reutilizável","lane":"Suprimentos e Ambiental","doc":"Detalhado no diagrama P18.","shape":"s24"},{"n":26,"name":"Conformidade ambiental mantida","type":"Evento de fim","lane":"Suprimentos e Ambiental","doc":"—","shape":"s25"}],"notes":[{"s":"Pagamento","x":287.7,"y":219.8,"w":23.8,"fs":4.6},{"s":"Pedido e pagamento","x":928.0,"y":219.8,"w":42.9,"fs":4.6},{"s":"NF-e","x":991.5,"y":219.8,"w":10.3,"fs":4.6},{"s":"Pescado e camarão","x":374.9,"y":252.1,"w":41.4,"fs":4.6},{"s":"Camarão","x":548.7,"y":410.1,"w":20.1,"fs":4.9},{"s":"Fresco","x":736.8,"y":424.8,"w":14.9,"fs":4.9},{"s":"Peixe","x":548.7,"y":450.2,"w":12.2,"fs":4.9},{"s":"Congelado","x":723.1,"y":450.2,"w":23.7,"fs":4.9},{"s":"Gelo para a pescaria","x":200.5,"y":699.7,"w":43.2,"fs":4.6},{"s":"Resíduos e MTR","x":462.1,"y":699.7,"w":34.9,"fs":4.6},{"s":"Requerimento","x":941.7,"y":699.7,"w":29.2,"fs":4.6},{"s":"Licença ou exigência","x":991.5,"y":699.7,"w":43.4,"fs":4.6}]},{"id":"P01","ord":3,"title":"P01 — Planejamento e Controle da Produção (PCP)","pool":"P01 — Planejamento da Produção","lanes":["Gerente de Produção","Supervisores de Produção","Gerente de Vendas"],"externals":[],"objective":"Conciliar a demanda comercial com a oferta sazonal de pescado e camarão e programar linhas, gelo, embalagens, câmaras e turnos.","decisions":[{"name":"Período de defeso do camarão?","paths":[{"label":"Não","target":"Programar 2 t/turno de camarão e 3 t/turno de peixes"},{"label":"Sim","target":"Programar até 5 t/turno de peixes"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":47.6,"y":313.0,"w":1095.3,"h":306.3,"name":"P01 — Planejamento da Produção","collapsed":false}],"lanesGeo":[{"x":65.0,"y":313.0,"w":1077.9,"h":153.2,"name":"Gerente de Produção"},{"x":65.0,"y":466.2,"w":1077.9,"h":76.6,"name":"Supervisores de Produção"},{"x":65.0,"y":542.8,"w":1077.9,"h":76.5,"name":"Gerente de Vendas"}],"shapes":[{"id":"s0","kind":"event","x":112.6,"y":340.9,"w":20.9,"h":20.9,"label":"Planejamento semanal"},{"id":"s1","kind":"task","x":188.0,"y":560.2,"w":76.6,"h":41.8,"label":"Consolidar pedidos e previsão de demanda"},{"id":"s2","kind":"task","x":291.3,"y":330.4,"w":76.6,"h":41.8,"label":"Estimar a oferta de pescado e camarão"},{"id":"s3","kind":"gateway","x":418.3,"y":336.8,"w":29.0,"h":29.0,"label":"Período de defeso do camarão?"},{"id":"s4","kind":"task","x":497.8,"y":407.0,"w":76.6,"h":41.8,"label":"Programar até 5 t/turno de peixes"},{"id":"s5","kind":"task","x":497.8,"y":330.4,"w":76.6,"h":41.8,"label":"Programar 2 t/turno de camarão e 3 t/turno de peixes"},{"id":"s6","kind":"task","x":601.1,"y":483.6,"w":76.6,"h":41.8,"label":"Definir o mix de produtos por linha"},{"id":"s7","kind":"task","x":704.3,"y":483.6,"w":76.6,"h":41.8,"label":"Dimensionar gelo, caixas, embalagens e câmaras"},{"id":"s8","kind":"task","x":807.6,"y":483.6,"w":76.6,"h":41.8,"label":"Escalar cooperados por setor e turno"},{"id":"s9","kind":"task","x":910.9,"y":330.4,"w":76.6,"h":41.8,"label":"Aprovar o programa de produção"},{"id":"s10","kind":"event","x":1042.0,"y":340.9,"w":20.9,"h":20.9,"label":"Programa de produção emitido"}],"edges":[{"pts":[[133.5,351.3],[147.4,351.3],[147.4,581.1],[188.0,581.1]],"from":"s0","to":"s1","label":""},{"pts":[[264.6,581.1],[278.5,581.1],[278.5,351.3],[291.3,351.3]],"from":"s1","to":"s2","label":""},{"pts":[[432.8,365.8],[432.8,427.9],[497.8,427.9]],"from":"s3","to":"s4","label":"Sim"},{"pts":[[574.4,427.9],[588.3,427.9],[588.3,504.5],[601.1,504.5]],"from":"s4","to":"s6","label":""},{"pts":[[574.4,351.3],[588.3,351.3],[588.3,504.5],[601.1,504.5]],"from":"s5","to":"s6","label":""},{"pts":[[884.2,504.5],[898.1,504.5],[898.1,351.3],[910.9,351.3]],"from":"s8","to":"s9","label":""},{"pts":[[367.8,351.3],[418.3,351.3]],"from":"s2","to":"s3","label":""},{"pts":[[447.3,351.3],[497.8,351.3]],"from":"s3","to":"s5","label":"Não"},{"pts":[[677.7,504.5],[704.3,504.5]],"from":"s6","to":"s7","label":""},{"pts":[[780.9,504.5],[807.6,504.5]],"from":"s7","to":"s8","label":""},{"pts":[[987.5,351.3],[1042.0,351.3]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Planejamento semanal","type":"Evento de início (temporizador)","lane":"Gerente de Produção","doc":"—","shape":"s0"},{"n":2,"name":"Consolidar pedidos e previsão de demanda","type":"Tarefa","lane":"Gerente de Vendas","doc":"Consumidor final, peixarias, supermercados, restaurantes, outras unidades de beneficiamento e fabricantes de farinha.","shape":"s1"},{"n":3,"name":"Estimar a oferta de pescado e camarão","type":"Tarefa","lane":"Gerente de Produção","doc":"Safra e defeso do camarão sete-barbas, barba-ruça e Santana e dos peixes da pesca artesanal da área de abrangência.","shape":"s2"},{"n":4,"name":"Período de defeso do camarão?","type":"Gateway exclusivo (XOR)","lane":"Gerente de Produção","doc":"—","shape":"s3"},{"n":5,"name":"Programar até 5 t/turno de peixes","type":"Tarefa","lane":"Gerente de Produção","doc":"A unidade pode processar 5 t só de peixes ou só de camarão conforme a oferta e a demanda.","shape":"s4"},{"n":6,"name":"Programar 2 t/turno de camarão e 3 t/turno de peixes","type":"Tarefa","lane":"Gerente de Produção","doc":"—","shape":"s5"},{"n":7,"name":"Definir o mix de produtos por linha","type":"Tarefa","lane":"Supervisores de Produção","doc":"Camarão: inteiro, sem cabeça (60%), filé com cauda e filé (45%); peixes: inteiro eviscerado (84%), postas (68,7%), filé com pele (43,7%), filé sem pele (43%) e CMS.","shape":"s6"},{"n":8,"name":"Dimensionar gelo, caixas, embalagens e câmaras","type":"Tarefa","lane":"Supervisores de Produção","doc":"Gelo interno de 5,0 t/turno; câmaras de espera de 60 t e de estocagem de 328 t.","shape":"s7"},{"n":9,"name":"Escalar cooperados por setor e turno","type":"Tarefa","lane":"Supervisores de Produção","doc":"76 cooperados por turno; meta de dois turnos na maturidade do projeto.","shape":"s8"},{"n":10,"name":"Aprovar o programa de produção","type":"Tarefa","lane":"Gerente de Produção","doc":"—","shape":"s9"},{"n":11,"name":"Programa de produção emitido","type":"Evento de fim","lane":"Gerente de Produção","doc":"—","shape":"s10"}],"notes":[]},{"id":"P02","ord":4,"title":"P02 — Aquisição de Pescado e Suprimentos","pool":"P02 — Compras","lanes":["Gerência de Produção / Compras","Técnico de Controle de Qualidade","Financeiro"],"externals":["Pescadores artesanais e fornecedores de pescado","Fornecedores de embalagens e insumos"],"objective":"Adquirir o pescado da pesca artesanal e de outras origens com preço justo e rastreabilidade, e suprir embalagens e insumos da produção.","decisions":[{"name":"Lote aceito?","paths":[{"label":"Sim","target":"Registrar a compra pelo peso aceito"},{"label":"Não","target":"Devolver ao fornecedor com registro"}]}],"messages":[{"from":"Divulgar demanda e preços de compra às comunidades","to":"Pescadores artesanais e fornecedores de pescado","msg":"Demanda e preços"},{"from":"Pescadores artesanais e fornecedores de pescado","to":"Agendar entregas ou coletas nos pontos de desembarque","msg":"Oferta e agendamento"},{"from":"Comprar embalagens, metabissulfito, químicos e EPIs","to":"Fornecedores de embalagens e insumos","msg":"Pedido de compra"},{"from":"Pagar o pescador ou fornecedor","to":"Pescadores artesanais e fornecedores de pescado","msg":"Pagamento"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":48.8,"y":380.4,"w":1093.0,"h":337.5,"name":"P02 — Compras","collapsed":false},{"x":175.3,"y":289.7,"w":823.2,"h":35.8,"name":"Pescadores artesanais e fornecedores de pescado","collapsed":true},{"x":367.7,"y":216.8,"w":210.9,"h":35.8,"name":"Fornecedores de embalagens e insumos","collapsed":true}],"lanesGeo":[{"x":68.0,"y":380.4,"w":1073.8,"h":84.4,"name":"Gerência de Produção / Compras"},{"x":68.0,"y":464.8,"w":1073.8,"h":168.7,"name":"Técnico de Controle de Qualidade"},{"x":68.0,"y":633.5,"w":1073.8,"h":84.4,"name":"Financeiro"}],"shapes":[{"id":"s0","kind":"event","x":120.4,"y":411.1,"w":23.0,"h":23.0,"label":"Programa de produção emitido"},{"id":"s1","kind":"task","x":203.5,"y":399.6,"w":84.4,"h":46.0,"label":"Divulgar demanda e preços de compra às comunidades"},{"id":"s2","kind":"task","x":317.2,"y":399.6,"w":84.4,"h":46.0,"label":"Agendar entregas ou coletas nos pontos de desembarque"},{"id":"s3","kind":"task","x":431.0,"y":399.6,"w":84.4,"h":46.0,"label":"Comprar embalagens, metabissulfito, químicos e EPIs"},{"id":"s4","kind":"task","x":544.8,"y":484.0,"w":84.4,"h":46.0,"label":"Receber o resultado da inspeção de recepção (P03)"},{"id":"s5","kind":"gateway","x":684.8,"y":491.0,"w":32.0,"h":32.0,"label":"Lote aceito?"},{"id":"s6","kind":"task","x":772.3,"y":568.4,"w":84.4,"h":46.0,"label":"Devolver ao fornecedor com registro"},{"id":"s7","kind":"event","x":916.8,"y":579.9,"w":23.0,"h":23.0,"label":"Lote devolvido"},{"id":"s8","kind":"task","x":772.3,"y":652.7,"w":84.4,"h":46.0,"label":"Registrar a compra pelo peso aceito"},{"id":"s9","kind":"task","x":886.1,"y":652.7,"w":84.4,"h":46.0,"label":"Pagar o pescador ou fornecedor"},{"id":"s10","kind":"event","x":1030.5,"y":664.2,"w":23.0,"h":23.0,"label":"Matéria-prima adquirida e paga"}],"edges":[{"pts":[[515.4,422.6],[530.7,422.6],[530.7,507.0],[544.8,507.0]],"from":"s3","to":"s4","label":""},{"pts":[[700.7,523.0],[700.7,675.7],[772.3,675.7]],"from":"s5","to":"s8","label":"Sim"},{"pts":[[716.7,507.0],[732.1,507.0],[732.1,591.4],[772.3,591.4]],"from":"s5","to":"s6","label":"Não"},{"pts":[[143.4,422.6],[203.5,422.6]],"from":"s0","to":"s1","label":""},{"pts":[[287.8,422.6],[317.2,422.6]],"from":"s1","to":"s2","label":""},{"pts":[[401.6,422.6],[431.0,422.6]],"from":"s2","to":"s3","label":""},{"pts":[[629.1,507.0],[684.8,507.0]],"from":"s4","to":"s5","label":""},{"pts":[[856.7,591.4],[916.8,591.4]],"from":"s6","to":"s7","label":""},{"pts":[[856.7,675.7],[886.1,675.7]],"from":"s8","to":"s9","label":""},{"pts":[[970.5,675.7],[1030.5,675.7]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Programa de produção emitido","type":"Evento de início","lane":"Gerência de Produção / Compras","doc":"—","shape":"s0"},{"n":2,"name":"Divulgar demanda e preços de compra às comunidades","type":"Tarefa","lane":"Gerência de Produção / Compras","doc":"Pesca artesanal das comunidades adjacentes, aquicultura, outros PGTRs e comunidades da área de abrangência.","shape":"s1"},{"n":3,"name":"Agendar entregas ou coletas nos pontos de desembarque","type":"Tarefa","lane":"Gerência de Produção / Compras","doc":"—","shape":"s2"},{"n":4,"name":"Comprar embalagens, metabissulfito, químicos e EPIs","type":"Tarefa","lane":"Gerência de Produção / Compras","doc":"Cotação com no mínimo três fornecedores.","shape":"s3"},{"n":5,"name":"Receber o resultado da inspeção de recepção (P03)","type":"Tarefa","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s4"},{"n":6,"name":"Lote aceito?","type":"Gateway exclusivo (XOR)","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s5"},{"n":7,"name":"Devolver ao fornecedor com registro","type":"Tarefa","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s6"},{"n":8,"name":"Lote devolvido","type":"Evento de fim","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s7"},{"n":9,"name":"Registrar a compra pelo peso aceito","type":"Tarefa","lane":"Financeiro","doc":"—","shape":"s8"},{"n":10,"name":"Pagar o pescador ou fornecedor","type":"Tarefa","lane":"Financeiro","doc":"Custo anual de matéria-prima estimado em R$ 24.925.680,00.","shape":"s9"},{"n":11,"name":"Matéria-prima adquirida e paga","type":"Evento de fim","lane":"Financeiro","doc":"—","shape":"s10"}],"notes":[{"s":"Pedido de compra","x":478.3,"y":349.5,"w":49.2,"fs":6.1},{"s":"Demanda e preços","x":250.8,"y":356.5,"w":51.3,"fs":6.1},{"s":"Oferta e agendamento","x":364.5,"y":356.5,"w":60.7,"fs":6.1},{"s":"Pagamento","x":990.3,"y":477.9,"w":31.0,"fs":6.1}]},{"id":"P03","ord":5,"title":"P03 — Recepção e Inspeção de Pescado e Camarão","pool":"P03 — Recepção","lanes":["Cooperados — Recepção","Técnico de Controle de Qualidade / Médico Veterinário"],"externals":["Pescadores artesanais e fornecedores de pescado"],"objective":"Receber o pescado e o camarão em área coberta, inspecionar, aceitar ou devolver, pesar, etiquetar e acondicionar com gelo.","decisions":[{"name":"Produto aceito?","paths":[{"label":"Sim","target":"Pesar em balança de piso"},{"label":"Não","target":"Devolver ao fornecedor e registrar"}]}],"messages":[{"from":"Pescadores artesanais e fornecedores de pescado","to":"Higienizar-se no pedilúvio e acessar a plataforma","msg":"Pescado e camarão"},{"from":"Devolver ao fornecedor e registrar","to":"Pescadores artesanais e fornecedores de pescado","msg":"Devolução"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":48.8,"y":386.2,"w":1093.0,"h":253.1,"name":"P03 — Recepção","collapsed":false},{"x":175.3,"y":295.4,"w":481.9,"h":35.8,"name":"Pescadores artesanais e fornecedores de pescado","collapsed":true}],"lanesGeo":[{"x":68.0,"y":386.2,"w":1073.8,"h":84.4,"name":"Cooperados — Recepção"},{"x":68.0,"y":470.6,"w":1073.8,"h":168.7,"name":"Técnico de Controle de Qualidade / Médico Veterinário"}],"shapes":[{"id":"s0","kind":"event","x":120.4,"y":416.9,"w":23.0,"h":23.0,"label":"Pescado ou camarão chega à plataforma"},{"id":"s1","kind":"task","x":203.5,"y":405.4,"w":84.4,"h":46.0,"label":"Higienizar-se no pedilúvio e acessar a plataforma"},{"id":"s2","kind":"task","x":317.2,"y":489.7,"w":84.4,"h":46.0,"label":"Inspecionar a qualidade do produto"},{"id":"s3","kind":"gateway","x":457.2,"y":496.8,"w":32.0,"h":32.0,"label":"Produto aceito?"},{"id":"s4","kind":"task","x":544.8,"y":574.1,"w":84.4,"h":46.0,"label":"Devolver ao fornecedor e registrar"},{"id":"s5","kind":"event","x":689.2,"y":585.6,"w":23.0,"h":23.0,"label":"Produto devolvido"},{"id":"s6","kind":"task","x":544.8,"y":405.4,"w":84.4,"h":46.0,"label":"Pesar em balança de piso"},{"id":"s7","kind":"task","x":658.5,"y":405.4,"w":84.4,"h":46.0,"label":"Registrar e etiquetar quantidade, data e origem"},{"id":"s8","kind":"task","x":772.3,"y":405.4,"w":84.4,"h":46.0,"label":"Acondicionar em caixas de 20 kg com gelo 1:1"},{"id":"s9","kind":"task","x":886.1,"y":405.4,"w":84.4,"h":46.0,"label":"Transportar em carrinhos para lavagem e degelo"},{"id":"s10","kind":"event","x":1030.5,"y":416.9,"w":23.0,"h":23.0,"label":"Matéria-prima recebida"}],"edges":[{"pts":[[287.8,428.4],[303.2,428.4],[303.2,512.7],[317.2,512.7]],"from":"s1","to":"s2","label":""},{"pts":[[473.2,496.8],[473.2,428.4],[544.8,428.4]],"from":"s3","to":"s6","label":"Sim"},{"pts":[[473.2,528.7],[473.2,597.1],[544.8,597.1]],"from":"s3","to":"s4","label":"Não"},{"pts":[[143.4,428.4],[203.5,428.4]],"from":"s0","to":"s1","label":""},{"pts":[[401.6,512.7],[457.2,512.7]],"from":"s2","to":"s3","label":""},{"pts":[[629.1,597.1],[689.2,597.1]],"from":"s4","to":"s5","label":""},{"pts":[[629.1,428.4],[658.5,428.4]],"from":"s6","to":"s7","label":""},{"pts":[[742.9,428.4],[772.3,428.4]],"from":"s7","to":"s8","label":""},{"pts":[[856.7,428.4],[886.1,428.4]],"from":"s8","to":"s9","label":""},{"pts":[[970.5,428.4],[1030.5,428.4]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Pescado ou camarão chega à plataforma","type":"Evento de início","lane":"Cooperados — Recepção","doc":"—","shape":"s0"},{"n":2,"name":"Higienizar-se no pedilúvio e acessar a plataforma","type":"Tarefa","lane":"Cooperados — Recepção","doc":"—","shape":"s1"},{"n":3,"name":"Inspecionar a qualidade do produto","type":"Tarefa","lane":"Técnico de Controle de Qualidade / Médico Veterinário","doc":"Camarão em caixas com gelo e sem by-catch; pescado artesanal com ou sem gelo; pescado da aquicultura já depurado, insensibilizado e abatido.","shape":"s2"},{"n":4,"name":"Produto aceito?","type":"Gateway exclusivo (XOR)","lane":"Técnico de Controle de Qualidade / Médico Veterinário","doc":"—","shape":"s3"},{"n":5,"name":"Devolver ao fornecedor e registrar","type":"Tarefa","lane":"Técnico de Controle de Qualidade / Médico Veterinário","doc":"—","shape":"s4"},{"n":6,"name":"Produto devolvido","type":"Evento de fim","lane":"Técnico de Controle de Qualidade / Médico Veterinário","doc":"—","shape":"s5"},{"n":7,"name":"Pesar em balança de piso","type":"Tarefa","lane":"Cooperados — Recepção","doc":"Duas balanças de 300 kg e balança portátil para pesagem nos locais de desembarque.","shape":"s6"},{"n":8,"name":"Registrar e etiquetar quantidade, data e origem","type":"Tarefa","lane":"Cooperados — Recepção","doc":"Etiquetas com código de barras ou QR Code emitidas na área seca do setor.","shape":"s7"},{"n":9,"name":"Acondicionar em caixas de 20 kg com gelo 1:1","type":"Tarefa","lane":"Cooperados — Recepção","doc":"Demanda máxima de gelo de 5,0 t/turno nesta etapa.","shape":"s8"},{"n":10,"name":"Transportar em carrinhos para lavagem e degelo","type":"Tarefa","lane":"Cooperados — Recepção","doc":"Carrinhos de até 300 kg (7 caixas); 3 cooperados no setor.","shape":"s9"},{"n":11,"name":"Matéria-prima recebida","type":"Evento de fim","lane":"Cooperados — Recepção","doc":"—","shape":"s10"}],"notes":[{"s":"Devolução","x":649.0,"y":395.0,"w":28.7,"fs":6.1}]},{"id":"P04","ord":6,"title":"P04 — Lavagem, Degelo e Câmara de Espera","pool":"P04 — Lavagem e Degelo","lanes":["Cooperados — Lavagem e Degelo","Supervisor de Produção"],"externals":[],"objective":"Separar a área suja das áreas limpas, lavar peixes e camarões e regular o fluxo de beneficiamento com as câmaras de espera.","decisions":[{"name":"Tipo de matéria-prima?","paths":[{"label":"Camarão","target":"Beneficiar o camarão agora?"},{"label":"Peixe","target":"Lavar na lavadora mecanizada de pescado"}]},{"name":"Beneficiar o camarão agora?","paths":[{"label":"Sim","target":"Separar o gelo e lavar o camarão"},{"label":"Não","target":"Estocar na câmara de espera (2 a 7 °C)"}]},{"name":"Beneficiar o peixe agora?","paths":[{"label":"Sim","target":"Enviar à área limpa de peixes"},{"label":"Não","target":"Acondicionar com gelo na câmara de espera"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":52.0,"y":205.8,"w":1086.4,"h":529.6,"name":"P04 — Lavagem e Degelo","collapsed":false}],"lanesGeo":[{"x":76.1,"y":205.8,"w":1062.3,"h":423.7,"name":"Cooperados — Lavagem e Degelo"},{"x":76.1,"y":629.5,"w":1062.3,"h":105.9,"name":"Supervisor de Produção"}],"shapes":[{"id":"s0","kind":"event","x":141.9,"y":403.2,"w":28.9,"h":28.9,"label":"Caixas recebidas da recepção"},{"id":"s1","kind":"gateway","x":279.1,"y":397.6,"w":40.1,"h":40.1,"label":"Tipo de matéria-prima?"},{"id":"s2","kind":"gateway","x":422.0,"y":291.7,"w":40.1,"h":40.1,"label":"Beneficiar o camarão agora?"},{"id":"s3","kind":"task","x":531.9,"y":229.9,"w":105.9,"h":57.8,"label":"Separar o gelo e lavar o camarão"},{"id":"s4","kind":"task","x":674.7,"y":229.9,"w":105.9,"h":57.8,"label":"Enviar à área limpa de camarão com a etiqueta"},{"id":"s5","kind":"event","x":856.1,"y":244.4,"w":28.9,"h":28.9,"label":"Camarão para beneficiamento"},{"id":"s6","kind":"task","x":531.9,"y":335.8,"w":105.9,"h":57.8,"label":"Estocar na câmara de espera (2 a 7 °C)"},{"id":"s7","kind":"task","x":674.7,"y":335.8,"w":105.9,"h":57.8,"label":"Aplicar metabissulfito de sódio, se necessário"},{"id":"s8","kind":"task","x":389.1,"y":494.7,"w":105.9,"h":57.8,"label":"Lavar na lavadora mecanizada de pescado"},{"id":"s9","kind":"gateway","x":564.8,"y":503.5,"w":40.1,"h":40.1,"label":"Beneficiar o peixe agora?"},{"id":"s10","kind":"task","x":674.7,"y":441.7,"w":105.9,"h":57.8,"label":"Enviar à área limpa de peixes"},{"id":"s11","kind":"event","x":856.1,"y":456.2,"w":28.9,"h":28.9,"label":"Peixe para beneficiamento"},{"id":"s12","kind":"task","x":674.7,"y":547.7,"w":105.9,"h":57.8,"label":"Acondicionar com gelo na câmara de espera"},{"id":"s13","kind":"task","x":817.5,"y":653.6,"w":105.9,"h":57.8,"label":"Liberar lotes em espera conforme o programa"},{"id":"s14","kind":"event","x":998.9,"y":668.0,"w":28.9,"h":28.9,"label":"Lotes em espera controlados"}],"edges":[{"pts":[[299.2,397.6],[299.2,311.8],[422.0,311.8]],"from":"s1","to":"s2","label":""},{"pts":[[299.2,437.7],[299.2,523.6],[389.1,523.6]],"from":"s1","to":"s8","label":""},{"pts":[[442.0,291.7],[442.0,258.8],[531.9,258.8]],"from":"s2","to":"s3","label":"Sim"},{"pts":[[442.0,331.8],[442.0,364.7],[531.9,364.7]],"from":"s2","to":"s6","label":"Não"},{"pts":[[780.6,364.7],[799.9,364.7],[799.9,682.5],[817.5,682.5]],"from":"s7","to":"s13","label":""},{"pts":[[584.8,503.5],[584.8,470.6],[674.7,470.6]],"from":"s9","to":"s10","label":"Sim"},{"pts":[[584.8,543.6],[584.8,576.5],[674.7,576.5]],"from":"s9","to":"s12","label":"Não"},{"pts":[[780.6,576.5],[799.9,576.5],[799.9,682.5],[817.5,682.5]],"from":"s12","to":"s13","label":""},{"pts":[[170.8,417.7],[279.1,417.7]],"from":"s0","to":"s1","label":""},{"pts":[[637.8,258.8],[674.7,258.8]],"from":"s3","to":"s4","label":""},{"pts":[[780.6,258.8],[856.1,258.8]],"from":"s4","to":"s5","label":""},{"pts":[[637.8,364.7],[674.7,364.7]],"from":"s6","to":"s7","label":""},{"pts":[[495.0,523.6],[564.8,523.6]],"from":"s8","to":"s9","label":""},{"pts":[[780.6,470.6],[856.1,470.6]],"from":"s10","to":"s11","label":""},{"pts":[[923.5,682.5],[998.9,682.5]],"from":"s13","to":"s14","label":""}],"elements":[{"n":1,"name":"Caixas recebidas da recepção","type":"Evento de início","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s0"},{"n":2,"name":"Tipo de matéria-prima?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s1"},{"n":3,"name":"Beneficiar o camarão agora?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s2"},{"n":4,"name":"Separar o gelo e lavar o camarão","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"Tanque separador de gelo e lavador de camarão.","shape":"s3"},{"n":5,"name":"Enviar à área limpa de camarão com a etiqueta","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s4"},{"n":6,"name":"Camarão para beneficiamento","type":"Evento de fim","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s5"},{"n":7,"name":"Estocar na câmara de espera (2 a 7 °C)","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"Duas câmaras de 30 t (60 t); serviço de estocagem também pode ser oferecido aos pescadores.","shape":"s6"},{"n":8,"name":"Aplicar metabissulfito de sódio, se necessário","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"Evita pontos escuros na casca durante a espera (STSOCH, 2015).","shape":"s7"},{"n":9,"name":"Lavar na lavadora mecanizada de pescado","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"400 a 450 kg/h com água clorada a 5 ppm, sem contato com camarões.","shape":"s8"},{"n":10,"name":"Beneficiar o peixe agora?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s9"},{"n":11,"name":"Enviar à área limpa de peixes","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s10"},{"n":12,"name":"Peixe para beneficiamento","type":"Evento de fim","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s11"},{"n":13,"name":"Acondicionar com gelo na câmara de espera","type":"Tarefa","lane":"Cooperados — Lavagem e Degelo","doc":"—","shape":"s12"},{"n":14,"name":"Liberar lotes em espera conforme o programa","type":"Tarefa","lane":"Supervisor de Produção","doc":"2 cooperados por turno no setor, climatizado entre 15 e 20 °C.","shape":"s13"},{"n":15,"name":"Lotes em espera controlados","type":"Evento de fim","lane":"Supervisor de Produção","doc":"—","shape":"s14"}],"notes":[{"s":"Camarão","x":304.8,"y":381.7,"w":33.0,"fs":8.0},{"s":"Peixe","x":304.8,"y":447.5,"w":20.1,"fs":8.0}]},{"id":"P05","ord":7,"title":"P05 — Beneficiamento de Camarão","pool":"P05 — Beneficiamento de Camarão","lanes":["Cooperados — Beneficiamento de Camarão","Supervisor de Produção"],"externals":[],"objective":"Classificar e beneficiar até 2 t/turno de camarão nas apresentações inteiro, sem cabeça, filé com cauda e filé, com rastreabilidade e aproveitamento dos resíduos.","decisions":[{"name":"Apresentação do produto?","paths":[{"label":"Inteiro","target":"Camarão inteiro para frescos ou congelamento"},{"label":"Descabeçar","target":"Descabeçar manualmente"}]},{"name":"Apresentação final?","paths":[{"label":"Sem cabeça","target":"Camarão sem cabeça para frescos ou congelamento"},{"label":"Filé com cauda","target":"Descascar manualmente mantendo a cauda"},{"label":"Filé","target":"Descascar na máquina com alimentador (120 kg/h)"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":45.8,"y":335.1,"w":1099.0,"h":258.6,"name":"P05 — Beneficiamento de Camarão","collapsed":false}],"lanesGeo":[{"x":60.5,"y":335.1,"w":1084.3,"h":193.9,"name":"Cooperados — Beneficiamento de Camarão"},{"x":60.5,"y":529.0,"w":1084.3,"h":64.7,"name":"Supervisor de Produção"}],"shapes":[{"id":"s0","kind":"event","x":100.6,"y":423.2,"w":17.6,"h":17.6,"label":"Camarão lavado recebido"},{"id":"s1","kind":"task","x":164.3,"y":414.4,"w":64.6,"h":35.3,"label":"Classificar por tamanho na esteira classificadora"},{"id":"s2","kind":"task","x":251.5,"y":414.4,"w":64.6,"h":35.3,"label":"Classificar por espécie e selecionar o camarão especial"},{"id":"s3","kind":"task","x":338.7,"y":543.7,"w":64.6,"h":35.3,"label":"Ler etiquetas e registrar a data de beneficiamento"},{"id":"s4","kind":"gateway","x":445.9,"y":419.8,"w":24.5,"h":24.5,"label":"Apresentação do produto?"},{"id":"s5","kind":"event","x":536.5,"y":487.9,"w":17.6,"h":17.6,"label":"Camarão inteiro para frescos ou congelamento"},{"id":"s6","kind":"task","x":513.0,"y":414.4,"w":64.6,"h":35.3,"label":"Descabeçar manualmente"},{"id":"s7","kind":"task","x":600.2,"y":414.4,"w":64.6,"h":35.3,"label":"Lavar e inspecionar o camarão sem cabeça"},{"id":"s8","kind":"gateway","x":707.4,"y":419.8,"w":24.5,"h":24.5,"label":"Apresentação final?"},{"id":"s9","kind":"event","x":798.0,"y":487.9,"w":17.6,"h":17.6,"label":"Camarão sem cabeça para frescos ou congelamento"},{"id":"s10","kind":"task","x":774.5,"y":349.8,"w":64.6,"h":35.3,"label":"Descascar manualmente mantendo a cauda"},{"id":"s11","kind":"task","x":774.5,"y":414.4,"w":64.6,"h":35.3,"label":"Descascar na máquina com alimentador (120 kg/h)"},{"id":"s12","kind":"task","x":861.7,"y":414.4,"w":64.6,"h":35.3,"label":"Coletar filés em cestos para escorrimento"},{"id":"s13","kind":"task","x":948.9,"y":543.7,"w":64.6,"h":35.3,"label":"Registrar rendimento e destinar cabeças e cascas"},{"id":"s14","kind":"event","x":1059.5,"y":552.5,"w":17.6,"h":17.6,"label":"Filés para congelamento e embalagem"}],"edges":[{"pts":[[316.1,432.1],[327.9,432.1],[327.9,561.3],[338.7,561.3]],"from":"s2","to":"s3","label":""},{"pts":[[403.3,561.3],[415.1,561.3],[415.1,432.1],[445.9,432.1]],"from":"s3","to":"s4","label":""},{"pts":[[458.1,444.3],[458.1,496.7],[536.5,496.7]],"from":"s4","to":"s5","label":""},{"pts":[[719.7,444.3],[719.7,496.7],[798.0,496.7]],"from":"s8","to":"s9","label":""},{"pts":[[719.7,419.8],[719.7,367.4],[774.5,367.4]],"from":"s8","to":"s10","label":""},{"pts":[[839.2,367.4],[850.9,367.4],[850.9,432.1],[861.7,432.1]],"from":"s10","to":"s12","label":""},{"pts":[[926.3,432.1],[938.1,432.1],[938.1,561.3],[948.9,561.3]],"from":"s12","to":"s13","label":""},{"pts":[[118.3,432.1],[164.3,432.1]],"from":"s0","to":"s1","label":""},{"pts":[[229.0,432.1],[251.5,432.1]],"from":"s1","to":"s2","label":""},{"pts":[[470.4,432.1],[513.0,432.1]],"from":"s4","to":"s6","label":""},{"pts":[[577.6,432.1],[600.2,432.1]],"from":"s6","to":"s7","label":""},{"pts":[[664.8,432.1],[707.4,432.1]],"from":"s7","to":"s8","label":""},{"pts":[[731.9,432.1],[774.5,432.1]],"from":"s8","to":"s11","label":""},{"pts":[[839.2,432.1],[861.7,432.1]],"from":"s11","to":"s12","label":""},{"pts":[[1013.5,561.3],[1059.5,561.3]],"from":"s13","to":"s14","label":""}],"elements":[{"n":1,"name":"Camarão lavado recebido","type":"Evento de início","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s0"},{"n":2,"name":"Classificar por tamanho na esteira classificadora","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"Capacidade de classificação de 2 t/turno.","shape":"s1"},{"n":3,"name":"Classificar por espécie e selecionar o camarão especial","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"Remoção de impurezas remanescentes.","shape":"s2"},{"n":4,"name":"Ler etiquetas e registrar a data de beneficiamento","type":"Tarefa","lane":"Supervisor de Produção","doc":"Leitura de código de barras ou QR Code; a data pode diferir da recepção pelo tempo em espera.","shape":"s3"},{"n":5,"name":"Apresentação do produto?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s4"},{"n":6,"name":"Camarão inteiro para frescos ou congelamento","type":"Evento de fim","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s5"},{"n":7,"name":"Descabeçar manualmente","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"Cabeças representam 32% da massa (até 640 kg/turno).","shape":"s6"},{"n":8,"name":"Lavar e inspecionar o camarão sem cabeça","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"1,36 t/turno (rendimento de 60%).","shape":"s7"},{"n":9,"name":"Apresentação final?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s8"},{"n":10,"name":"Camarão sem cabeça para frescos ou congelamento","type":"Evento de fim","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s9"},{"n":11,"name":"Descascar manualmente mantendo a cauda","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"Filé com cauda (camarão Santana), produto premium para restaurantes.","shape":"s10"},{"n":12,"name":"Descascar na máquina com alimentador (120 kg/h)","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"Duas descascadoras com esteira elevatória e água potável: 900 kg/turno de filé (45%) e 260 kg/turno de cascas.","shape":"s11"},{"n":13,"name":"Coletar filés em cestos para escorrimento","type":"Tarefa","lane":"Cooperados — Beneficiamento de Camarão","doc":"—","shape":"s12"},{"n":14,"name":"Registrar rendimento e destinar cabeças e cascas","type":"Tarefa","lane":"Supervisor de Produção","doc":"Até 1,1 t/turno de resíduos (55% da massa) em câmara fria, com coleta duas vezes por semana; 22 cooperados por turno.","shape":"s13"},{"n":15,"name":"Filés para congelamento e embalagem","type":"Evento de fim","lane":"Supervisor de Produção","doc":"—","shape":"s14"}],"notes":[{"s":"Filé com cauda","x":723.1,"y":410.1,"w":33.2,"fs":4.9},{"s":"Descabeçar","x":475.3,"y":424.8,"w":26.1,"fs":4.9},{"s":"Filé","x":736.8,"y":424.8,"w":7.9,"fs":4.9},{"s":"Inteiro","x":461.6,"y":450.2,"w":13.6,"fs":4.9},{"s":"Sem cabeça","x":723.1,"y":450.2,"w":27.2,"fs":4.9}]},{"id":"P06","ord":8,"title":"P06 — Beneficiamento de Peixes","pool":"P06 — Beneficiamento de Peixes","lanes":["Cooperados — Salão de Limpeza","Cooperados — Salão de Beneficiamento","Supervisor de Produção"],"externals":[],"objective":"Beneficiar até 3 t/turno de peixes em inteiro eviscerado, postas, filé com e sem pele e CMS, com segregação de resíduos servíveis e inservíveis.","decisions":[{"name":"Vender como inteiro eviscerado?","paths":[{"label":"Sim","target":"Peixe inteiro eviscerado (84%)"},{"label":"Não","target":"Peixe de escamas?"}]},{"name":"Peixe de escamas?","paths":[{"label":"Sim","target":"Escamar na descamadeira (120 kg/h)"},{"label":"Não (couro)","target":"Remover a cabeça"}]},{"name":"Tipo de corte?","paths":[{"label":"Postas","target":"Cortar em postas ou corpinho"},{"label":"Filé","target":"Filetar com ou sem pele"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":45.8,"y":302.8,"w":1099.0,"h":323.2,"name":"P06 — Beneficiamento de Peixes","collapsed":false}],"lanesGeo":[{"x":60.5,"y":302.8,"w":1084.3,"h":129.3,"name":"Cooperados — Salão de Limpeza"},{"x":60.5,"y":432.1,"w":1084.3,"h":129.2,"name":"Cooperados — Salão de Beneficiamento"},{"x":60.5,"y":561.3,"w":1084.3,"h":64.7,"name":"Supervisor de Produção"}],"shapes":[{"id":"s0","kind":"event","x":100.6,"y":326.3,"w":17.6,"h":17.6,"label":"Peixe lavado recebido"},{"id":"s1","kind":"task","x":164.3,"y":317.5,"w":64.6,"h":35.3,"label":"Eviscerar manualmente"},{"id":"s2","kind":"gateway","x":271.6,"y":322.8,"w":24.5,"h":24.5,"label":"Vender como inteiro eviscerado?"},{"id":"s3","kind":"event","x":362.2,"y":390.9,"w":17.6,"h":17.6,"label":"Peixe inteiro eviscerado (84%)"},{"id":"s4","kind":"gateway","x":358.7,"y":322.8,"w":24.5,"h":24.5,"label":"Peixe de escamas?"},{"id":"s5","kind":"task","x":425.8,"y":317.5,"w":64.6,"h":35.3,"label":"Escamar na descamadeira (120 kg/h)"},{"id":"s6","kind":"task","x":513.0,"y":317.5,"w":64.6,"h":35.3,"label":"Remover a cabeça"},{"id":"s7","kind":"gateway","x":620.2,"y":452.1,"w":24.5,"h":24.5,"label":"Tipo de corte?"},{"id":"s8","kind":"task","x":687.3,"y":446.7,"w":64.6,"h":35.3,"label":"Cortar em postas ou corpinho"},{"id":"s9","kind":"task","x":687.3,"y":511.4,"w":64.6,"h":35.3,"label":"Filetar com ou sem pele"},{"id":"s10","kind":"gateway","x":794.6,"y":516.8,"w":24.5,"h":24.5,"label":"—"},{"id":"s11","kind":"task","x":861.7,"y":511.4,"w":64.6,"h":35.3,"label":"Classificar os filés por tamanho e qualidade"},{"id":"s12","kind":"task","x":861.7,"y":317.5,"w":64.6,"h":35.3,"label":"Extrair CMS de cabeças, caudas e carcaças"},{"id":"s13","kind":"task","x":948.9,"y":446.7,"w":64.6,"h":35.3,"label":"Encaminhar produtos ao congelamento ou venda fresca"},{"id":"s14","kind":"event","x":1059.5,"y":455.6,"w":17.6,"h":17.6,"label":"Produtos de peixe encaminhados"},{"id":"s15","kind":"event","x":710.8,"y":584.9,"w":17.6,"h":17.6,"label":"Resíduos gerados nas estações"},{"id":"s16","kind":"task","x":774.5,"y":576.0,"w":64.6,"h":35.3,"label":"Segregar, prensar e armazenar resíduos em câmara fria"},{"id":"s17","kind":"event","x":885.2,"y":584.9,"w":17.6,"h":17.6,"label":"Resíduos armazenados"}],"edges":[{"pts":[[283.8,347.3],[283.8,399.7],[362.2,399.7]],"from":"s2","to":"s3","label":"Sim"},{"pts":[[371.0,347.3],[371.0,365.5],[545.3,365.5],[545.3,352.7]],"from":"s4","to":"s6","label":""},{"pts":[[577.6,335.1],[589.4,335.1],[589.4,464.4],[620.2,464.4]],"from":"s6","to":"s7","label":""},{"pts":[[632.5,476.6],[632.5,529.0],[687.3,529.0]],"from":"s7","to":"s9","label":""},{"pts":[[806.8,516.8],[806.8,335.1],[861.7,335.1]],"from":"s10","to":"s12","label":""},{"pts":[[926.3,529.0],[938.1,529.0],[938.1,464.4],[948.9,464.4]],"from":"s11","to":"s13","label":""},{"pts":[[926.3,335.1],[938.1,335.1],[938.1,464.4],[948.9,464.4]],"from":"s12","to":"s13","label":""},{"pts":[[118.3,335.1],[164.3,335.1]],"from":"s0","to":"s1","label":""},{"pts":[[229.0,335.1],[271.6,335.1]],"from":"s1","to":"s2","label":""},{"pts":[[296.0,335.1],[358.7,335.1]],"from":"s2","to":"s4","label":"Não"},{"pts":[[383.2,335.1],[425.8,335.1]],"from":"s4","to":"s5","label":"Sim"},{"pts":[[490.5,335.1],[513.0,335.1]],"from":"s5","to":"s6","label":""},{"pts":[[644.7,464.4],[687.3,464.4]],"from":"s7","to":"s8","label":""},{"pts":[[752.0,529.0],[794.6,529.0]],"from":"s9","to":"s10","label":""},{"pts":[[819.1,529.0],[861.7,529.0]],"from":"s10","to":"s11","label":""},{"pts":[[752.0,464.4],[948.9,464.4]],"from":"s8","to":"s13","label":""},{"pts":[[1013.5,464.4],[1059.5,464.4]],"from":"s13","to":"s14","label":""},{"pts":[[728.5,593.7],[774.5,593.7]],"from":"s15","to":"s16","label":""},{"pts":[[839.2,593.7],[885.2,593.7]],"from":"s16","to":"s17","label":""}],"elements":[{"n":1,"name":"Peixe lavado recebido","type":"Evento de início","lane":"Cooperados — Salão de Limpeza","doc":"—","shape":"s0"},{"n":2,"name":"Eviscerar manualmente","type":"Tarefa","lane":"Cooperados — Salão de Limpeza","doc":"Todo pescado que entra na unidade é eviscerado; estações multifuncionais para 8 a 10 cooperados.","shape":"s1"},{"n":3,"name":"Vender como inteiro eviscerado?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Salão de Limpeza","doc":"—","shape":"s2"},{"n":4,"name":"Peixe inteiro eviscerado (84%)","type":"Evento de fim","lane":"Cooperados — Salão de Limpeza","doc":"—","shape":"s3"},{"n":5,"name":"Peixe de escamas?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Salão de Limpeza","doc":"—","shape":"s4"},{"n":6,"name":"Escamar na descamadeira (120 kg/h)","type":"Tarefa","lane":"Cooperados — Salão de Limpeza","doc":"Duas máquinas; indivíduos grandes ou de carne macia podem ser escamados manualmente.","shape":"s5"},{"n":7,"name":"Remover a cabeça","type":"Tarefa","lane":"Cooperados — Salão de Limpeza","doc":"—","shape":"s6"},{"n":8,"name":"Tipo de corte?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Salão de Beneficiamento","doc":"—","shape":"s7"},{"n":9,"name":"Cortar em postas ou corpinho","type":"Tarefa","lane":"Cooperados — Salão de Beneficiamento","doc":"Rendimento de 68,7%.","shape":"s8"},{"n":10,"name":"Filetar com ou sem pele","type":"Tarefa","lane":"Cooperados — Salão de Beneficiamento","doc":"Filé sem pele 43% (1,29 t/turno) ou com pele 43,7% (1,31 t/turno).","shape":"s9"},{"n":11,"name":"—","type":"Gateway paralelo (AND)","lane":"Cooperados — Salão de Beneficiamento","doc":"—","shape":"s10"},{"n":12,"name":"Classificar os filés por tamanho e qualidade","type":"Tarefa","lane":"Cooperados — Salão de Beneficiamento","doc":"—","shape":"s11"},{"n":13,"name":"Extrair CMS de cabeças, caudas e carcaças","type":"Tarefa","lane":"Cooperados — Salão de Limpeza","doc":"Despolpadora com rendimento de 50% sobre as sobras: até 1,35 t/turno de carcaças e 675 kg/turno de CMS.","shape":"s12"},{"n":14,"name":"Encaminhar produtos ao congelamento ou venda fresca","type":"Tarefa","lane":"Cooperados — Salão de Beneficiamento","doc":"10 postos de trabalho no salão de beneficiamento.","shape":"s13"},{"n":15,"name":"Produtos de peixe encaminhados","type":"Evento de fim","lane":"Cooperados — Salão de Beneficiamento","doc":"—","shape":"s14"},{"n":16,"name":"Resíduos gerados nas estações","type":"Evento de início","lane":"Supervisor de Produção","doc":"—","shape":"s15"},{"n":17,"name":"Segregar, prensar e armazenar resíduos em câmara fria","type":"Tarefa","lane":"Supervisor de Produção","doc":"Vísceras, escamas, peles e carcaças despolpadas (até 1,2 t/turno) para farinha ou destinação adequada.","shape":"s16"},{"n":18,"name":"Resíduos armazenados","type":"Evento de fim","lane":"Supervisor de Produção","doc":"—","shape":"s17"}],"notes":[{"s":"Não (couro)","x":374.4,"y":353.3,"w":25.8,"fs":4.9},{"s":"Postas","x":649.6,"y":457.1,"w":14.9,"fs":4.9},{"s":"Filé","x":635.9,"y":482.6,"w":7.9,"fs":4.9}]},{"id":"P07","ord":9,"title":"P07 — Congelamento e Embalagem","pool":"P07 — Congelamento e Embalagem","lanes":["Cooperados — Congelamento e Embalagem de Camarão","Cooperados — Congelamento e Embalagem de Peixes"],"externals":[],"objective":"Congelar rapidamente e embalar os produtos de camarão e de peixe preservando qualidade e rastreabilidade, em salas limpas separadas.","decisions":[{"name":"Filé descascado?","paths":[{"label":"Sim","target":"Selecionar, pesar e embalar em 400 g, 800 g ou 1 kg"},{"label":"Não","target":"Congelar soltos no túnel"}]},{"name":"Peixe grande para postas?","paths":[{"label":"Não","target":"Embalar a vácuo em 400 g, 600 g ou 800 g ou por unidade"},{"label":"Sim","target":"Cortar postas congeladas na serra fita"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":48.8,"y":298.6,"w":1093.0,"h":337.5,"name":"P07 — Congelamento e Embalagem","collapsed":false}],"lanesGeo":[{"x":68.0,"y":298.6,"w":1073.8,"h":168.8,"name":"Cooperados — Congelamento e Embalagem de Camarão"},{"x":68.0,"y":467.4,"w":1073.8,"h":168.7,"name":"Cooperados — Congelamento e Embalagem de Peixes"}],"shapes":[{"id":"s0","kind":"event","x":120.4,"y":371.5,"w":23.0,"h":23.0,"label":"Produtos de camarão recebidos"},{"id":"s1","kind":"gateway","x":229.7,"y":367.0,"w":32.0,"h":32.0,"label":"Filé descascado?"},{"id":"s2","kind":"task","x":317.2,"y":317.8,"w":84.4,"h":46.0,"label":"Selecionar, pesar e embalar em 400 g, 800 g ou 1 kg"},{"id":"s3","kind":"task","x":431.0,"y":317.8,"w":84.4,"h":46.0,"label":"Congelar em blocos no túnel"},{"id":"s4","kind":"task","x":317.2,"y":402.2,"w":84.4,"h":46.0,"label":"Congelar soltos no túnel"},{"id":"s5","kind":"task","x":431.0,"y":402.2,"w":84.4,"h":46.0,"label":"Pesar, embalar, selar e etiquetar"},{"id":"s6","kind":"task","x":544.8,"y":360.0,"w":84.4,"h":46.0,"label":"Masterizar em caixas etiquetadas"},{"id":"s7","kind":"event","x":689.2,"y":371.5,"w":23.0,"h":23.0,"label":"Camarão congelado para armazenagem"},{"id":"s8","kind":"event","x":120.4,"y":498.0,"w":23.0,"h":23.0,"label":"Produtos de peixe recebidos"},{"id":"s9","kind":"task","x":203.5,"y":486.5,"w":84.4,"h":46.0,"label":"Dispor em bandejas, cestos ou ganchos"},{"id":"s10","kind":"task","x":317.2,"y":486.5,"w":84.4,"h":46.0,"label":"Congelar no túnel"},{"id":"s11","kind":"task","x":431.0,"y":486.5,"w":84.4,"h":46.0,"label":"Aplicar glazing no tanque inox"},{"id":"s12","kind":"gateway","x":571.0,"y":493.6,"w":32.0,"h":32.0,"label":"Peixe grande para postas?"},{"id":"s13","kind":"task","x":658.5,"y":570.9,"w":84.4,"h":46.0,"label":"Cortar postas congeladas na serra fita"},{"id":"s14","kind":"task","x":772.3,"y":486.5,"w":84.4,"h":46.0,"label":"Embalar a vácuo em 400 g, 600 g ou 800 g ou por unidade"},{"id":"s15","kind":"task","x":886.1,"y":486.5,"w":84.4,"h":46.0,"label":"Imprimir lote e validade e masterizar"},{"id":"s16","kind":"event","x":1030.5,"y":498.0,"w":23.0,"h":23.0,"label":"Peixe congelado para armazenagem"}],"edges":[{"pts":[[245.6,367.0],[245.6,340.8],[317.2,340.8]],"from":"s1","to":"s2","label":"Sim"},{"pts":[[245.6,399.0],[245.6,425.2],[317.2,425.2]],"from":"s1","to":"s4","label":"Não"},{"pts":[[515.4,340.8],[530.7,340.8],[530.7,383.0],[544.8,383.0]],"from":"s3","to":"s6","label":""},{"pts":[[515.4,425.2],[530.7,425.2],[530.7,383.0],[544.8,383.0]],"from":"s5","to":"s6","label":""},{"pts":[[587.0,525.5],[587.0,593.9],[658.5,593.9]],"from":"s12","to":"s13","label":"Sim"},{"pts":[[742.9,593.9],[758.3,593.9],[758.3,509.6],[772.3,509.6]],"from":"s13","to":"s14","label":""},{"pts":[[143.4,383.0],[229.7,383.0]],"from":"s0","to":"s1","label":""},{"pts":[[401.6,340.8],[431.0,340.8]],"from":"s2","to":"s3","label":""},{"pts":[[401.6,425.2],[431.0,425.2]],"from":"s4","to":"s5","label":""},{"pts":[[629.1,383.0],[689.2,383.0]],"from":"s6","to":"s7","label":""},{"pts":[[143.4,509.6],[203.5,509.6]],"from":"s8","to":"s9","label":""},{"pts":[[287.8,509.6],[317.2,509.6]],"from":"s9","to":"s10","label":""},{"pts":[[401.6,509.6],[431.0,509.6]],"from":"s10","to":"s11","label":""},{"pts":[[515.4,509.6],[571.0,509.6]],"from":"s11","to":"s12","label":""},{"pts":[[602.9,509.6],[772.3,509.6]],"from":"s12","to":"s14","label":"Não"},{"pts":[[856.7,509.6],[886.1,509.6]],"from":"s14","to":"s15","label":""},{"pts":[[970.5,509.6],[1030.5,509.6]],"from":"s15","to":"s16","label":""}],"elements":[{"n":1,"name":"Produtos de camarão recebidos","type":"Evento de início","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"—","shape":"s0"},{"n":2,"name":"Filé descascado?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"—","shape":"s1"},{"n":3,"name":"Selecionar, pesar e embalar em 400 g, 800 g ou 1 kg","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"Sacos de polietileno selados e etiquetados com os dados do lote.","shape":"s2"},{"n":4,"name":"Congelar em blocos no túnel","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"Túnel de congelamento de 10 t por batelada.","shape":"s3"},{"n":5,"name":"Congelar soltos no túnel","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"Camarão inteiro, sem cabeça e filé com cauda congelados individualmente.","shape":"s4"},{"n":6,"name":"Pesar, embalar, selar e etiquetar","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"—","shape":"s5"},{"n":7,"name":"Masterizar em caixas etiquetadas","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"3 cooperados por turno.","shape":"s6"},{"n":8,"name":"Camarão congelado para armazenagem","type":"Evento de fim","lane":"Cooperados — Congelamento e Embalagem de Camarão","doc":"—","shape":"s7"},{"n":9,"name":"Produtos de peixe recebidos","type":"Evento de início","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"—","shape":"s8"},{"n":10,"name":"Dispor em bandejas, cestos ou ganchos","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"Peixes grandes suspensos em ganchos; túnel contínuo de 350 kg/h.","shape":"s9"},{"n":11,"name":"Congelar no túnel","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"Até 2,52 t/turno processadas, gerando 3,02 t/turno de congelados.","shape":"s10"},{"n":12,"name":"Aplicar glazing no tanque inox","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"—","shape":"s11"},{"n":13,"name":"Peixe grande para postas?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"—","shape":"s12"},{"n":14,"name":"Cortar postas congeladas na serra fita","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"—","shape":"s13"},{"n":15,"name":"Embalar a vácuo em 400 g, 600 g ou 800 g ou por unidade","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"Seladoras a vácuo industriais (4 embalagens/min) e mesas com balança integrada.","shape":"s14"},{"n":16,"name":"Imprimir lote e validade e masterizar","type":"Tarefa","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"Datadoras inkjet, arqueadoras semiautomáticas e leitores de etiquetas; 3 cooperados por turno.","shape":"s15"},{"n":17,"name":"Peixe congelado para armazenagem","type":"Evento de fim","lane":"Cooperados — Congelamento e Embalagem de Peixes","doc":"—","shape":"s16"}],"notes":[]},{"id":"P08","ord":10,"title":"P08 — Comercialização de Produtos Frescos e Loja Local","pool":"P08 — Frescos e Loja Local","lanes":["Cooperados — Comercialização de Frescos","Cooperados — Sala de Comercialização Local","Financeiro"],"externals":["Consumidores da comunidade local"],"objective":"Destinar produtos frescos a outros elos da cadeia em caixas com gelo e atender a comunidade local com pescado fresco, congelado e gelo.","decisions":[{"name":"Canal de venda?","paths":[{"label":"Atacado","target":"Pesar e acondicionar em caixas de 20 kg com gelo 1:1"},{"label":"Loja local","target":"Expor pescado fresco e congelado"}]}],"messages":[{"from":"Consumidores da comunidade local","to":"Atender o cliente, cortar e embalar","msg":"Pedido"},{"from":"Emitir cupom ou nota fiscal e conciliar o caixa","to":"Consumidores da comunidade local","msg":"Cupom fiscal"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":52.0,"y":254.8,"w":1086.4,"h":317.7,"name":"P08 — Frescos e Loja Local","collapsed":false},{"x":496.6,"y":641.5,"w":462.2,"h":44.9,"name":"Consumidores da comunidade local","collapsed":true}],"lanesGeo":[{"x":76.1,"y":254.8,"w":1062.3,"h":105.9,"name":"Cooperados — Comercialização de Frescos"},{"x":76.1,"y":360.7,"w":1062.3,"h":105.9,"name":"Cooperados — Sala de Comercialização Local"},{"x":76.1,"y":466.6,"w":1062.3,"h":105.9,"name":"Financeiro"}],"shapes":[{"id":"s0","kind":"event","x":141.9,"y":293.3,"w":28.9,"h":28.9,"label":"Produto fresco recebido do beneficiamento"},{"id":"s1","kind":"gateway","x":279.1,"y":287.7,"w":40.1,"h":40.1,"label":"Canal de venda?"},{"id":"s2","kind":"task","x":389.1,"y":278.9,"w":105.9,"h":57.8,"label":"Pesar e acondicionar em caixas de 20 kg com gelo 1:1"},{"id":"s3","kind":"task","x":531.9,"y":278.9,"w":105.9,"h":57.8,"label":"Controlar e etiquetar as caixas"},{"id":"s4","kind":"task","x":674.7,"y":278.9,"w":105.9,"h":57.8,"label":"Enviar à câmara de espera para expedição"},{"id":"s5","kind":"event","x":856.1,"y":293.3,"w":28.9,"h":28.9,"label":"Frescos prontos para expedição"},{"id":"s6","kind":"task","x":389.1,"y":384.8,"w":105.9,"h":57.8,"label":"Expor pescado fresco e congelado"},{"id":"s7","kind":"task","x":531.9,"y":384.8,"w":105.9,"h":57.8,"label":"Atender o cliente, cortar e embalar"},{"id":"s8","kind":"task","x":674.7,"y":384.8,"w":105.9,"h":57.8,"label":"Registrar a venda no balcão de checkout"},{"id":"s9","kind":"task","x":817.5,"y":490.7,"w":105.9,"h":57.8,"label":"Emitir cupom ou nota fiscal e conciliar o caixa"},{"id":"s10","kind":"event","x":998.9,"y":505.1,"w":28.9,"h":28.9,"label":"Venda local concluída"}],"edges":[{"pts":[[299.2,327.8],[299.2,413.7],[389.1,413.7]],"from":"s1","to":"s6","label":""},{"pts":[[780.6,413.7],[799.9,413.7],[799.9,519.6],[817.5,519.6]],"from":"s8","to":"s9","label":""},{"pts":[[170.8,307.7],[279.1,307.7]],"from":"s0","to":"s1","label":""},{"pts":[[319.2,307.7],[389.1,307.7]],"from":"s1","to":"s2","label":""},{"pts":[[495.0,307.7],[531.9,307.7]],"from":"s2","to":"s3","label":""},{"pts":[[637.8,307.7],[674.7,307.7]],"from":"s3","to":"s4","label":""},{"pts":[[780.6,307.7],[856.1,307.7]],"from":"s4","to":"s5","label":""},{"pts":[[495.0,413.7],[531.9,413.7]],"from":"s6","to":"s7","label":""},{"pts":[[637.8,413.7],[674.7,413.7]],"from":"s7","to":"s8","label":""},{"pts":[[923.5,519.6],[998.9,519.6]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Produto fresco recebido do beneficiamento","type":"Evento de início","lane":"Cooperados — Comercialização de Frescos","doc":"—","shape":"s0"},{"n":2,"name":"Canal de venda?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Comercialização de Frescos","doc":"—","shape":"s1"},{"n":3,"name":"Pesar e acondicionar em caixas de 20 kg com gelo 1:1","type":"Tarefa","lane":"Cooperados — Comercialização de Frescos","doc":"Maior preço de venda e menor consumo de energia; armazenagem máxima de cerca de uma semana.","shape":"s2"},{"n":4,"name":"Controlar e etiquetar as caixas","type":"Tarefa","lane":"Cooperados — Comercialização de Frescos","doc":"—","shape":"s3"},{"n":5,"name":"Enviar à câmara de espera para expedição","type":"Tarefa","lane":"Cooperados — Comercialização de Frescos","doc":"—","shape":"s4"},{"n":6,"name":"Frescos prontos para expedição","type":"Evento de fim","lane":"Cooperados — Comercialização de Frescos","doc":"—","shape":"s5"},{"n":7,"name":"Expor pescado fresco e congelado","type":"Tarefa","lane":"Cooperados — Sala de Comercialização Local","doc":"Balcão expositor refrigerado, freezers horizontais, freezer vertical de 560 L e freezer para sacos de gelo de 20 kg.","shape":"s6"},{"n":8,"name":"Atender o cliente, cortar e embalar","type":"Tarefa","lane":"Cooperados — Sala de Comercialização Local","doc":"Mesa inox, pia industrial, serra fita de bancada e balança de 30 kg.","shape":"s7"},{"n":9,"name":"Registrar a venda no balcão de checkout","type":"Tarefa","lane":"Cooperados — Sala de Comercialização Local","doc":"Leitora de etiquetas, computador e impressora fiscal; 2 cooperados.","shape":"s8"},{"n":10,"name":"Emitir cupom ou nota fiscal e conciliar o caixa","type":"Tarefa","lane":"Financeiro","doc":"—","shape":"s9"},{"n":11,"name":"Venda local concluída","type":"Evento de fim","lane":"Financeiro","doc":"—","shape":"s10"}],"notes":[{"s":"Atacado","x":327.3,"y":295.8,"w":29.4,"fs":8.0},{"s":"Pedido","x":591.3,"y":534.4,"w":23.7,"fs":7.6},{"s":"Cupom fiscal","x":876.9,"y":587.4,"w":44.0,"fs":7.6}]},{"id":"P09","ord":11,"title":"P09 — Armazenagem e Expedição","pool":"P09 — Armazenagem e Expedição","lanes":["Cooperados — Armazenagem e Expedição","Assistente Administrativo","Motoristas"],"externals":["Gerência de Vendas"],"objective":"Registrar, armazenar em frio e expedir os produtos acabados com controle de estoque, validade e qualidade.","decisions":[{"name":"Produto congelado?","paths":[{"label":"Sim","target":"Armazenar na câmara de estocagem (abaixo de -18 °C)"},{"label":"Não","target":"Armazenar na câmara de espera (5 °C)"}]}],"messages":[{"from":"Gerência de Vendas","to":"Pedido de venda liberado","msg":"Pedido aprovado"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":46.6,"y":287.3,"w":1097.3,"h":280.4,"name":"P09 — Armazenagem e Expedição","collapsed":false},{"x":500.7,"y":613.4,"w":175.3,"h":29.7,"name":"Gerência de Vendas","collapsed":true}],"lanesGeo":[{"x":62.6,"y":287.3,"w":1081.3,"h":140.2,"name":"Cooperados — Armazenagem e Expedição"},{"x":62.6,"y":427.5,"w":1081.3,"h":70.1,"name":"Assistente Administrativo"},{"x":62.6,"y":497.6,"w":1081.3,"h":70.1,"name":"Motoristas"}],"shapes":[{"id":"s0","kind":"event","x":106.1,"y":312.8,"w":19.1,"h":19.1,"label":"Produto embalado recebido"},{"id":"s1","kind":"task","x":175.2,"y":303.2,"w":70.1,"h":38.2,"label":"Ler etiquetas e registrar a entrada"},{"id":"s2","kind":"gateway","x":291.5,"y":309.1,"w":26.6,"h":26.6,"label":"Produto congelado?"},{"id":"s3","kind":"task","x":364.2,"y":303.2,"w":70.1,"h":38.2,"label":"Armazenar na câmara de estocagem (abaixo de -18 °C)"},{"id":"s4","kind":"task","x":364.2,"y":373.3,"w":70.1,"h":38.2,"label":"Armazenar na câmara de espera (5 °C)"},{"id":"s5","kind":"task","x":458.8,"y":443.4,"w":70.1,"h":38.2,"label":"Controlar estoque, validade e inventário"},{"id":"s6","kind":"event","x":578.8,"y":453.0,"w":19.1,"h":19.1,"label":"Pedido de venda liberado"},{"id":"s7","kind":"task","x":647.9,"y":303.2,"w":70.1,"h":38.2,"label":"Separar e conferir o pedido (PEPS)"},{"id":"s8","kind":"task","x":742.4,"y":303.2,"w":70.1,"h":38.2,"label":"Paletizar e fechar as caixas de papelão"},{"id":"s9","kind":"task","x":836.9,"y":443.4,"w":70.1,"h":38.2,"label":"Emitir romaneio e documentos de transporte"},{"id":"s10","kind":"task","x":931.5,"y":513.5,"w":70.1,"h":38.2,"label":"Carregar o caminhão baú refrigerado"},{"id":"s11","kind":"event","x":1051.5,"y":523.1,"w":19.1,"h":19.1,"label":"Pedido expedido"}],"edges":[{"pts":[[304.7,335.6],[304.7,392.4],[364.2,392.4]],"from":"s2","to":"s4","label":"Não"},{"pts":[[434.3,322.3],[447.1,322.3],[447.1,462.5],[458.8,462.5]],"from":"s3","to":"s5","label":""},{"pts":[[434.3,392.4],[447.1,392.4],[447.1,462.5],[458.8,462.5]],"from":"s4","to":"s5","label":""},{"pts":[[597.9,462.5],[610.7,462.5],[610.7,322.3],[647.9,322.3]],"from":"s6","to":"s7","label":""},{"pts":[[812.5,322.3],[825.2,322.3],[825.2,462.5],[836.9,462.5]],"from":"s8","to":"s9","label":""},{"pts":[[907.0,462.5],[919.8,462.5],[919.8,532.7],[931.5,532.7]],"from":"s9","to":"s10","label":""},{"pts":[[588.4,611.5],[588.4,472.6]],"from":null,"to":"s6","label":""},{"pts":[[125.2,322.3],[175.2,322.3]],"from":"s0","to":"s1","label":""},{"pts":[[245.3,322.3],[291.5,322.3]],"from":"s1","to":"s2","label":""},{"pts":[[318.0,322.3],[364.2,322.3]],"from":"s2","to":"s3","label":"Sim"},{"pts":[[528.9,462.5],[578.8,462.5]],"from":"s5","to":"s6","label":""},{"pts":[[718.0,322.3],[742.4,322.3]],"from":"s7","to":"s8","label":""},{"pts":[[1001.6,532.7],[1051.5,532.7]],"from":"s10","to":"s11","label":""}],"elements":[{"n":1,"name":"Produto embalado recebido","type":"Evento de início","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s0"},{"n":2,"name":"Ler etiquetas e registrar a entrada","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"Área seca com controle rigoroso de entrada, saída, tempo de armazenamento e inspeção.","shape":"s1"},{"n":3,"name":"Produto congelado?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s2"},{"n":4,"name":"Armazenar na câmara de estocagem (abaixo de -18 °C)","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"Câmaras de 280 t para peixes e de 48 t para crustáceos (328 t no total).","shape":"s3"},{"n":5,"name":"Armazenar na câmara de espera (5 °C)","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s4"},{"n":6,"name":"Controlar estoque, validade e inventário","type":"Tarefa","lane":"Assistente Administrativo","doc":"Estoque regulador para safras, grandes compras e poder de barganha dos cooperados.","shape":"s5"},{"n":7,"name":"Pedido de venda liberado","type":"Evento intermediário (mensagem)","lane":"Assistente Administrativo","doc":"—","shape":"s6"},{"n":8,"name":"Separar e conferir o pedido (PEPS)","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s7"},{"n":9,"name":"Paletizar e fechar as caixas de papelão","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"Fechadora automática de caixas, empilhadeira e estantes de aço; 3 cooperados por turno.","shape":"s8"},{"n":10,"name":"Emitir romaneio e documentos de transporte","type":"Tarefa","lane":"Assistente Administrativo","doc":"—","shape":"s9"},{"n":11,"name":"Carregar o caminhão baú refrigerado","type":"Tarefa","lane":"Motoristas","doc":"Expedição coberta com rampas, degrau para carga e pátio de manobra.","shape":"s10"},{"n":12,"name":"Pedido expedido","type":"Evento de fim","lane":"Motoristas","doc":"—","shape":"s11"}],"notes":[{"s":"Pedido aprovado","x":592.6,"y":537.7,"w":38.1,"fs":5.0}]},{"id":"P10","ord":12,"title":"P10 — Logística de Captação, Distribuição e Frota","pool":"P10 — Logística e Frota","lanes":["Assistente Administrativo (Programação)","Motoristas","Técnico de Manutenção"],"externals":["Pescadores artesanais (locais de desembarque)","Clientes"],"objective":"Captar o pescado nos locais de desembarque e distribuir os produtos com frota própria, empregando mão de obra local.","decisions":[{"name":"Veículo apto?","paths":[{"label":"Sim","target":"Abastecer gelo, caixas limpas e balança portátil"},{"label":"Não","target":"Encaminhar o veículo para manutenção"}]}],"messages":[{"from":"Pescadores artesanais (locais de desembarque)","to":"Captar pescado nos locais de desembarque","msg":"Pescado"},{"from":"Carregar pedidos e entregar aos clientes","to":"Clientes","msg":"Produtos e NF-e"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":47.6,"y":351.3,"w":1095.3,"h":229.7,"name":"P10 — Logística e Frota","collapsed":false},{"x":543.6,"y":268.9,"w":191.5,"h":32.5,"name":"Pescadores artesanais (locais de desembarque)","collapsed":true},{"x":750.2,"y":630.9,"w":191.5,"h":32.5,"name":"Clientes","collapsed":true}],"lanesGeo":[{"x":65.0,"y":351.3,"w":1077.9,"h":76.6,"name":"Assistente Administrativo (Programação)"},{"x":65.0,"y":427.9,"w":1077.9,"h":76.6,"name":"Motoristas"},{"x":65.0,"y":504.5,"w":1077.9,"h":76.5,"name":"Técnico de Manutenção"}],"shapes":[{"id":"s0","kind":"event","x":112.6,"y":379.2,"w":20.9,"h":20.9,"label":"Programação diária de rotas"},{"id":"s1","kind":"task","x":188.0,"y":368.7,"w":76.6,"h":41.8,"label":"Programar captações e entregas"},{"id":"s2","kind":"task","x":291.3,"y":445.3,"w":76.6,"h":41.8,"label":"Inspecionar veículo, refrigeração e documentos"},{"id":"s3","kind":"gateway","x":418.3,"y":451.7,"w":29.0,"h":29.0,"label":"Veículo apto?"},{"id":"s4","kind":"task","x":497.8,"y":521.9,"w":76.6,"h":41.8,"label":"Encaminhar o veículo para manutenção"},{"id":"s5","kind":"task","x":497.8,"y":445.3,"w":76.6,"h":41.8,"label":"Abastecer gelo, caixas limpas e balança portátil"},{"id":"s6","kind":"task","x":601.1,"y":445.3,"w":76.6,"h":41.8,"label":"Captar pescado nos locais de desembarque"},{"id":"s7","kind":"task","x":704.3,"y":445.3,"w":76.6,"h":41.8,"label":"Descarregar na recepção da UBP-M"},{"id":"s8","kind":"task","x":807.6,"y":445.3,"w":76.6,"h":41.8,"label":"Carregar pedidos e entregar aos clientes"},{"id":"s9","kind":"task","x":910.9,"y":368.7,"w":76.6,"h":41.8,"label":"Registrar quilometragem, combustível e custos"},{"id":"s10","kind":"event","x":1042.0,"y":379.2,"w":20.9,"h":20.9,"label":"Rotas concluídas"}],"edges":[{"pts":[[264.6,389.6],[278.5,389.6],[278.5,466.2],[291.3,466.2]],"from":"s1","to":"s2","label":""},{"pts":[[432.8,480.7],[432.8,542.8],[497.8,542.8]],"from":"s3","to":"s4","label":"Não"},{"pts":[[536.1,521.9],[536.1,506.8],[329.6,506.8],[329.6,487.1]],"from":"s4","to":"s2","label":""},{"pts":[[884.2,466.2],[898.1,466.2],[898.1,389.6],[910.9,389.6]],"from":"s8","to":"s9","label":""},{"pts":[[639.4,303.5],[639.4,442.7]],"from":null,"to":"s6","label":""},{"pts":[[845.9,489.1],[845.9,628.3]],"from":"s8","to":null,"label":""},{"pts":[[133.5,389.6],[188.0,389.6]],"from":"s0","to":"s1","label":""},{"pts":[[367.8,466.2],[418.3,466.2]],"from":"s2","to":"s3","label":""},{"pts":[[447.3,466.2],[497.8,466.2]],"from":"s3","to":"s5","label":"Sim"},{"pts":[[574.4,466.2],[601.1,466.2]],"from":"s5","to":"s6","label":""},{"pts":[[677.7,466.2],[704.3,466.2]],"from":"s6","to":"s7","label":""},{"pts":[[780.9,466.2],[807.6,466.2]],"from":"s7","to":"s8","label":""},{"pts":[[987.5,389.6],[1042.0,389.6]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Programação diária de rotas","type":"Evento de início (temporizador)","lane":"Assistente Administrativo (Programação)","doc":"—","shape":"s0"},{"n":2,"name":"Programar captações e entregas","type":"Tarefa","lane":"Assistente Administrativo (Programação)","doc":"Flexibiliza captação conforme a oferta e a distribuição conforme a demanda.","shape":"s1"},{"n":3,"name":"Inspecionar veículo, refrigeração e documentos","type":"Tarefa","lane":"Motoristas","doc":"Quatro caminhões baú refrigerados de 5,5 t (R$ 1.680.000,00).","shape":"s2"},{"n":4,"name":"Veículo apto?","type":"Gateway exclusivo (XOR)","lane":"Motoristas","doc":"—","shape":"s3"},{"n":5,"name":"Encaminhar o veículo para manutenção","type":"Tarefa","lane":"Técnico de Manutenção","doc":"—","shape":"s4"},{"n":6,"name":"Abastecer gelo, caixas limpas e balança portátil","type":"Tarefa","lane":"Motoristas","doc":"—","shape":"s5"},{"n":7,"name":"Captar pescado nos locais de desembarque","type":"Tarefa","lane":"Motoristas","doc":"—","shape":"s6"},{"n":8,"name":"Descarregar na recepção da UBP-M","type":"Tarefa","lane":"Motoristas","doc":"—","shape":"s7"},{"n":9,"name":"Carregar pedidos e entregar aos clientes","type":"Tarefa","lane":"Motoristas","doc":"—","shape":"s8"},{"n":10,"name":"Registrar quilometragem, combustível e custos","type":"Tarefa","lane":"Assistente Administrativo (Programação)","doc":"Por veículo: combustível R$ 7.215,00/mês e pneus R$ 3.358,00/mês, além de manutenção, seguros e licenciamento.","shape":"s9"},{"n":11,"name":"Rotas concluídas","type":"Evento de fim","lane":"Assistente Administrativo (Programação)","doc":"—","shape":"s10"}],"notes":[{"s":"Pescado","x":644.0,"y":367.9,"w":21.4,"fs":5.5},{"s":"Produtos e NF-e","x":850.5,"y":553.5,"w":40.4,"fs":5.5}]},{"id":"P11","ord":13,"title":"P11 — Comercialização, Faturamento e Cobrança","pool":"P11 — Comercialização","lanes":["Gerente de Vendas e Vendedor","Expedição","Financeiro"],"externals":["Clientes (peixarias, supermercados, restaurantes, indústrias)"],"objective":"Vender o mix de produtos de camarão, peixe, CMS e gelo, faturar com os tributos corretos e cobrar.","decisions":[{"name":"Estoque e crédito aprovados?","paths":[{"label":"Sim","target":"Emitir NF-e com os tributos incidentes"},{"label":"Não","target":"Negociar prazo, quantidade ou forma de pagamento"}]},{"name":"Pagamento recebido no prazo?","paths":[{"label":"Sim","target":"Conciliar recebimento e apurar resultado de vendas"},{"label":"Não","target":"Efetuar cobrança e renegociar"}]}],"messages":[{"from":"Clientes (peixarias, supermercados, restaurantes, indústrias)","to":"Receber e registrar o pedido","msg":"Pedido"},{"from":"Separar e expedir o pedido (P09)","to":"Clientes (peixarias, supermercados, restaurantes, indústrias)","msg":"Produtos e NF-e"},{"from":"Clientes (peixarias, supermercados, restaurantes, indústrias)","to":"Conciliar recebimento e apurar resultado de vendas","msg":"Pagamento"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":46.6,"y":327.6,"w":1097.3,"h":350.5,"name":"P11 — Comercialização","collapsed":false},{"x":340.9,"y":252.2,"w":684.1,"h":29.7,"name":"Clientes (peixarias, supermercados, restaurantes, indústrias)","collapsed":true}],"lanesGeo":[{"x":62.6,"y":327.6,"w":1081.3,"h":140.3,"name":"Gerente de Vendas e Vendedor"},{"x":62.6,"y":467.9,"w":1081.3,"h":70.1,"name":"Expedição"},{"x":62.6,"y":538.0,"w":1081.3,"h":140.1,"name":"Financeiro"}],"shapes":[{"id":"s0","kind":"event","x":106.1,"y":353.1,"w":19.1,"h":19.1,"label":"Ciclo semanal de vendas"},{"id":"s1","kind":"task","x":175.2,"y":343.6,"w":70.1,"h":38.2,"label":"Levantar preços de referência e disponibilidade"},{"id":"s2","kind":"task","x":269.7,"y":343.6,"w":70.1,"h":38.2,"label":"Prospectar e atender clientes"},{"id":"s3","kind":"task","x":364.2,"y":343.6,"w":70.1,"h":38.2,"label":"Receber e registrar o pedido"},{"id":"s4","kind":"gateway","x":480.5,"y":349.4,"w":26.6,"h":26.6,"label":"Estoque e crédito aprovados?"},{"id":"s5","kind":"task","x":553.3,"y":413.7,"w":70.1,"h":38.2,"label":"Negociar prazo, quantidade ou forma de pagamento"},{"id":"s6","kind":"task","x":553.3,"y":553.9,"w":70.1,"h":38.2,"label":"Emitir NF-e com os tributos incidentes"},{"id":"s7","kind":"task","x":647.9,"y":483.8,"w":70.1,"h":38.2,"label":"Separar e expedir o pedido (P09)"},{"id":"s8","kind":"task","x":742.4,"y":553.9,"w":70.1,"h":38.2,"label":"Registrar contas a receber e emitir boleto"},{"id":"s9","kind":"gateway","x":858.7,"y":559.7,"w":26.6,"h":26.6,"label":"Pagamento recebido no prazo?"},{"id":"s10","kind":"task","x":931.5,"y":624.0,"w":70.1,"h":38.2,"label":"Efetuar cobrança e renegociar"},{"id":"s11","kind":"task","x":931.5,"y":553.9,"w":70.1,"h":38.2,"label":"Conciliar recebimento e apurar resultado de vendas"},{"id":"s12","kind":"event","x":1051.5,"y":563.5,"w":19.1,"h":19.1,"label":"Venda concluída e receita realizada"}],"edges":[{"pts":[[493.8,376.0],[493.8,573.0],[553.3,573.0]],"from":"s4","to":"s6","label":"Sim"},{"pts":[[507.1,362.7],[519.9,362.7],[519.9,432.8],[553.3,432.8]],"from":"s4","to":"s5","label":"Não"},{"pts":[[588.4,413.7],[588.4,399.9],[399.3,399.9],[399.3,381.8]],"from":"s5","to":"s3","label":""},{"pts":[[623.4,573.0],[636.2,573.0],[636.2,502.9],[647.9,502.9]],"from":"s6","to":"s7","label":""},{"pts":[[718.0,502.9],[730.7,502.9],[730.7,573.0],[742.4,573.0]],"from":"s7","to":"s8","label":""},{"pts":[[872.0,586.3],[872.0,643.1],[931.5,643.1]],"from":"s9","to":"s10","label":"Não"},{"pts":[[966.5,624.0],[966.5,610.2],[872.0,610.2],[872.0,586.3]],"from":"s10","to":"s9","label":""},{"pts":[[399.3,283.8],[399.3,341.2]],"from":null,"to":"s3","label":""},{"pts":[[682.9,481.9],[682.9,284.4]],"from":"s7","to":null,"label":""},{"pts":[[966.5,283.8],[966.5,551.5]],"from":null,"to":"s11","label":""},{"pts":[[125.2,362.7],[175.2,362.7]],"from":"s0","to":"s1","label":""},{"pts":[[245.3,362.7],[269.7,362.7]],"from":"s1","to":"s2","label":""},{"pts":[[339.8,362.7],[364.2,362.7]],"from":"s2","to":"s3","label":""},{"pts":[[434.3,362.7],[480.5,362.7]],"from":"s3","to":"s4","label":""},{"pts":[[812.5,573.0],[858.7,573.0]],"from":"s8","to":"s9","label":""},{"pts":[[885.3,573.0],[931.5,573.0]],"from":"s9","to":"s11","label":"Sim"},{"pts":[[1001.6,573.0],[1051.5,573.0]],"from":"s11","to":"s12","label":""}],"elements":[{"n":1,"name":"Ciclo semanal de vendas","type":"Evento de início (temporizador)","lane":"Gerente de Vendas e Vendedor","doc":"—","shape":"s0"},{"n":2,"name":"Levantar preços de referência e disponibilidade","type":"Tarefa","lane":"Gerente de Vendas e Vendedor","doc":"Referências dos CEASAs do Rio de Janeiro e de São Paulo e do mercado regional.","shape":"s1"},{"n":3,"name":"Prospectar e atender clientes","type":"Tarefa","lane":"Gerente de Vendas e Vendedor","doc":"Consumidor final, peixarias, supermercados, restaurantes, hipermercados, outras unidades de beneficiamento e fabricantes de farinha de peixe.","shape":"s2"},{"n":4,"name":"Receber e registrar o pedido","type":"Tarefa","lane":"Gerente de Vendas e Vendedor","doc":"—","shape":"s3"},{"n":5,"name":"Estoque e crédito aprovados?","type":"Gateway exclusivo (XOR)","lane":"Gerente de Vendas e Vendedor","doc":"—","shape":"s4"},{"n":6,"name":"Negociar prazo, quantidade ou forma de pagamento","type":"Tarefa","lane":"Gerente de Vendas e Vendedor","doc":"—","shape":"s5"},{"n":7,"name":"Emitir NF-e com os tributos incidentes","type":"Tarefa","lane":"Financeiro","doc":"ICMS de 7% para pescado (cesta básica) e 18% + 2% (FECP) para camarão e gelo; ISSQN de 2,5%; IPI 0%.","shape":"s6"},{"n":8,"name":"Separar e expedir o pedido (P09)","type":"Tarefa","lane":"Expedição","doc":"—","shape":"s7"},{"n":9,"name":"Registrar contas a receber e emitir boleto","type":"Tarefa","lane":"Financeiro","doc":"PIS de 0,65% sobre a receita bruta.","shape":"s8"},{"n":10,"name":"Pagamento recebido no prazo?","type":"Gateway exclusivo (XOR)","lane":"Financeiro","doc":"—","shape":"s9"},{"n":11,"name":"Efetuar cobrança e renegociar","type":"Tarefa","lane":"Financeiro","doc":"—","shape":"s10"},{"n":12,"name":"Conciliar recebimento e apurar resultado de vendas","type":"Tarefa","lane":"Financeiro","doc":"Receita anual projetada de R$ 74.802.082,34 (camarão R$ 32.847.186,11; pescado R$ 39.252.196,23; gelo R$ 2.702.700,00).","shape":"s11"},{"n":13,"name":"Venda concluída e receita realizada","type":"Evento de fim","lane":"Financeiro","doc":"—","shape":"s12"}],"notes":[{"s":"Pedido","x":403.5,"y":307.7,"w":15.7,"fs":5.0},{"s":"Produtos e NF-e","x":687.1,"y":377.8,"w":37.0,"fs":5.0},{"s":"Pagamento","x":970.8,"y":412.9,"w":25.8,"fs":5.0}]},{"id":"P12","ord":14,"title":"P12 — Fabricação e Fornecimento de Gelo","pool":"P12 — Fabricação de Gelo","lanes":["Cooperados — Fabricação de Gelo","Cooperados — Recepção e Beneficiamento","Loja e Financeiro"],"externals":["Embarcações da pesca artesanal"],"objective":"Produzir gelo em escamas para o consumo interno e para as embarcações que abastecem a unidade, gerando receita adicional.","decisions":[{"name":"Destino do gelo?","paths":[{"label":"Embarcações","target":"Carregar gelo para as embarcações"},{"label":"Uso interno","target":"Abastecer recepção, espera e frescos (1:1)"},{"label":"Venda em sacos","target":"Ensacar em sacos de 20 kg para venda"}]}],"messages":[{"from":"Carregar gelo para as embarcações","to":"Embarcações da pesca artesanal","msg":"Gelo para a pescaria"},{"from":"Embarcações da pesca artesanal","to":"Faturar o gelo fornecido","msg":"Pagamento"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":52.0,"y":368.7,"w":1086.4,"h":317.7,"name":"P12 — Fabricação de Gelo","collapsed":false},{"x":639.4,"y":254.8,"w":319.4,"h":44.9,"name":"Embarcações da pesca artesanal","collapsed":true}],"lanesGeo":[{"x":76.1,"y":368.7,"w":1062.3,"h":105.9,"name":"Cooperados — Fabricação de Gelo"},{"x":76.1,"y":474.6,"w":1062.3,"h":106.0,"name":"Cooperados — Recepção e Beneficiamento"},{"x":76.1,"y":580.6,"w":1062.3,"h":105.8,"name":"Loja e Financeiro"}],"shapes":[{"id":"s0","kind":"event","x":141.9,"y":407.2,"w":28.9,"h":28.9,"label":"Programação diária de gelo"},{"id":"s1","kind":"task","x":246.2,"y":392.8,"w":105.9,"h":57.8,"label":"Produzir gelo em escamas"},{"id":"s2","kind":"task","x":389.1,"y":392.8,"w":105.9,"h":57.8,"label":"Armazenar nos silos de gelo"},{"id":"s3","kind":"gateway","x":564.8,"y":401.6,"w":40.1,"h":40.1,"label":"Destino do gelo?"},{"id":"s4","kind":"task","x":674.7,"y":498.7,"w":105.9,"h":57.8,"label":"Abastecer recepção, espera e frescos (1:1)"},{"id":"s5","kind":"event","x":856.1,"y":513.2,"w":28.9,"h":28.9,"label":"Gelo consumido internamente"},{"id":"s6","kind":"task","x":674.7,"y":392.8,"w":105.9,"h":57.8,"label":"Carregar gelo para as embarcações"},{"id":"s7","kind":"task","x":674.7,"y":604.6,"w":105.9,"h":57.8,"label":"Ensacar em sacos de 20 kg para venda"},{"id":"s8","kind":"task","x":817.5,"y":604.6,"w":105.9,"h":57.8,"label":"Faturar o gelo fornecido"},{"id":"s9","kind":"event","x":998.9,"y":619.1,"w":28.9,"h":28.9,"label":"Gelo fornecido e faturado"}],"edges":[{"pts":[[584.8,441.7],[584.8,527.6],[674.7,527.6]],"from":"s3","to":"s4","label":""},{"pts":[[584.8,441.7],[584.8,633.5],[674.7,633.5]],"from":"s3","to":"s7","label":""},{"pts":[[780.6,421.7],[799.9,421.7],[799.9,633.5],[817.5,633.5]],"from":"s6","to":"s8","label":""},{"pts":[[170.8,421.7],[246.2,421.7]],"from":"s0","to":"s1","label":""},{"pts":[[352.1,421.7],[389.1,421.7]],"from":"s1","to":"s2","label":""},{"pts":[[495.0,421.7],[564.8,421.7]],"from":"s2","to":"s3","label":""},{"pts":[[604.9,421.7],[674.7,421.7]],"from":"s3","to":"s6","label":""},{"pts":[[780.6,527.6],[856.1,527.6]],"from":"s4","to":"s5","label":""},{"pts":[[780.6,633.5],[817.5,633.5]],"from":"s7","to":"s8","label":""},{"pts":[[923.5,633.5],[998.9,633.5]],"from":"s8","to":"s9","label":""}],"elements":[{"n":1,"name":"Programação diária de gelo","type":"Evento de início (temporizador)","lane":"Cooperados — Fabricação de Gelo","doc":"Demanda de 10,5 t/turno (5,0 t internas e 5,46 t para embarcações); 21 t em dois turnos.","shape":"s0"},{"n":2,"name":"Produzir gelo em escamas","type":"Tarefa","lane":"Cooperados — Fabricação de Gelo","doc":"Quatro fabricadores de 6.000 kg/24 h; 70 a 85 kWh por tonelada; 4 cooperados por turno.","shape":"s1"},{"n":3,"name":"Armazenar nos silos de gelo","type":"Tarefa","lane":"Cooperados — Fabricação de Gelo","doc":"Silos de 30 m³ regulam a produção contínua e o consumo sob demanda.","shape":"s2"},{"n":4,"name":"Destino do gelo?","type":"Gateway exclusivo (XOR)","lane":"Cooperados — Fabricação de Gelo","doc":"—","shape":"s3"},{"n":5,"name":"Abastecer recepção, espera e frescos (1:1)","type":"Tarefa","lane":"Cooperados — Recepção e Beneficiamento","doc":"Caixas plásticas de 42 L ou transportador de gelo.","shape":"s4"},{"n":6,"name":"Gelo consumido internamente","type":"Evento de fim","lane":"Cooperados — Recepção e Beneficiamento","doc":"—","shape":"s5"},{"n":7,"name":"Carregar gelo para as embarcações","type":"Tarefa","lane":"Cooperados — Fabricação de Gelo","doc":"Refrigeração 0,34:1, conservação 1:2 e 30% de perdas na jornada de pesca.","shape":"s6"},{"n":8,"name":"Ensacar em sacos de 20 kg para venda","type":"Tarefa","lane":"Loja e Financeiro","doc":"—","shape":"s7"},{"n":9,"name":"Faturar o gelo fornecido","type":"Tarefa","lane":"Loja e Financeiro","doc":"Produção máxima de 5.148 t/ano e receita de R$ 2.702.700,00; ICMS de 18% + 2%.","shape":"s8"},{"n":10,"name":"Gelo fornecido e faturado","type":"Evento de fim","lane":"Loja e Financeiro","doc":"—","shape":"s9"}],"notes":[{"s":"Gelo para a pescaria","x":734.1,"y":338.6,"w":70.7,"fs":7.6},{"s":"Embarcações","x":612.9,"y":409.7,"w":49.0,"fs":8.0},{"s":"Pagamento","x":948.3,"y":438.1,"w":39.0,"fs":7.6},{"s":"UVesnod inat ermn osacos","x":590.5,"y":451.5,"w":59.3,"fs":8.0}]},{"id":"P13","ord":15,"title":"P13 — Suprimento de Caixas Limpas e Higienização","pool":"P13 — Caixas e Higienização","lanes":["Cooperados — Lavagem de Caixas","Cooperados — Todos os Setores","Técnico de Controle de Qualidade"],"externals":[],"objective":"Garantir caixas limpas para transporte e armazenamento e a higienização de pessoas, equipamentos e instalações da área limpa.","decisions":[{"name":"Higienização conforme?","paths":[{"label":"Sim","target":"Registrar a planilha de higienização (PPHO)"},{"label":"Não","target":"Refazer a higienização"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":50.2,"y":281.0,"w":1090.1,"h":375.7,"name":"P13 — Caixas e Higienização","collapsed":false}],"lanesGeo":[{"x":71.6,"y":281.0,"w":1068.7,"h":93.9,"name":"Cooperados — Lavagem de Caixas"},{"x":71.6,"y":374.9,"w":1068.7,"h":93.9,"name":"Cooperados — Todos os Setores"},{"x":71.6,"y":468.8,"w":1068.7,"h":187.9,"name":"Técnico de Controle de Qualidade"}],"shapes":[{"id":"s0","kind":"event","x":129.9,"y":315.1,"w":25.6,"h":25.6,"label":"Caixas sujas retornam dos setores"},{"id":"s1","kind":"task","x":222.4,"y":302.3,"w":93.9,"h":51.2,"label":"Remover resíduos e pré-lavar as caixas"},{"id":"s2","kind":"task","x":349.1,"y":302.3,"w":93.9,"h":51.2,"label":"Lavar na lavadora de caixas (400 caixas/h)"},{"id":"s3","kind":"task","x":475.7,"y":302.3,"w":93.9,"h":51.2,"label":"Estocar e distribuir caixas limpas aos setores"},{"id":"s4","kind":"event","x":636.5,"y":315.1,"w":25.6,"h":25.6,"label":"Caixas limpas disponíveis"},{"id":"s5","kind":"event","x":129.9,"y":409.0,"w":25.6,"h":25.6,"label":"Início e fim de turno"},{"id":"s6","kind":"task","x":222.4,"y":396.2,"w":93.9,"h":51.2,"label":"Higienizar mãos e botas na entrada da área limpa"},{"id":"s7","kind":"task","x":349.1,"y":396.2,"w":93.9,"h":51.2,"label":"Lavar instalações com alta pressão e espuma"},{"id":"s8","kind":"task","x":475.7,"y":396.2,"w":93.9,"h":51.2,"label":"Sanitizar equipamentos e utensílios"},{"id":"s9","kind":"task","x":602.4,"y":490.2,"w":93.9,"h":51.2,"label":"Verificar a eficácia da higienização"},{"id":"s10","kind":"gateway","x":758.2,"y":498.0,"w":35.6,"h":35.6,"label":"Higienização conforme?"},{"id":"s11","kind":"task","x":855.7,"y":584.1,"w":93.9,"h":51.2,"label":"Refazer a higienização"},{"id":"s12","kind":"task","x":855.7,"y":490.2,"w":93.9,"h":51.2,"label":"Registrar a planilha de higienização (PPHO)"},{"id":"s13","kind":"event","x":1016.5,"y":503.0,"w":25.6,"h":25.6,"label":"Área liberada para produção"}],"edges":[{"pts":[[569.7,421.9],[586.7,421.9],[586.7,515.8],[602.4,515.8]],"from":"s8","to":"s9","label":""},{"pts":[[776.0,533.6],[776.0,609.7],[855.7,609.7]],"from":"s10","to":"s11","label":"Não"},{"pts":[[902.7,584.1],[902.7,565.6],[396.0,565.6],[396.0,447.5]],"from":"s11","to":"s7","label":""},{"pts":[[155.5,327.9],[222.4,327.9]],"from":"s0","to":"s1","label":""},{"pts":[[316.3,327.9],[349.1,327.9]],"from":"s1","to":"s2","label":""},{"pts":[[443.0,327.9],[475.7,327.9]],"from":"s2","to":"s3","label":""},{"pts":[[569.7,327.9],[636.5,327.9]],"from":"s3","to":"s4","label":""},{"pts":[[155.5,421.9],[222.4,421.9]],"from":"s5","to":"s6","label":""},{"pts":[[316.3,421.9],[349.1,421.9]],"from":"s6","to":"s7","label":""},{"pts":[[443.0,421.9],[475.7,421.9]],"from":"s7","to":"s8","label":""},{"pts":[[696.3,515.8],[758.2,515.8]],"from":"s9","to":"s10","label":""},{"pts":[[793.8,515.8],[855.7,515.8]],"from":"s10","to":"s12","label":"Sim"},{"pts":[[949.6,515.8],[1016.5,515.8]],"from":"s12","to":"s13","label":""}],"elements":[{"n":1,"name":"Caixas sujas retornam dos setores","type":"Evento de início","lane":"Cooperados — Lavagem de Caixas","doc":"—","shape":"s0"},{"n":2,"name":"Remover resíduos e pré-lavar as caixas","type":"Tarefa","lane":"Cooperados — Lavagem de Caixas","doc":"—","shape":"s1"},{"n":3,"name":"Lavar na lavadora de caixas (400 caixas/h)","type":"Tarefa","lane":"Cooperados — Lavagem de Caixas","doc":"Também lava bandejas de congelamento em blocos.","shape":"s2"},{"n":4,"name":"Estocar e distribuir caixas limpas aos setores","type":"Tarefa","lane":"Cooperados — Lavagem de Caixas","doc":"Estoque de 6.250 caixas de 42 L; demanda de 500 caixas limpas por dia em dois turnos; 2 cooperados por turno.","shape":"s3"},{"n":5,"name":"Caixas limpas disponíveis","type":"Evento de fim","lane":"Cooperados — Lavagem de Caixas","doc":"—","shape":"s4"},{"n":6,"name":"Início e fim de turno","type":"Evento de início (temporizador)","lane":"Cooperados — Todos os Setores","doc":"—","shape":"s5"},{"n":7,"name":"Higienizar mãos e botas na entrada da área limpa","type":"Tarefa","lane":"Cooperados — Todos os Setores","doc":"Lavatório para 4 pessoas, lava-botas a pedal, pedilúvio inox e tapetes sanitários.","shape":"s6"},{"n":8,"name":"Lavar instalações com alta pressão e espuma","type":"Tarefa","lane":"Cooperados — Todos os Setores","doc":"Lavadora de 1.200 L/h e gerador de espuma.","shape":"s7"},{"n":9,"name":"Sanitizar equipamentos e utensílios","type":"Tarefa","lane":"Cooperados — Todos os Setores","doc":"Carros elétricos de esterilização de facas.","shape":"s8"},{"n":10,"name":"Verificar a eficácia da higienização","type":"Tarefa","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s9"},{"n":11,"name":"Higienização conforme?","type":"Gateway exclusivo (XOR)","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s10"},{"n":12,"name":"Refazer a higienização","type":"Tarefa","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s11"},{"n":13,"name":"Registrar a planilha de higienização (PPHO)","type":"Tarefa","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s12"},{"n":14,"name":"Área liberada para produção","type":"Evento de fim","lane":"Técnico de Controle de Qualidade","doc":"—","shape":"s13"}],"notes":[]},{"id":"P14","ord":16,"title":"P14 — Controle de Qualidade e Rastreabilidade","pool":"P14 — Qualidade e Rastreabilidade","lanes":["Coordenador de Controle de Qualidade (Bioquímico)","Técnico de CQ de Alimentos / Médico Veterinário","Supervisores de Produção"],"externals":["Serviço de Inspeção Oficial (SIF/MAPA)"],"objective":"Assegurar a qualidade e a segurança dos produtos, com laboratório de controle de qualidade, monitoramento de temperaturas e rastreio digital dos lotes.","decisions":[{"name":"Lote conforme?","paths":[{"label":"Sim","target":"Liberar o lote para comercialização"},{"label":"Não","target":"Bloquear o lote e definir a destinação"}]}],"messages":[{"from":"Manter documentação para o serviço de inspeção","to":"Serviço de Inspeção Oficial (SIF/MAPA)","msg":"Registros e documentação"},{"from":"Serviço de Inspeção Oficial (SIF/MAPA)","to":"Manter documentação para o serviço de inspeção","msg":"Auditoria e exigências"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":48.8,"y":344.0,"w":1093.0,"h":337.5,"name":"P14 — Qualidade e Rastreabilidade","collapsed":false},{"x":822.8,"y":253.2,"w":210.9,"h":35.8,"name":"Serviço de Inspeção Oficial (SIF/MAPA)","collapsed":true}],"lanesGeo":[{"x":68.0,"y":344.0,"w":1073.8,"h":168.7,"name":"Coordenador de Controle de Qualidade (Bioquímico)"},{"x":68.0,"y":512.7,"w":1073.8,"h":84.4,"name":"Técnico de CQ de Alimentos / Médico Veterinário"},{"x":68.0,"y":597.1,"w":1073.8,"h":84.4,"name":"Supervisores de Produção"}],"shapes":[{"id":"s0","kind":"event","x":120.4,"y":543.4,"w":23.0,"h":23.0,"label":"Início do turno"},{"id":"s1","kind":"task","x":203.5,"y":531.9,"w":84.4,"h":46.0,"label":"Inspecionar matéria-prima e condições higiênicas"},{"id":"s2","kind":"task","x":317.2,"y":616.3,"w":84.4,"h":46.0,"label":"Rastrear lotes por código de barras ou QR Code"},{"id":"s3","kind":"task","x":431.0,"y":531.9,"w":84.4,"h":46.0,"label":"Monitorar temperaturas de salas, câmaras e túneis"},{"id":"s4","kind":"task","x":544.8,"y":363.2,"w":84.4,"h":46.0,"label":"Realizar análises no laboratório de controle de qualidade"},{"id":"s5","kind":"gateway","x":684.8,"y":370.2,"w":32.0,"h":32.0,"label":"Lote conforme?"},{"id":"s6","kind":"task","x":772.3,"y":447.6,"w":84.4,"h":46.0,"label":"Bloquear o lote e definir a destinação"},{"id":"s7","kind":"task","x":886.1,"y":447.6,"w":84.4,"h":46.0,"label":"Registrar não conformidade e ação corretiva"},{"id":"s8","kind":"event","x":1030.5,"y":459.1,"w":23.0,"h":23.0,"label":"Não conformidade tratada"},{"id":"s9","kind":"task","x":772.3,"y":531.9,"w":84.4,"h":46.0,"label":"Liberar o lote para comercialização"},{"id":"s10","kind":"task","x":886.1,"y":363.2,"w":84.4,"h":46.0,"label":"Manter documentação para o serviço de inspeção"},{"id":"s11","kind":"event","x":1030.5,"y":374.7,"w":23.0,"h":23.0,"label":"Lotes liberados e rastreáveis"}],"edges":[{"pts":[[287.8,554.9],[303.2,554.9],[303.2,639.3],[317.2,639.3]],"from":"s1","to":"s2","label":""},{"pts":[[401.6,639.3],[416.9,639.3],[416.9,554.9],[431.0,554.9]],"from":"s2","to":"s3","label":""},{"pts":[[515.4,554.9],[530.7,554.9],[530.7,386.2],[544.8,386.2]],"from":"s3","to":"s4","label":""},{"pts":[[700.7,402.2],[700.7,554.9],[772.3,554.9]],"from":"s5","to":"s9","label":"Sim"},{"pts":[[716.7,386.2],[732.1,386.2],[732.1,470.6],[772.3,470.6]],"from":"s5","to":"s6","label":"Não"},{"pts":[[856.7,554.9],[872.0,554.9],[872.0,386.2],[886.1,386.2]],"from":"s9","to":"s10","label":""},{"pts":[[143.4,554.9],[203.5,554.9]],"from":"s0","to":"s1","label":""},{"pts":[[629.1,386.2],[684.8,386.2]],"from":"s4","to":"s5","label":""},{"pts":[[856.7,470.6],[886.1,470.6]],"from":"s6","to":"s7","label":""},{"pts":[[970.5,470.6],[1030.5,470.6]],"from":"s7","to":"s8","label":""},{"pts":[[970.5,386.2],[1030.5,386.2]],"from":"s10","to":"s11","label":""}],"elements":[{"n":1,"name":"Início do turno","type":"Evento de início (temporizador)","lane":"Técnico de CQ de Alimentos / Médico Veterinário","doc":"—","shape":"s0"},{"n":2,"name":"Inspecionar matéria-prima e condições higiênicas","type":"Tarefa","lane":"Técnico de CQ de Alimentos / Médico Veterinário","doc":"—","shape":"s1"},{"n":3,"name":"Rastrear lotes por código de barras ou QR Code","type":"Tarefa","lane":"Supervisores de Produção","doc":"Datas de recepção, beneficiamento e embalagem registradas no sistema digital.","shape":"s2"},{"n":4,"name":"Monitorar temperaturas de salas, câmaras e túneis","type":"Tarefa","lane":"Técnico de CQ de Alimentos / Médico Veterinário","doc":"Salas de 15 a 20 °C; câmara de espera de 2 a 7 °C; estocagem abaixo de -18 °C.","shape":"s3"},{"n":5,"name":"Realizar análises no laboratório de controle de qualidade","type":"Tarefa","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s4"},{"n":6,"name":"Lote conforme?","type":"Gateway exclusivo (XOR)","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s5"},{"n":7,"name":"Bloquear o lote e definir a destinação","type":"Tarefa","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s6"},{"n":8,"name":"Registrar não conformidade e ação corretiva","type":"Tarefa","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s7"},{"n":9,"name":"Não conformidade tratada","type":"Evento de fim","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s8"},{"n":10,"name":"Liberar o lote para comercialização","type":"Tarefa","lane":"Técnico de CQ de Alimentos / Médico Veterinário","doc":"—","shape":"s9"},{"n":11,"name":"Manter documentação para o serviço de inspeção","type":"Tarefa","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"Consultoria de SIF e registro de outros crustáceos junto ao órgão fiscalizador.","shape":"s10"},{"n":12,"name":"Lotes liberados e rastreáveis","type":"Evento de fim","lane":"Coordenador de Controle de Qualidade (Bioquímico)","doc":"—","shape":"s11"}],"notes":[{"s":"Registros e documentação","x":875.0,"y":316.5,"w":39.8,"fs":6.1},{"s":"Auditoria e exigências","x":941.7,"y":320.1,"w":59.4,"fs":6.1}]},{"id":"P15","ord":17,"title":"P15 — Tratamento de Água e de Efluentes (ETA/ETE)","pool":"P15 — Água e Efluentes","lanes":["Operadores de ETA/ETE","Técnico de Manutenção"],"externals":[],"objective":"Suprir água tratada com captação própria e tratar os efluentes industriais do beneficiamento antes do lançamento.","decisions":[{"name":"Atende aos padrões de lançamento?","paths":[{"label":"Sim","target":"Lançar conforme outorga e licença"},{"label":"Não","target":"Ajustar dosagens e manter a ETE"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":52.0,"y":311.8,"w":1086.4,"h":317.7,"name":"P15 — Água e Efluentes","collapsed":false}],"lanesGeo":[{"x":76.1,"y":311.8,"w":1062.3,"h":211.8,"name":"Operadores de ETA/ETE"},{"x":76.1,"y":523.6,"w":1062.3,"h":105.9,"name":"Técnico de Manutenção"}],"shapes":[{"id":"s0","kind":"event","x":141.9,"y":350.3,"w":28.9,"h":28.9,"label":"Demanda de água do turno"},{"id":"s1","kind":"task","x":246.2,"y":335.8,"w":105.9,"h":57.8,"label":"Captar água no poço artesiano"},{"id":"s2","kind":"task","x":389.1,"y":335.8,"w":105.9,"h":57.8,"label":"Tratar a água na ETA"},{"id":"s3","kind":"task","x":531.9,"y":335.8,"w":105.9,"h":57.8,"label":"Armazenar e clorar a água"},{"id":"s4","kind":"task","x":674.7,"y":335.8,"w":105.9,"h":57.8,"label":"Distribuir aos setores"},{"id":"s5","kind":"event","x":856.1,"y":350.3,"w":28.9,"h":28.9,"label":"Água tratada disponível"},{"id":"s6","kind":"event","x":141.9,"y":456.2,"w":28.9,"h":28.9,"label":"Efluente industrial gerado"},{"id":"s7","kind":"task","x":246.2,"y":441.7,"w":105.9,"h":57.8,"label":"Gradear e separar óleos e sólidos"},{"id":"s8","kind":"task","x":389.1,"y":441.7,"w":105.9,"h":57.8,"label":"Tratar na ETE físico-químico-biológica"},{"id":"s9","kind":"task","x":531.9,"y":441.7,"w":105.9,"h":57.8,"label":"Analisar parâmetros do efluente tratado"},{"id":"s10","kind":"gateway","x":707.6,"y":450.6,"w":40.1,"h":40.1,"label":"Atende aos padrões de lançamento?"},{"id":"s11","kind":"task","x":817.5,"y":547.7,"w":105.9,"h":57.8,"label":"Ajustar dosagens e manter a ETE"},{"id":"s12","kind":"task","x":817.5,"y":441.7,"w":105.9,"h":57.8,"label":"Lançar conforme outorga e licença"},{"id":"s13","kind":"event","x":998.9,"y":456.2,"w":28.9,"h":28.9,"label":"Efluente em conformidade"}],"edges":[{"pts":[[727.7,490.7],[727.7,576.5],[817.5,576.5]],"from":"s10","to":"s11","label":"Não"},{"pts":[[870.5,547.7],[870.5,526.8],[442.0,526.8],[442.0,499.5]],"from":"s11","to":"s8","label":""},{"pts":[[170.8,364.7],[246.2,364.7]],"from":"s0","to":"s1","label":""},{"pts":[[352.1,364.7],[389.1,364.7]],"from":"s1","to":"s2","label":""},{"pts":[[495.0,364.7],[531.9,364.7]],"from":"s2","to":"s3","label":""},{"pts":[[637.8,364.7],[674.7,364.7]],"from":"s3","to":"s4","label":""},{"pts":[[780.6,364.7],[856.1,364.7]],"from":"s4","to":"s5","label":""},{"pts":[[170.8,470.6],[246.2,470.6]],"from":"s6","to":"s7","label":""},{"pts":[[352.1,470.6],[389.1,470.6]],"from":"s7","to":"s8","label":""},{"pts":[[495.0,470.6],[531.9,470.6]],"from":"s8","to":"s9","label":""},{"pts":[[637.8,470.6],[707.6,470.6]],"from":"s9","to":"s10","label":""},{"pts":[[747.7,470.6],[817.5,470.6]],"from":"s10","to":"s12","label":"Sim"},{"pts":[[923.5,470.6],[998.9,470.6]],"from":"s12","to":"s13","label":""}],"elements":[{"n":1,"name":"Demanda de água do turno","type":"Evento de início (temporizador)","lane":"Operadores de ETA/ETE","doc":"21 L/kg de matéria-prima: 105 m³/turno; a rede pública custaria R$ 248.211,60 por turno/mês.","shape":"s0"},{"n":2,"name":"Captar água no poço artesiano","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"Poço de 14 m³/h (R$ 162.328,00).","shape":"s1"},{"n":3,"name":"Tratar a água na ETA","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"Investimento de R$ 346.580,00; operação de R$ 662,27 por turno/mês; área de 35 m².","shape":"s2"},{"n":4,"name":"Armazenar e clorar a água","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"12 caixas d’água de 15 m³ (180 m³) e 4 caixas de 3 m³ de água clorada.","shape":"s3"},{"n":5,"name":"Distribuir aos setores","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"—","shape":"s4"},{"n":6,"name":"Água tratada disponível","type":"Evento de fim","lane":"Operadores de ETA/ETE","doc":"—","shape":"s5"},{"n":7,"name":"Efluente industrial gerado","type":"Evento de início","lane":"Operadores de ETA/ETE","doc":"Cerca de 110 m³/turno com óleos e matéria orgânica.","shape":"s6"},{"n":8,"name":"Gradear e separar óleos e sólidos","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"—","shape":"s7"},{"n":9,"name":"Tratar na ETE físico-químico-biológica","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"Implantação de R$ 926.020,00; operação de R$ 3,00 a R$ 3,60/m³; área de 270 m² (lodo ativado convencional não é adequado).","shape":"s8"},{"n":10,"name":"Analisar parâmetros do efluente tratado","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"—","shape":"s9"},{"n":11,"name":"Atende aos padrões de lançamento?","type":"Gateway exclusivo (XOR)","lane":"Operadores de ETA/ETE","doc":"—","shape":"s10"},{"n":12,"name":"Ajustar dosagens e manter a ETE","type":"Tarefa","lane":"Técnico de Manutenção","doc":"—","shape":"s11"},{"n":13,"name":"Lançar conforme outorga e licença","type":"Tarefa","lane":"Operadores de ETA/ETE","doc":"—","shape":"s12"},{"n":14,"name":"Efluente em conformidade","type":"Evento de fim","lane":"Operadores de ETA/ETE","doc":"—","shape":"s13"}],"notes":[]},{"id":"P16","ord":18,"title":"P16 — Gestão de Resíduos do Beneficiamento","pool":"P16 — Resíduos","lanes":["Cooperados — Beneficiamento","Cooperados — Armazenagem e Expedição","Administração"],"externals":["Fábrica de Ração, Farinha e Tratamento de Conchas / Receptor licenciado"],"objective":"Segregar, conservar refrigerados e destinar os resíduos de camarão e peixe para aproveitamento em subprodutos ou destinação adequada.","decisions":[],"messages":[{"from":"Fábrica de Ração, Farinha e Tratamento de Conchas / Receptor licenciado","to":"Emitir MTR e documentos de transporte","msg":"Agendamento da coleta"},{"from":"Pesar e expedir os resíduos","to":"Fábrica de Ração, Farinha e Tratamento de Conchas / Receptor licenciado","msg":"Resíduos e MTR"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":50.2,"y":277.4,"w":1090.1,"h":281.8,"name":"P16 — Resíduos","collapsed":false},{"x":680.7,"y":620.4,"w":317.2,"h":39.8,"name":"Fábrica de Ração, Farinha e Tratamento de Conchas / Receptor licenciado","collapsed":true}],"lanesGeo":[{"x":71.6,"y":277.4,"w":1068.7,"h":93.9,"name":"Cooperados — Beneficiamento"},{"x":71.6,"y":371.3,"w":1068.7,"h":94.0,"name":"Cooperados — Armazenagem e Expedição"},{"x":71.6,"y":465.3,"w":1068.7,"h":93.9,"name":"Administração"}],"shapes":[{"id":"s0","kind":"event","x":129.9,"y":311.6,"w":25.6,"h":25.6,"label":"Resíduos gerados no beneficiamento"},{"id":"s1","kind":"task","x":222.4,"y":298.8,"w":93.9,"h":51.2,"label":"Separar servíveis (para CMS) e inservíveis"},{"id":"s2","kind":"task","x":349.1,"y":298.8,"w":93.9,"h":51.2,"label":"Prensar para reduzir líquidos e acondicionar em caixas"},{"id":"s3","kind":"task","x":475.7,"y":392.7,"w":93.9,"h":51.2,"label":"Armazenar em câmara fria de resíduos"},{"id":"s4","kind":"event","x":636.5,"y":405.5,"w":25.6,"h":25.6,"label":"Coleta duas vezes por semana"},{"id":"s5","kind":"task","x":729.0,"y":486.6,"w":93.9,"h":51.2,"label":"Emitir MTR e documentos de transporte"},{"id":"s6","kind":"task","x":855.7,"y":392.7,"w":93.9,"h":51.2,"label":"Pesar e expedir os resíduos"},{"id":"s7","kind":"event","x":1016.5,"y":405.5,"w":25.6,"h":25.6,"label":"Resíduos destinados"}],"edges":[{"pts":[[443.0,324.4],[460.1,324.4],[460.1,418.3],[475.7,418.3]],"from":"s2","to":"s3","label":""},{"pts":[[662.2,418.3],[679.2,418.3],[679.2,512.2],[729.0,512.2]],"from":"s4","to":"s5","label":""},{"pts":[[823.0,512.2],[840.0,512.2],[840.0,418.3],[855.7,418.3]],"from":"s5","to":"s6","label":""},{"pts":[[155.5,324.4],[222.4,324.4]],"from":"s0","to":"s1","label":""},{"pts":[[316.3,324.4],[349.1,324.4]],"from":"s1","to":"s2","label":""},{"pts":[[569.7,418.3],[636.5,418.3]],"from":"s3","to":"s4","label":""},{"pts":[[949.6,418.3],[1016.5,418.3]],"from":"s6","to":"s7","label":""}],"elements":[{"n":1,"name":"Resíduos gerados no beneficiamento","type":"Evento de início","lane":"Cooperados — Beneficiamento","doc":"Cabeças, cascas e caudas de camarão (até 1,1 t/turno) e carcaças, vísceras, escamas e peles (até 1,2 t/turno): 2,3 t/turno.","shape":"s0"},{"n":2,"name":"Separar servíveis (para CMS) e inservíveis","type":"Tarefa","lane":"Cooperados — Beneficiamento","doc":"—","shape":"s1"},{"n":3,"name":"Prensar para reduzir líquidos e acondicionar em caixas","type":"Tarefa","lane":"Cooperados — Beneficiamento","doc":"—","shape":"s2"},{"n":4,"name":"Armazenar em câmara fria de resíduos","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"Câmara de 30 t; sem refrigeração há mau cheiro e risco de contaminação.","shape":"s3"},{"n":5,"name":"Coleta duas vezes por semana","type":"Evento intermediário (temporizador)","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s4"},{"n":6,"name":"Emitir MTR e documentos de transporte","type":"Tarefa","lane":"Administração","doc":"NOP-INEA-35 (Resolução CONEMA nº 79/2018).","shape":"s5"},{"n":7,"name":"Pesar e expedir os resíduos","type":"Tarefa","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s6"},{"n":8,"name":"Resíduos destinados","type":"Evento de fim","lane":"Cooperados — Armazenagem e Expedição","doc":"—","shape":"s7"}],"notes":[{"s":"Resíduos e MTR","x":908.3,"y":525.4,"w":50.7,"fs":6.8},{"s":"Agendamento da coleta","x":781.7,"y":568.4,"w":51.5,"fs":6.8}]},{"id":"P17","ord":19,"title":"P17 — Manutenção, Energia e Utilidades","pool":"P17 — Energia e Manutenção","lanes":["Técnico de Manutenção","Operação (Cooperados)","Compras e Financeiro"],"externals":["Concessionária de energia e assistência técnica"],"objective":"Manter disponíveis câmaras frias, túneis, fabricadores de gelo, máquinas de beneficiamento e sistemas de energia da UBP-M.","decisions":[{"name":"Falha crítica para a produção?","paths":[{"label":"Não","target":"Executar manutenção preventiva ou corretiva"},{"label":"Sim","target":"Acionar gerador de 170 kVA para câmaras e túneis"}]},{"name":"Necessita peças ou serviço externo?","paths":[{"label":"Sim","target":"Adquirir peças ou contratar assistência técnica"},{"label":"Não","target":"Testar e liberar o equipamento para operação"}]}],"messages":[{"from":"Adquirir peças ou contratar assistência técnica","to":"Concessionária de energia e assistência técnica","msg":"Solicitação de peças / serviço"},{"from":"Concessionária de energia e assistência técnica","to":"Testar e liberar o equipamento para operação","msg":"Peças e serviço executado"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":47.6,"y":271.8,"w":1095.3,"h":306.3,"name":"P17 — Energia e Manutenção","collapsed":false},{"x":678.8,"y":628.0,"w":230.9,"h":32.5,"name":"Concessionária de energia e assistência técnica","collapsed":true}],"lanesGeo":[{"x":65.0,"y":271.8,"w":1077.9,"h":153.2,"name":"Técnico de Manutenção"},{"x":65.0,"y":425.0,"w":1077.9,"h":76.6,"name":"Operação (Cooperados)"},{"x":65.0,"y":501.6,"w":1077.9,"h":76.5,"name":"Compras e Financeiro"}],"shapes":[{"id":"s0","kind":"event","x":112.6,"y":299.7,"w":20.9,"h":20.9,"label":"Plano de manutenção preventiva"},{"id":"s1","kind":"event","x":112.6,"y":452.8,"w":20.9,"h":20.9,"label":"Falha ou anomalia detectada"},{"id":"s2","kind":"task","x":188.0,"y":442.4,"w":76.6,"h":41.8,"label":"Abrir ordem de serviço e isolar o equipamento com segurança"},{"id":"s3","kind":"task","x":291.3,"y":289.2,"w":76.6,"h":41.8,"label":"Inspecionar equipamentos e sistemas críticos"},{"id":"s4","kind":"gateway","x":418.3,"y":295.6,"w":29.0,"h":29.0,"label":"Falha crítica para a produção?"},{"id":"s5","kind":"task","x":497.8,"y":365.8,"w":76.6,"h":41.8,"label":"Acionar gerador de 170 kVA para câmaras e túneis"},{"id":"s6","kind":"task","x":497.8,"y":289.2,"w":76.6,"h":41.8,"label":"Executar manutenção preventiva ou corretiva"},{"id":"s7","kind":"gateway","x":624.9,"y":295.6,"w":29.0,"h":29.0,"label":"Necessita peças ou serviço externo?"},{"id":"s8","kind":"task","x":704.3,"y":519.0,"w":76.6,"h":41.8,"label":"Adquirir peças ou contratar assistência técnica"},{"id":"s9","kind":"task","x":807.6,"y":289.2,"w":76.6,"h":41.8,"label":"Testar e liberar o equipamento para operação"},{"id":"s10","kind":"task","x":910.9,"y":289.2,"w":76.6,"h":41.8,"label":"Registrar consumo de energia, água e indicadores de disponibilidade"},{"id":"s11","kind":"event","x":1042.0,"y":299.7,"w":20.9,"h":20.9,"label":"Sistemas disponíveis"}],"edges":[{"pts":[[264.6,463.3],[329.6,463.3],[329.6,331.0]],"from":"s2","to":"s3","label":""},{"pts":[[432.8,324.6],[432.8,386.7],[497.8,386.7]],"from":"s4","to":"s5","label":"Sim"},{"pts":[[639.4,324.6],[639.4,539.9],[704.3,539.9]],"from":"s7","to":"s8","label":"Sim"},{"pts":[[780.9,539.9],[794.8,539.9],[794.8,310.1],[807.6,310.1]],"from":"s8","to":"s9","label":""},{"pts":[[742.6,562.8],[742.6,625.4]],"from":"s8","to":null,"label":""},{"pts":[[845.9,626.0],[845.9,333.6]],"from":null,"to":"s9","label":""},{"pts":[[133.5,310.1],[291.3,310.1]],"from":"s0","to":"s3","label":""},{"pts":[[133.5,463.3],[188.0,463.3]],"from":"s1","to":"s2","label":""},{"pts":[[367.8,310.1],[418.3,310.1]],"from":"s3","to":"s4","label":""},{"pts":[[447.3,310.1],[497.8,310.1]],"from":"s4","to":"s6","label":"Não"},{"pts":[[536.1,331.0],[536.1,365.8]],"from":"s6","to":"s5","label":""},{"pts":[[574.4,310.1],[624.9,310.1]],"from":"s6","to":"s7","label":""},{"pts":[[653.9,310.1],[807.6,310.1]],"from":"s7","to":"s9","label":"Não"},{"pts":[[884.2,310.1],[910.9,310.1]],"from":"s9","to":"s10","label":""},{"pts":[[987.5,310.1],[1042.0,310.1]],"from":"s10","to":"s11","label":""}],"elements":[{"n":1,"name":"Plano de manutenção preventiva","type":"Evento de início (temporizador)","lane":"Técnico de Manutenção","doc":"Câmaras frias, túneis de congelamento, fabricadores de gelo, descascadoras, descamadeiras, despolpadora, lavadoras, ETA e ETE.","shape":"s0"},{"n":2,"name":"Falha ou anomalia detectada","type":"Evento de início","lane":"Operação (Cooperados)","doc":"—","shape":"s1"},{"n":3,"name":"Abrir ordem de serviço e isolar o equipamento com segurança","type":"Tarefa","lane":"Operação (Cooperados)","doc":"—","shape":"s2"},{"n":4,"name":"Inspecionar equipamentos e sistemas críticos","type":"Tarefa","lane":"Técnico de Manutenção","doc":"Potência instalada de 226,5 kW; subestação de 300 kVA (R$ 350.781,84).","shape":"s3"},{"n":5,"name":"Falha crítica para a produção?","type":"Gateway exclusivo (XOR)","lane":"Técnico de Manutenção","doc":"—","shape":"s4"},{"n":6,"name":"Acionar gerador de 170 kVA para câmaras e túneis","type":"Tarefa","lane":"Técnico de Manutenção","doc":"Grupo gerador a diesel com chave automática; também pode operar no horário de pico.","shape":"s5"},{"n":7,"name":"Executar manutenção preventiva ou corretiva","type":"Tarefa","lane":"Técnico de Manutenção","doc":"—","shape":"s6"},{"n":8,"name":"Necessita peças ou serviço externo?","type":"Gateway exclusivo (XOR)","lane":"Técnico de Manutenção","doc":"—","shape":"s7"},{"n":9,"name":"Adquirir peças ou contratar assistência técnica","type":"Tarefa","lane":"Compras e Financeiro","doc":"—","shape":"s8"},{"n":10,"name":"Testar e liberar o equipamento para operação","type":"Tarefa","lane":"Técnico de Manutenção","doc":"—","shape":"s9"},{"n":11,"name":"Registrar consumo de energia, água e indicadores de disponibilidade","type":"Tarefa","lane":"Técnico de Manutenção","doc":"Consumo de 119.138,88 kWh/mês (R$ 207.267,82 em bandeira vermelha, dois turnos); fotovoltaica de 379,05 kWp gerando 46.138 kWh/mês (R$ 1.337.748,52).","shape":"s10"},{"n":12,"name":"Sistemas disponíveis","type":"Evento de fim","lane":"Técnico de Manutenção","doc":"—","shape":"s11"}],"notes":[{"s":"Peças e serviço executado","x":850.5,"y":470.8,"w":38.9,"fs":5.5},{"s":"Solicitação de peças / serviço","x":747.3,"y":585.7,"w":53.6,"fs":5.5}]},{"id":"P18","ord":20,"title":"P18 — Gestão Ambiental e Licenciamento","pool":"P18 — Gestão Ambiental","lanes":["Conselho de Administração","Responsável Técnico Ambiental / Consultoria","Operação (Cooperados)"],"externals":["Órgão ambiental municipal / INEA"],"objective":"Obter e manter as licenças municipais e as outorgas estaduais da UBP-M e cumprir as condicionantes.","decisions":[{"name":"Exigências ou complementações?","paths":[{"label":"Não","target":"Receber licença, autorização ou outorga e registrar condicionantes"},{"label":"Sim","target":"Atender exigências e complementar informações"}]}],"messages":[{"from":"Protocolar o requerimento na sede do órgão ambiental municipal","to":"Órgão ambiental municipal / INEA","msg":"Requerimento e documentos"},{"from":"Órgão ambiental municipal / INEA","to":"Atender exigências e complementar informações","msg":"Exigências e complementações"},{"from":"Órgão ambiental municipal / INEA","to":"Receber licença, autorização ou outorga e registrar condicionantes","msg":"Licença / autorização emitida"},{"from":"Monitorar condicionantes e elaborar relatórios","to":"Órgão ambiental municipal / INEA","msg":"Relatórios de condicionantes"}],"page":{"w":1191.1,"h":841.9},"pools":[{"x":46.6,"y":362.7,"w":1097.3,"h":280.4,"name":"P18 — Gestão Ambiental","collapsed":false},{"x":435.4,"y":287.3,"w":495.0,"h":29.7,"name":"Órgão ambiental municipal / INEA","collapsed":true}],"lanesGeo":[{"x":62.6,"y":362.7,"w":1081.3,"h":70.1,"name":"Conselho de Administração"},{"x":62.6,"y":432.8,"w":1081.3,"h":140.2,"name":"Responsável Técnico Ambiental / Consultoria"},{"x":62.6,"y":573.0,"w":1081.3,"h":70.1,"name":"Operação (Cooperados)"}],"shapes":[{"id":"s0","kind":"event","x":106.1,"y":458.3,"w":19.1,"h":19.1,"label":"Exigência legal, prazo de renovação ou nova intervenção"},{"id":"s1","kind":"task","x":175.2,"y":448.7,"w":70.1,"h":38.2,"label":"Enquadrar a atividade e definir a competência do licenciamento"},{"id":"s2","kind":"task","x":269.7,"y":448.7,"w":70.1,"h":38.2,"label":"Reunir documentação, estudos e projetos exigidos"},{"id":"s3","kind":"task","x":364.2,"y":378.6,"w":70.1,"h":38.2,"label":"Aprovar o requerimento e o pagamento das taxas"},{"id":"s4","kind":"task","x":458.8,"y":448.7,"w":70.1,"h":38.2,"label":"Protocolar o requerimento na sede do órgão ambiental municipal"},{"id":"s5","kind":"gateway","x":575.1,"y":454.6,"w":26.6,"h":26.6,"label":"Exigências ou complementações?"},{"id":"s6","kind":"task","x":647.9,"y":518.8,"w":70.1,"h":38.2,"label":"Atender exigências e complementar informações"},{"id":"s7","kind":"task","x":647.9,"y":448.7,"w":70.1,"h":38.2,"label":"Receber licença, autorização ou outorga e registrar condicionantes"},{"id":"s8","kind":"task","x":742.4,"y":589.0,"w":70.1,"h":38.2,"label":"Executar os controles ambientais na rotina operacional"},{"id":"s9","kind":"task","x":836.9,"y":448.7,"w":70.1,"h":38.2,"label":"Monitorar condicionantes e elaborar relatórios"},{"id":"s10","kind":"task","x":931.5,"y":378.6,"w":70.1,"h":38.2,"label":"Realizar auditoria ambiental de conformidade legal"},{"id":"s11","kind":"event","x":1051.5,"y":388.2,"w":19.1,"h":19.1,"label":"Conformidade ambiental mantida"}],"edges":[{"pts":[[339.8,467.9],[352.5,467.9],[352.5,397.8],[364.2,397.8]],"from":"s2","to":"s3","label":""},{"pts":[[434.3,397.8],[447.1,397.8],[447.1,467.9],[458.8,467.9]],"from":"s3","to":"s4","label":""},{"pts":[[588.4,481.1],[588.4,538.0],[647.9,538.0]],"from":"s5","to":"s6","label":"Sim"},{"pts":[[682.9,518.8],[682.9,505.0],[493.8,505.0],[493.8,487.0]],"from":"s6","to":"s4","label":""},{"pts":[[718.0,467.9],[730.7,467.9],[730.7,608.1],[742.4,608.1]],"from":"s7","to":"s8","label":""},{"pts":[[812.5,608.1],[825.2,608.1],[825.2,467.9],[836.9,467.9]],"from":"s8","to":"s9","label":""},{"pts":[[907.0,467.9],[919.8,467.9],[919.8,397.8],[931.5,397.8]],"from":"s9","to":"s10","label":""},{"pts":[[493.8,446.9],[493.8,319.4]],"from":"s4","to":null,"label":""},{"pts":[[682.9,318.9],[682.9,446.3]],"from":null,"to":"s7","label":""},{"pts":[[872.0,446.9],[872.0,319.4]],"from":"s9","to":null,"label":""},{"pts":[[125.2,467.9],[175.2,467.9]],"from":"s0","to":"s1","label":""},{"pts":[[245.3,467.9],[269.7,467.9]],"from":"s1","to":"s2","label":""},{"pts":[[528.9,467.9],[575.1,467.9]],"from":"s4","to":"s5","label":""},{"pts":[[601.6,467.9],[647.9,467.9]],"from":"s5","to":"s7","label":"Não"},{"pts":[[1001.6,397.8],[1051.5,397.8]],"from":"s10","to":"s11","label":""}],"elements":[{"n":1,"name":"Exigência legal, prazo de renovação ou nova intervenção","type":"Evento de início","lane":"Responsável Técnico Ambiental / Consultoria","doc":"Implantação no terreno do terminal pesqueiro do município, renovação ou alteração do empreendimento.","shape":"s0"},{"n":2,"name":"Enquadrar a atividade e definir a competência do licenciamento","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"Instrumentos do órgão ambiental municipal: LP, LI, LPI, LO, LIO e LAS; outorgas de captação e lançamento junto ao INEA.","shape":"s1"},{"n":3,"name":"Reunir documentação, estudos e projetos exigidos","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"Titularidade (CPF, CNPJ, contrato social), título de propriedade, estudos e pareceres técnicos, certidões negativas e projetos de contenção e mitigação.","shape":"s2"},{"n":4,"name":"Aprovar o requerimento e o pagamento das taxas","type":"Tarefa","lane":"Conselho de Administração","doc":"Licenças previstas no investimento: R$ 26.000,00.","shape":"s3"},{"n":5,"name":"Protocolar o requerimento na sede do órgão ambiental municipal","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"Entrega de documentos, pagamento da taxa enviada por e-mail, análise, vistoria e notificações.","shape":"s4"},{"n":6,"name":"Exigências ou complementações?","type":"Gateway exclusivo (XOR)","lane":"Responsável Técnico Ambiental / Consultoria","doc":"—","shape":"s5"},{"n":7,"name":"Atender exigências e complementar informações","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"—","shape":"s6"},{"n":8,"name":"Receber licença, autorização ou outorga e registrar condicionantes","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"—","shape":"s7"},{"n":9,"name":"Executar os controles ambientais na rotina operacional","type":"Tarefa","lane":"Operação (Cooperados)","doc":"Operação da ETE, câmara de resíduos, controle de odores e ruídos da refrigeração.","shape":"s8"},{"n":10,"name":"Monitorar condicionantes e elaborar relatórios","type":"Tarefa","lane":"Responsável Técnico Ambiental / Consultoria","doc":"—","shape":"s9"},{"n":11,"name":"Realizar auditoria ambiental de conformidade legal","type":"Tarefa","lane":"Conselho de Administração","doc":"—","shape":"s10"},{"n":12,"name":"Conformidade ambiental mantida","type":"Evento de fim","lane":"Conselho de Administração","doc":"—","shape":"s11"}],"notes":[{"s":"Requerimento e documentos","x":498.1,"y":374.9,"w":35.9,"fs":5.0},{"s":"Licença / autorização emitida","x":687.1,"y":374.9,"w":47.6,"fs":5.0},{"s":"Relatórios de condicionantes","x":876.2,"y":374.9,"w":33.6,"fs":5.0},{"s":"Exigências e complementações","x":734.4,"y":405.7,"w":40.9,"fs":5.0}]},{"id":"P19","ord":21,"title":"P19 — Gestão de Pessoas e Cooperados","pool":"P19 — Pessoas e Cooperados","lanes":["Conselho de Administração e Assembleia","Administração / RH","Gerência de Produção"],"externals":[],"objective":"Dimensionar, admitir, capacitar e remunerar os cooperados e a equipe técnica da UBP-M em dois turnos.","decisions":[{"name":"Função exercida por cooperado?","paths":[{"label":"Sim","target":"Admitir cooperado conforme estatuto e aprovação em assembleia"},{"label":"Não","target":"Recrutar e contratar equipe técnica em regime CLT"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":47.6,"y":313.0,"w":1095.3,"h":306.3,"name":"P19 — Pessoas e Cooperados","collapsed":false}],"lanesGeo":[{"x":65.0,"y":313.0,"w":1077.9,"h":76.6,"name":"Conselho de Administração e Assembleia"},{"x":65.0,"y":389.6,"w":1077.9,"h":153.2,"name":"Administração / RH"},{"x":65.0,"y":542.8,"w":1077.9,"h":76.5,"name":"Gerência de Produção"}],"shapes":[{"id":"s0","kind":"event","x":112.6,"y":417.5,"w":20.9,"h":20.9,"label":"Necessidade de pessoal identificada"},{"id":"s1","kind":"task","x":188.0,"y":407.0,"w":76.6,"h":41.8,"label":"Dimensionar postos de trabalho por setor e turno"},{"id":"s2","kind":"gateway","x":315.1,"y":413.4,"w":29.0,"h":29.0,"label":"Função exercida por cooperado?"},{"id":"s3","kind":"task","x":394.5,"y":330.4,"w":76.6,"h":41.8,"label":"Admitir cooperado conforme estatuto e aprovação em assembleia"},{"id":"s4","kind":"task","x":394.5,"y":483.6,"w":76.6,"h":41.8,"label":"Recrutar e contratar equipe técnica em regime CLT"},{"id":"s5","kind":"task","x":497.8,"y":560.2,"w":76.6,"h":41.8,"label":"Realizar integração, capacitação e treinamento em BPF, EPI e segurança"},{"id":"s6","kind":"task","x":601.1,"y":560.2,"w":76.6,"h":41.8,"label":"Organizar escala de trabalho e rodízio entre setores"},{"id":"s7","kind":"task","x":704.3,"y":407.0,"w":76.6,"h":41.8,"label":"Apurar frequência, produção e remuneração"},{"id":"s8","kind":"task","x":807.6,"y":407.0,"w":76.6,"h":41.8,"label":"Recolher encargos (INSS cooperado e cooperativa; encargos CLT)"},{"id":"s9","kind":"task","x":910.9,"y":330.4,"w":76.6,"h":41.8,"label":"Avaliar desempenho, participação e educação cooperativista"},{"id":"s10","kind":"event","x":1042.0,"y":340.9,"w":20.9,"h":20.9,"label":"Equipe capacitada e remunerada"}],"edges":[{"pts":[[329.6,413.4],[329.6,351.3],[394.5,351.3]],"from":"s2","to":"s3","label":"Sim"},{"pts":[[329.6,442.4],[329.6,504.5],[394.5,504.5]],"from":"s2","to":"s4","label":"Não"},{"pts":[[471.1,351.3],[485.0,351.3],[485.0,581.1],[497.8,581.1]],"from":"s3","to":"s5","label":""},{"pts":[[471.1,504.5],[485.0,504.5],[485.0,581.1],[497.8,581.1]],"from":"s4","to":"s5","label":""},{"pts":[[677.7,581.1],[691.6,581.1],[691.6,427.9],[704.3,427.9]],"from":"s6","to":"s7","label":""},{"pts":[[884.2,427.9],[898.1,427.9],[898.1,351.3],[910.9,351.3]],"from":"s8","to":"s9","label":""},{"pts":[[133.5,427.9],[188.0,427.9]],"from":"s0","to":"s1","label":""},{"pts":[[264.6,427.9],[315.1,427.9]],"from":"s1","to":"s2","label":""},{"pts":[[574.4,581.1],[601.1,581.1]],"from":"s5","to":"s6","label":""},{"pts":[[780.9,427.9],[807.6,427.9]],"from":"s7","to":"s8","label":""},{"pts":[[987.5,351.3],[1042.0,351.3]],"from":"s9","to":"s10","label":""}],"elements":[{"n":1,"name":"Necessidade de pessoal identificada","type":"Evento de início","lane":"Administração / RH","doc":"—","shape":"s0"},{"n":2,"name":"Dimensionar postos de trabalho por setor e turno","type":"Tarefa","lane":"Administração / RH","doc":"153 cooperados. Por turno: recepção 3, lavagem 2, beneficiamento de camarão 22, congelamento de camarão 3, beneficiamento de pescado 30, congelamento de pescado 3, frescos 2, armazenagem 3, gelo 4 e caixas limpas 2; conselho administrativo 5.","shape":"s1"},{"n":3,"name":"Função exercida por cooperado?","type":"Gateway exclusivo (XOR)","lane":"Administração / RH","doc":"—","shape":"s2"},{"n":4,"name":"Admitir cooperado conforme estatuto e aprovação em assembleia","type":"Tarefa","lane":"Conselho de Administração e Assembleia","doc":"—","shape":"s3"},{"n":5,"name":"Recrutar e contratar equipe técnica em regime CLT","type":"Tarefa","lane":"Administração / RH","doc":"Gerente de produção, coordenador de qualidade (bioquímico), 2 supervisores de produção, gerente de vendas, vendedor, assistente administrativo, médico veterinário, técnicos de manutenção e de qualidade, auxiliar de manutenção, 2 operadores de ETE/ETA e 4 motoristas, entre outros.","shape":"s4"},{"n":6,"name":"Realizar integração, capacitação e treinamento em BPF, EPI e segurança","type":"Tarefa","lane":"Gerência de Produção","doc":"BPF, APPCC, uso de EPIs, facas e máquinas e segurança em câmaras frias.","shape":"s5"},{"n":7,"name":"Organizar escala de trabalho e rodízio entre setores","type":"Tarefa","lane":"Gerência de Produção","doc":"—","shape":"s6"},{"n":8,"name":"Apurar frequência, produção e remuneração","type":"Tarefa","lane":"Administração / RH","doc":"Renda líquida de R$ 1.600,00 mensais por cooperado.","shape":"s7"},{"n":9,"name":"Recolher encargos (INSS cooperado e cooperativa; encargos CLT)","type":"Tarefa","lane":"Administração / RH","doc":"INSS de 20% do cooperado e 9% da cooperativa; PIS de 1% sobre a folha; encargos CLT de 65%.","shape":"s8"},{"n":10,"name":"Avaliar desempenho, participação e educação cooperativista","type":"Tarefa","lane":"Conselho de Administração e Assembleia","doc":"—","shape":"s9"},{"n":11,"name":"Equipe capacitada e remunerada","type":"Evento de fim","lane":"Conselho de Administração e Assembleia","doc":"—","shape":"s10"}],"notes":[]},{"id":"P20","ord":22,"title":"P20 — Gestão Econômico-Financeira e Tributária","pool":"P20 — Finanças, Custos e Tributos","lanes":["Financeiro","Contabilidade","Conselho Fiscal e Assembleia"],"externals":[],"objective":"Fechamento mensal, apuração de custos e tributos, demonstrações, indicadores de viabilidade e prestação de contas.","decisions":[{"name":"Resultado dentro do plano?","paths":[{"label":"Sim","target":"Apresentar as demonstrações ao Conselho Fiscal"},{"label":"Não","target":"Elaborar plano de ação corretivo"}]},{"name":"Contas aprovadas?","paths":[{"label":"Sim","target":"Destinar sobras e constituir fundos estatutários"},{"label":"Não","target":"Prestar esclarecimentos e ajustar as demonstrações"}]}],"messages":[],"page":{"w":1191.1,"h":841.9},"pools":[{"x":45.8,"y":335.1,"w":1099.0,"h":258.6,"name":"P20 — Finanças, Custos e Tributos","collapsed":false}],"lanesGeo":[{"x":60.5,"y":335.1,"w":1084.3,"h":64.6,"name":"Financeiro"},{"x":60.5,"y":399.7,"w":1084.3,"h":64.7,"name":"Contabilidade"},{"x":60.5,"y":464.4,"w":1084.3,"h":129.3,"name":"Conselho Fiscal e Assembleia"}],"shapes":[{"id":"s0","kind":"event","x":100.6,"y":358.6,"w":17.6,"h":17.6,"label":"Fechamento mensal"},{"id":"s1","kind":"task","x":164.3,"y":349.8,"w":64.6,"h":35.3,"label":"Consolidar as receitas de venda"},{"id":"s2","kind":"task","x":251.5,"y":349.8,"w":64.6,"h":35.3,"label":"Apropriar custos de matéria-prima, insumos e utilidades"},{"id":"s3","kind":"task","x":338.7,"y":349.8,"w":64.6,"h":35.3,"label":"Apropriar custos de mão de obra CLT e cooperados"},{"id":"s4","kind":"task","x":425.8,"y":414.4,"w":64.6,"h":35.3,"label":"Apurar tributos e encargos"},{"id":"s5","kind":"task","x":513.0,"y":414.4,"w":64.6,"h":35.3,"label":"Elaborar DRE, fluxo de caixa e capital de giro"},{"id":"s6","kind":"task","x":600.2,"y":414.4,"w":64.6,"h":35.3,"label":"Calcular EBITDA, ponto de equilíbrio, TIR e payback"},{"id":"s7","kind":"gateway","x":707.4,"y":419.8,"w":24.5,"h":24.5,"label":"Resultado dentro do plano?"},{"id":"s8","kind":"task","x":774.5,"y":349.8,"w":64.6,"h":35.3,"label":"Elaborar plano de ação corretivo"},{"id":"s9","kind":"task","x":774.5,"y":479.1,"w":64.6,"h":35.3,"label":"Apresentar as demonstrações ao Conselho Fiscal"},{"id":"s10","kind":"gateway","x":881.8,"y":484.5,"w":24.5,"h":24.5,"label":"Contas aprovadas?"},{"id":"s11","kind":"task","x":948.9,"y":543.7,"w":64.6,"h":35.3,"label":"Prestar esclarecimentos e ajustar as demonstrações"},{"id":"s12","kind":"task","x":948.9,"y":479.1,"w":64.6,"h":35.3,"label":"Destinar sobras e constituir fundos estatutários"},{"id":"s13","kind":"event","x":1059.5,"y":487.9,"w":17.6,"h":17.6,"label":"Resultado apurado e contas prestadas"}],"edges":[{"pts":[[403.3,367.4],[415.1,367.4],[415.1,432.1],[425.8,432.1]],"from":"s3","to":"s4","label":""},{"pts":[[719.7,444.3],[719.7,496.7],[774.5,496.7]],"from":"s7","to":"s9","label":"Sim"},{"pts":[[719.7,419.8],[719.7,367.4],[774.5,367.4]],"from":"s7","to":"s8","label":"Não"},{"pts":[[894.0,508.9],[894.0,561.3],[948.9,561.3]],"from":"s10","to":"s11","label":"Não"},{"pts":[[981.2,543.7],[981.2,531.0],[806.8,531.0],[806.8,514.3]],"from":"s11","to":"s9","label":""},{"pts":[[118.3,367.4],[164.3,367.4]],"from":"s0","to":"s1","label":""},{"pts":[[229.0,367.4],[251.5,367.4]],"from":"s1","to":"s2","label":""},{"pts":[[316.1,367.4],[338.7,367.4]],"from":"s2","to":"s3","label":""},{"pts":[[490.5,432.1],[513.0,432.1]],"from":"s4","to":"s5","label":""},{"pts":[[577.6,432.1],[600.2,432.1]],"from":"s5","to":"s6","label":""},{"pts":[[664.8,432.1],[707.4,432.1]],"from":"s6","to":"s7","label":""},{"pts":[[806.8,385.0],[806.8,479.1]],"from":"s8","to":"s9","label":""},{"pts":[[839.2,496.7],[881.8,496.7]],"from":"s9","to":"s10","label":""},{"pts":[[906.2,496.7],[948.9,496.7]],"from":"s10","to":"s12","label":"Sim"},{"pts":[[1013.5,496.7],[1059.5,496.7]],"from":"s12","to":"s13","label":""}],"elements":[{"n":1,"name":"Fechamento mensal","type":"Evento de início (temporizador)","lane":"Financeiro","doc":"—","shape":"s0"},{"n":2,"name":"Consolidar as receitas de venda","type":"Tarefa","lane":"Financeiro","doc":"Receita anual de R$ 74.802.082,34: camarão R$ 32.847.186,11; pescado R$ 39.252.196,23; gelo R$ 2.702.700,00.","shape":"s1"},{"n":3,"name":"Apropriar custos de matéria-prima, insumos e utilidades","type":"Tarefa","lane":"Financeiro","doc":"Matéria-prima de R$ 24.925.680,00/ano; energia de R$ 207.267,82/mês (dois turnos); frota; ETA e ETE.","shape":"s2"},{"n":4,"name":"Apropriar custos de mão de obra CLT e cooperados","type":"Tarefa","lane":"Financeiro","doc":"Equipe CLT e remuneração dos 153 cooperados.","shape":"s3"},{"n":5,"name":"Apurar tributos e encargos","type":"Tarefa","lane":"Contabilidade","doc":"ICMS de 7% (pescado) e 18% + 2% (camarão e gelo); ISSQN de 2,5%; PIS de 0,65% e de 1% sobre a folha; IPI 0%.","shape":"s4"},{"n":6,"name":"Elaborar DRE, fluxo de caixa e capital de giro","type":"Tarefa","lane":"Contabilidade","doc":"—","shape":"s5"},{"n":7,"name":"Calcular EBITDA, ponto de equilíbrio, TIR e payback","type":"Tarefa","lane":"Contabilidade","doc":"Investimento total de R$ 21.933.204,33 (capital de giro de R$ 1.972.911,85); TIR de 5,48% e payback de 12,1 no cenário com retorno do investimento.","shape":"s6"},{"n":8,"name":"Resultado dentro do plano?","type":"Gateway exclusivo (XOR)","lane":"Contabilidade","doc":"—","shape":"s7"},{"n":9,"name":"Elaborar plano de ação corretivo","type":"Tarefa","lane":"Financeiro","doc":"—","shape":"s8"},{"n":10,"name":"Apresentar as demonstrações ao Conselho Fiscal","type":"Tarefa","lane":"Conselho Fiscal e Assembleia","doc":"—","shape":"s9"},{"n":11,"name":"Contas aprovadas?","type":"Gateway exclusivo (XOR)","lane":"Conselho Fiscal e Assembleia","doc":"—","shape":"s10"},{"n":12,"name":"Prestar esclarecimentos e ajustar as demonstrações","type":"Tarefa","lane":"Conselho Fiscal e Assembleia","doc":"—","shape":"s11"},{"n":13,"name":"Destinar sobras e constituir fundos estatutários","type":"Tarefa","lane":"Conselho Fiscal e Assembleia","doc":"—","shape":"s12"},{"n":14,"name":"Resultado apurado e contas prestadas","type":"Evento de fim","lane":"Conselho Fiscal e Assembleia","doc":"—","shape":"s13"}],"notes":[]}]}</script>
+<script>
+(function(){
+'use strict';
+const U = JSON.parse(document.getElementById('model').textContent);
+const app = document.getElementById('app');
+const mctx = document.createElement('canvas').getContext('2d');
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+/* ---------- state ---------- */
+const LS = 'oficina-' + U.id + '-v1';
+let notes = {};
+try { notes = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { notes = {}; }
+function save(){ try { localStorage.setItem(LS, JSON.stringify(notes)); } catch (e) {} }
+const nkey = (d, n) => d + '#' + n;
+const getNote = (d, n) => notes[nkey(d, n)] || {};
+function setNote(d, n, patch){
+  const k = nkey(d, n), cur = notes[k] || {};
+  const next = Object.assign({}, cur, patch);
+  if (!next.mark && !(next.quem || '').trim() && !(next.obs || '').trim()) delete notes[k];
+  else notes[k] = next;
+  save();
+}
+
+let S = { view:'home', dg:null, step:0, all:false, ui:1 };
+try { const s = JSON.parse(localStorage.getItem(LS + '-ui') || '{}'); if (s.ui) { S.ui = s.ui; document.documentElement.style.setProperty('--ui', s.ui); } } catch (e) {}
+
+/* ---------- model helpers ---------- */
+const D = {}; U.diagrams.forEach(d => D[d.id] = d);
+const N0 = U.diagrams.find(d => d.id === 'N0');
+const N1 = U.diagrams.find(d => d.id === 'N1');
+const PROCS = U.diagrams.filter(d => d.id !== 'N0' && d.id !== 'N1');
+
+function kindOf(t){
+  t = t || '';
+  if (/^Subprocesso/i.test(t)) return 'subprocess';
+  if (/^Evento de in/i.test(t)) return 'start';
+  if (/^Evento de fim/i.test(t)) return 'end';
+  if (/^Evento de borda/i.test(t)) return 'boundary';
+  if (/^Evento intermedi/i.test(t)) return 'intermediate';
+  if (/^Gateway/i.test(t)) return 'gateway';
+  return 'task';
+}
+const kindWord = { task:'Tarefa', subprocess:'Subprocesso', start:'Início', end:'Fim',
+  gateway:'Decisão', intermediate:'Espera', boundary:'Interrupção' };
+function glyphOf(t){
+  if (/temporizador/i.test(t)) return 'timer';
+  if (/mensagem/i.test(t)) return 'msg';
+  if (/paralelo/i.test(t)) return 'and';
+  if (/exclusivo/i.test(t)) return 'xor';
+  if (/^Subprocesso/i.test(t)) return 'plus';
+  if (/condicional/i.test(t)) return 'cond';
+  return null;
+}
+function laneColor(d, lane){
+  const i = Math.max(0, (d.lanes || []).indexOf(lane));
+  const hues = [188, 152, 36, 268, 6, 210];
+  return 'hsl(' + hues[i % hues.length] + ' 46% 42%)';
+}
+function flowsOf(d){
+  const groups = []; let cur = null;
+  d.elements.forEach((e, i) => {
+    if (!cur || kindOf(e.type) === 'start') { cur = { name:e.name, from:i, idx:[] }; groups.push(cur); }
+    cur.idx.push(i);
+  });
+  return groups;
+}
+function annCount(id){
+  let n = 0; for (const k in notes) if (k.split('#')[0] === id) n++;
+  return n;
+}
+
+/* ---------- text wrapping ---------- */
+function wrapText(str, maxW, size, weight){
+  mctx.font = (weight || 500) + ' ' + size + 'px "IBM Plex Sans", sans-serif';
+  const words = String(str).split(/\s+/).filter(Boolean);
+  const lines = []; let line = '';
+  for (const w of words){
+    const t = line ? line + ' ' + w : w;
+    if (mctx.measureText(t).width <= maxW || !line) line = t;
+    else { lines.push(line); line = w; }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function fitText(str, maxW, size){
+  mctx.font = '500 ' + size + 'px "IBM Plex Sans", sans-serif';
+  if (mctx.measureText(str).width <= maxW) return str;
+  let s = str;
+  while (s.length > 2 && mctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+  return s + '…';
+}
+const el = (tag, attrs, kids) => {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in (attrs || {})) n.setAttribute(k, attrs[k]);
+  (kids || []).forEach(c => n.appendChild(c));
+  return n;
+};
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- diagram rendering ---------- */
+function bounds(d){
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  const add = (a, b, c, e) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, e); };
+  d.pools.forEach(p => add(p.x, p.y, p.x + p.w, p.y + p.h));
+  d.shapes.forEach(s => add(s.x, s.y, s.x + s.w, s.y + s.h));
+  d.edges.forEach(e => e.pts.forEach(p => add(p[0], p[1], p[0], p[1])));
+  (d.notes || []).forEach(n => add(n.x, n.y, n.x + n.w, n.y + n.fs));
+  if (x0 > x1) { x0 = 0; y0 = 0; x1 = d.page.w; y1 = d.page.h; }
+  const m = 14;
+  return { x:x0 - m, y:y0 - m, w:(x1 - x0) + m * 2, h:(y1 - y0) + m * 2 };
+}
+
+function buildSvg(d){
+  const B = bounds(d);
+  const svg = el('svg', { class:'diagram', viewBox:[B.x, B.y, B.w, B.h].join(' '),
+    preserveAspectRatio:'xMidYMid meet', role:'img' });
+  svg._base = B;
+
+  const defs = el('defs');
+  [['ar','var(--ink-3)'],['ar-msg','var(--ext)'],['ar-cur','var(--accent)']].forEach(([id, col]) => {
+    defs.appendChild(el('marker', { id:id, viewBox:'0 0 8 8', refX:'7', refY:'4',
+      markerWidth:'5', markerHeight:'5', orient:'auto-start-reverse' },
+      [el('path', { d:'M0.5,0.8 L7.4,4 L0.5,7.2 z', fill:col })]));
+  });
+  svg.appendChild(defs);
+
+  const gLanes = el('g'), gEdges = el('g'), gNodes = el('g'), gNotes = el('g');
+  svg.appendChild(gLanes); svg.appendChild(gNotes); svg.appendChild(gEdges); svg.appendChild(gNodes);
+
+  /* pools + lanes */
+  d.pools.forEach(p => {
+    if (p.collapsed){
+      gLanes.appendChild(el('rect', { class:'xpool', x:p.x, y:p.y, width:p.w, height:p.h, rx:3 }));
+      const fs = Math.min(8, p.h * 0.46);
+      const t = el('text', { class:'pool-name', x:p.x + p.w / 2, y:p.y + p.h / 2,
+        'text-anchor':'middle', 'dominant-baseline':'central', 'font-size':fs });
+      t.textContent = fitText(p.name, p.w - 8, fs);
+      gLanes.appendChild(t);
+    } else {
+      gLanes.appendChild(el('rect', { class:'pool-frame', x:p.x, y:p.y, width:p.w, height:p.h, rx:2 }));
+    }
+  });
+  const lanes = (d.lanesGeo || []).slice().sort((a, b) => a.y - b.y);
+  lanes.forEach((L, i) => {
+    gLanes.appendChild(el('rect', { class:'lane-band' + (i % 2 ? ' alt' : ''), x:L.x, y:L.y, width:L.w, height:L.h }));
+    const head = Math.min(13, L.w * 0.02);
+    gLanes.appendChild(el('rect', { class:'pool-head', x:L.x, y:L.y, width:head, height:L.h }));
+    if (L.name){
+      const fs = Math.min(7.5, head * 0.62);
+      const cx = L.x + head / 2, cy = L.y + L.h / 2;
+      const t = el('text', { class:'lane-name', x:cx, y:cy, 'font-size':fs,
+        'text-anchor':'middle', 'dominant-baseline':'central',
+        transform:'rotate(-90 ' + cx + ' ' + cy + ')' });
+      t.textContent = fitText(L.name, L.h - 6, fs);
+      gLanes.appendChild(t);
+    }
+  });
+
+  /* free-floating labels (message names, data) */
+  (d.notes || []).forEach(n => {
+    const fs = Math.max(4.6, Math.min(6.4, n.fs || 5.5));
+    const t = el('text', { class:'note-txt', x:n.x, y:n.y + fs * 0.85, 'font-size':fs });
+    t.textContent = n.s; gNotes.appendChild(t);
+  });
+
+  /* which shape belongs to which step */
+  const stepOf = {};
+  d.elements.forEach((e, i) => { if (e.shape) stepOf[e.shape] = i; });
+  const collapsedPools = d.pools.filter(p => p.collapsed);
+  const nearPool = pt => collapsedPools.some(p =>
+    pt[0] > p.x - 12 && pt[0] < p.x + p.w + 12 && pt[1] > p.y - 12 && pt[1] < p.y + p.h + 12);
+
+  /* edges */
+  const edgeNodes = [];
+  d.edges.forEach(e => {
+    const isMsg = (!e.from || !e.to) && (nearPool(e.pts[0]) || nearPool(e.pts[e.pts.length - 1]));
+    const g = el('g');
+    const path = el('path', {
+      class:'edge' + (isMsg ? ' msg' : ''),
+      d:'M' + e.pts.map(p => p[0] + ',' + p[1]).join(' L'),
+      'marker-end':'url(#' + (isMsg ? 'ar-msg' : 'ar') + ')' });
+    g.appendChild(path);
+    if (e.label){
+      const mi = Math.max(1, Math.floor(e.pts.length / 2));
+      const mx = (e.pts[mi - 1][0] + e.pts[mi][0]) / 2, my = (e.pts[mi - 1][1] + e.pts[mi][1]) / 2;
+      const t = el('text', { class:'edge-label', x:mx + 1.5, y:my - 1.5 });
+      t.textContent = e.label; g.appendChild(t);
+    }
+    gEdges.appendChild(g);
+    const a = e.from != null ? stepOf[e.from] : undefined;
+    const b = e.to != null ? stepOf[e.to] : undefined;
+    const req = [a, b].filter(v => v != null);
+    edgeNodes.push({ g:g, need: req.length ? Math.min.apply(null, req) : 0 });
+  });
+
+  /* nodes */
+  const nodeMap = {};
+  d.shapes.forEach(s => {
+    const step = stepOf[s.id];
+    const elm = step != null ? d.elements[step] : null;
+    const kind = elm ? kindOf(elm.type) : (s.kind === 'gateway' ? 'gateway' : s.kind === 'event' ? 'start' : 'task');
+    const label = (elm && elm.name) || s.label || '';
+    const g = el('g', { class:'node ' + kind });
+    const cx = s.x + s.w / 2, cy = s.y + s.h / 2;
+
+    if (kind === 'gateway'){
+      g.appendChild(el('path', { class:'body',
+        d:'M' + cx + ',' + s.y + ' L' + (s.x + s.w) + ',' + cy + ' L' + cx + ',' + (s.y + s.h) + ' L' + s.x + ',' + cy + ' Z' }));
+      const r = s.w * 0.22;
+      const gl = glyphOf(elm ? elm.type : '');
+      if (gl === 'and'){
+        g.appendChild(el('path', { class:'glyph', d:'M' + (cx - r) + ',' + cy + ' H' + (cx + r) + ' M' + cx + ',' + (cy - r) + ' V' + (cy + r) }));
+      } else {
+        g.appendChild(el('path', { class:'glyph', d:'M' + (cx - r * .72) + ',' + (cy - r * .72) + ' L' + (cx + r * .72) + ',' + (cy + r * .72) +
+          ' M' + (cx + r * .72) + ',' + (cy - r * .72) + ' L' + (cx - r * .72) + ',' + (cy + r * .72) }));
+      }
+    } else if (kind === 'start' || kind === 'end' || kind === 'intermediate' || kind === 'boundary'){
+      const r = Math.min(s.w, s.h) / 2;
+      g.appendChild(el('circle', { class:'body', cx:cx, cy:cy, r:r }));
+      if (kind === 'intermediate' || kind === 'boundary')
+        g.appendChild(el('circle', { class:'body', cx:cx, cy:cy, r:r * 0.76 }));
+      const gl = glyphOf(elm ? elm.type : '');
+      if (gl === 'timer'){
+        g.appendChild(el('circle', { class:'glyph', cx:cx, cy:cy, r:r * 0.5 }));
+        g.appendChild(el('path', { class:'glyph', d:'M' + cx + ',' + (cy - r * .34) + ' V' + cy + ' H' + (cx + r * .3) }));
+      } else if (gl === 'msg'){
+        const w = r * 0.9, h = r * 0.6;
+        g.appendChild(el('rect', { class:'glyph', x:cx - w / 2, y:cy - h / 2, width:w, height:h }));
+        g.appendChild(el('path', { class:'glyph', d:'M' + (cx - w / 2) + ',' + (cy - h / 2) + ' L' + cx + ',' + (cy + h * .16) + ' L' + (cx + w / 2) + ',' + (cy - h / 2) }));
+      }
+    } else {
+      g.appendChild(el('rect', { class:'body', x:s.x, y:s.y, width:s.w, height:s.h, rx:Math.min(4, s.h * 0.16) }));
+      if (kind === 'subprocess'){
+        const b = Math.min(5, s.h * 0.2), bx = cx - b / 2, by = s.y + s.h - b - 1.5;
+        g.appendChild(el('rect', { class:'glyph', x:bx, y:by, width:b, height:b }));
+        g.appendChild(el('path', { class:'glyph', d:'M' + (bx + b * .22) + ',' + (by + b / 2) + ' H' + (bx + b * .78) +
+          ' M' + (bx + b / 2) + ',' + (by + b * .22) + ' V' + (by + b * .78) }));
+      }
+    }
+
+    /* label */
+    const inBox = kind === 'task' || kind === 'subprocess';
+    const boxW = inBox ? s.w - 5 : Math.max(s.w * 3.4, 40);
+    const fs = inBox ? Math.max(3.9, Math.min(6.4, s.h / 4.4)) : Math.max(3.9, Math.min(5.8, s.h / 2.6));
+    let lines = wrapText(label, boxW, fs, inBox ? 500 : 500);
+    const maxLines = inBox ? Math.max(1, Math.floor((s.h - 4) / (fs * 1.16))) : 3;
+    if (lines.length > maxLines){
+      lines = lines.slice(0, maxLines);
+      lines[maxLines - 1] = fitText(lines[maxLines - 1] + ' …', boxW, fs);
+    }
+    const startY = inBox ? cy - ((lines.length - 1) * fs * 1.16) / 2
+                         : s.y + s.h + fs * 1.15;
+    const t = el('text', { 'font-size':fs, 'text-anchor':'middle',
+      'dominant-baseline':inBox ? 'central' : 'auto', x:cx, y:startY });
+    lines.forEach((ln, i) => {
+      const ts = el('tspan', { x:cx, dy:(i === 0 ? 0 : fs * 1.16) });
+      ts.textContent = ln; t.appendChild(ts);
+    });
+    g.appendChild(t);
+
+    gNodes.appendChild(g);
+    nodeMap[s.id] = { g:g, step:step, box:s };
+  });
+
+  svg._nodes = nodeMap; svg._edges = edgeNodes; svg._stepOf = stepOf;
+  return svg;
+}
+
+/* viewBox animation */
+function setView(svg, r, animate){
+  const cur = (svg.getAttribute('viewBox') || '').split(/[ ,]+/).map(Number);
+  const to = [r.x, r.y, r.w, r.h];
+  if (!animate || cur.length !== 4 || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    svg.setAttribute('viewBox', to.join(' ')); return;
+  }
+  if (svg._raf) cancelAnimationFrame(svg._raf);
+  const t0 = performance.now(), dur = 420;
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    svg.setAttribute('viewBox', to.map((v, i) => cur[i] + (v - cur[i]) * e).join(' '));
+    if (k < 1) svg._raf = requestAnimationFrame(tick);
+  };
+  svg._raf = requestAnimationFrame(tick);
+}
+function focusRect(svg, box){
+  const B = svg._base;
+  const ar = (svg.clientWidth || 800) / (svg.clientHeight || 500);
+  let w = Math.max(box.w * 4.6, B.w * 0.3), h = w / ar;
+  if (h < box.h * 5) { h = box.h * 5; w = h * ar; }
+  w = Math.min(w, B.w); h = Math.min(h, B.h);
+  let x = box.x + box.w / 2 - w / 2, y = box.y + box.h / 2 - h / 2;
+  x = Math.max(B.x, Math.min(x, B.x + B.w - w));
+  y = Math.max(B.y, Math.min(y, B.y + B.h - h));
+  return { x:x, y:y, w:w, h:h };
+}
+
+/* pan + zoom */
+function attachPanZoom(svg){
+  let drag = null;
+  const vb = () => (svg.getAttribute('viewBox') || '').split(/[ ,]+/).map(Number);
+  svg.addEventListener('pointerdown', ev => {
+    drag = { x:ev.clientX, y:ev.clientY, v:vb() };
+    svg.classList.add('drag'); svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const sc = drag.v[2] / svg.clientWidth;
+    svg.setAttribute('viewBox', [drag.v[0] - (ev.clientX - drag.x) * sc,
+      drag.v[1] - (ev.clientY - drag.y) * sc, drag.v[2], drag.v[3]].join(' '));
+  });
+  const stop = () => { drag = null; svg.classList.remove('drag'); };
+  svg.addEventListener('pointerup', stop); svg.addEventListener('pointercancel', stop);
+  svg.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    const v = vb(), k = ev.deltaY > 0 ? 1.14 : 1 / 1.14;
+    const r = svg.getBoundingClientRect();
+    const px = v[0] + (ev.clientX - r.left) / r.width * v[2];
+    const py = v[1] + (ev.clientY - r.top) / r.height * v[3];
+    const nw = Math.max(svg._base.w * 0.05, Math.min(svg._base.w * 1.6, v[2] * k));
+    const nh = nw * (v[3] / v[2]);
+    svg.setAttribute('viewBox', [px - (px - v[0]) * nw / v[2], py - (py - v[1]) * nh / v[3], nw, nh].join(' '));
+  }, { passive:false });
+}
+
+/* ---------- views ---------- */
+function go(patch){ Object.assign(S, patch); render(); }
+
+function render(){
+  app.innerHTML = '';
+  app.appendChild(topBar());
+  if (S.view === 'home') app.appendChild(homeView());
+  else if (S.view === 'procs') app.appendChild(procsView());
+  else if (S.view === 'closing') app.appendChild(closingView());
+  else app.appendChild(playerView());
+}
+
+function topBar(){
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const b = document.createElement('button');
+  b.className = 'brand'; b.title = 'Voltar ao início';
+  b.innerHTML = '<b>' + esc(U.short) + '</b><span>' + esc(U.place) + '</span>';
+  b.onclick = () => go({ view:'home' });
+  bar.appendChild(b);
+
+  if (S.view === 'player' && S.dg){
+    const d = D[S.dg];
+    const chip = document.createElement('span'); chip.className = 'phase-chip';
+    chip.textContent = d.id === 'N0' ? 'Fase 1 · Panorama' : d.id === 'N1' ? 'Fase 2 · Caminho completo' : 'Fase 3 · ' + d.id;
+    bar.appendChild(chip);
+    const sel = document.createElement('select'); sel.className = 'pick'; sel.id = 'pick-diagram';
+    U.diagrams.forEach(x => {
+      const o = document.createElement('option'); o.value = x.id; o.textContent = x.title;
+      if (x.id === d.id) o.selected = true; sel.appendChild(o);
+    });
+    sel.onchange = () => go({ dg:sel.value, step:0 });
+    bar.appendChild(sel);
+  } else if (S.view === 'procs'){
+    const chip = document.createElement('span'); chip.className = 'phase-chip';
+    chip.textContent = 'Fase 3 · Processos'; bar.appendChild(chip);
+  } else if (S.view === 'closing'){
+    const chip = document.createElement('span'); chip.className = 'phase-chip';
+    chip.textContent = 'Fase 4 · Fechamento'; bar.appendChild(chip);
+  }
+
+  const grow = document.createElement('div'); grow.className = 'grow'; bar.appendChild(grow);
+
+  if (S.view === 'player'){
+    const all = document.createElement('button');
+    all.className = 'btn'; all.textContent = 'Ver tudo';
+    all.setAttribute('aria-pressed', String(S.all)); all.id = 'btn-all';
+    all.onclick = () => go({ all:!S.all });
+    bar.appendChild(all);
+  }
+  const leg = document.createElement('button');
+  leg.className = 'btn'; leg.textContent = 'Legenda'; leg.id = 'btn-legend';
+  leg.onclick = showLegend; bar.appendChild(leg);
+
+  const minus = document.createElement('button');
+  minus.className = 'btn icon'; minus.textContent = 'A−'; minus.title = 'Diminuir o texto';
+  minus.onclick = () => uiScale(-1); bar.appendChild(minus);
+  const plus = document.createElement('button');
+  plus.className = 'btn icon'; plus.textContent = 'A+'; plus.title = 'Aumentar o texto (projeção)';
+  plus.onclick = () => uiScale(1); bar.appendChild(plus);
+  return bar;
+}
+function uiScale(dir){
+  S.ui = Math.max(0.85, Math.min(1.5, Math.round((S.ui + dir * 0.08) * 100) / 100));
+  document.documentElement.style.setProperty('--ui', S.ui);
+  try { localStorage.setItem(LS + '-ui', JSON.stringify({ ui:S.ui })); } catch (e) {}
+}
+
+function homeView(){
+  const s = document.createElement('div'); s.className = 'scroll';
+  const w = document.createElement('div'); w.className = 'wrap';
+  const marked = Object.keys(notes).length;
+  w.innerHTML =
+    '<div class="hero">' +
+      '<div class="kicker">Oficina de processos · PEA Pescarte</div>' +
+      '<h1>' + esc(U.name) + '</h1>' +
+      '<p class="lede">' + esc(U.homeLede) + '</p>' +
+      '<div class="facts"><span>' + U.diagrams.length + ' processos</span>' +
+        '<span>' + U.diagrams.reduce((a, d) => a + d.elements.length, 0) + ' etapas</span>' +
+        '<span>' + esc(U.source) + '</span>' +
+        (marked ? '<span>' + marked + ' anotações salvas</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<h2 class="sec">As quatro fases da oficina</h2>' +
+    '<p class="sec-note">Cada fase abre um nível a mais de detalhe. Comece pelo panorama, desça ao caminho completo e só depois entre processo por processo — uma etapa de cada vez, no ritmo do grupo.</p>' +
+    '<div class="phases" id="phases"></div>';
+  const ph = w.querySelector('#phases');
+  const cards = [
+    { n:'Fase 1', t:'Onde cada coisa acontece', p:'O panorama da unidade em blocos: o que é gestão, o que é produção e o que é apoio. Serve para situar todo mundo antes de entrar no detalhe.',
+      m:(N0 ? N0.elements.length + ' blocos' : ''), go:() => go({ view:'player', dg:'N0', step:0, all:false }) },
+    { n:'Fase 2', t:'O caminho completo', p:'A operação de ponta a ponta, do começo do ciclo até o dinheiro entrar — com quem está de fora: fornecedores, clientes e órgãos.',
+      m:(N1 ? N1.elements.length + ' etapas' : ''), go:() => go({ view:'player', dg:'N1', step:0, all:false }) },
+    { n:'Fase 3', t:'Por dentro de cada processo', p:'Abre um processo de cada vez, etapa por etapa, para conferir com quem faz: é assim mesmo? quem faz? o que muda na prática?',
+      m:PROCS.length + ' processos', go:() => go({ view:'procs' }) },
+    { n:'Fase 4', t:'O que o grupo ajustou', p:'Reúne tudo que foi marcado e anotado durante a oficina, pronto para copiar e levar para a revisão do modelo.',
+      m:(marked ? marked + ' registros' : 'nada anotado ainda'), go:() => go({ view:'closing' }) }
+  ];
+  cards.forEach(c => {
+    const b = document.createElement('button'); b.className = 'pcard';
+    b.innerHTML = '<span class="num">' + c.n + '</span><h3>' + esc(c.t) + '</h3><p>' + esc(c.p) + '</p>' +
+      '<span class="meta">' + esc(c.m) + '</span>';
+    b.onclick = c.go; ph.appendChild(b);
+  });
+  s.appendChild(w); return s;
+}
+
+function procsView(){
+  const s = document.createElement('div'); s.className = 'scroll';
+  const w = document.createElement('div'); w.className = 'wrap';
+  w.innerHTML = '<div class="kicker">Fase 3</div>' +
+    '<h1 style="font-size:clamp(1.7rem,4vw,2.5rem)">Por dentro de cada processo</h1>' +
+    '<p class="lede">Escolha o processo que o grupo vai conferir agora. O ponto colorido marca os que já têm anotações da oficina.</p>' +
+    '<div class="grid" id="g"></div>';
+  const g = w.querySelector('#g');
+  PROCS.forEach(d => {
+    const n = annCount(d.id);
+    const b = document.createElement('button'); b.className = 'dcard';
+    b.innerHTML = '<span class="code">' + esc(d.id) + '</span>' +
+      '<b>' + esc(d.title.replace(/^.*?—\s*/, '')) + '</b>' +
+      '<span class="meta">' + (n ? '<i class="dot"></i>' + n + ' anotações · ' : '') + d.elements.length + ' etapas</span>';
+    b.onclick = () => go({ view:'player', dg:d.id, step:0, all:false });
+    g.appendChild(b);
+  });
+  s.appendChild(w); return s;
+}
+
+function playerView(){
+  const d = D[S.dg] || N0;
+  S.step = Math.max(0, Math.min(S.step, d.elements.length - 1));
+  const stage = document.createElement('div'); stage.className = 'stage';
+
+  const cw = document.createElement('div'); cw.className = 'canvas-wrap';
+  const svg = buildSvg(d); cw.appendChild(svg); attachPanZoom(svg);
+  const ct = document.createElement('div'); ct.className = 'canvas-title';
+  ct.textContent = d.title; cw.appendChild(ct);
+  const tools = document.createElement('div'); tools.className = 'canvas-tools';
+  const fit = document.createElement('button'); fit.className = 'btn'; fit.textContent = 'Tela inteira';
+  fit.title = 'Ver o diagrama inteiro'; fit.onclick = () => setView(svg, svg._base, true);
+  const zoom = document.createElement('button'); zoom.className = 'btn'; zoom.textContent = 'Focar etapa';
+  zoom.onclick = () => focusStep(svg, d, true);
+  tools.appendChild(fit); tools.appendChild(zoom); cw.appendChild(tools);
+  stage.appendChild(cw);
+
+  const side = document.createElement('div'); side.className = 'side';
+  const sc = document.createElement('div'); sc.className = 'side-scroll'; sc.id = 'side-scroll';
+  side.appendChild(sc); stage.appendChild(side);
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'display:flex;flex-direction:column;flex:1 1 auto;min-height:0';
+  wrapper.appendChild(stage);
+  wrapper.appendChild(railView(d, svg));
+
+  paintStep(d, svg, sc);
+  requestAnimationFrame(() => focusStep(svg, d, false));
+  return wrapper;
+}
+
+function railView(d, svg){
+  const r = document.createElement('div'); r.className = 'rail';
+  const nav = document.createElement('div'); nav.className = 'nav';
+  const prev = document.createElement('button'); prev.className = 'btn'; prev.id = 'btn-prev';
+  prev.textContent = '← Voltar'; prev.onclick = () => step(-1);
+  const next = document.createElement('button'); next.className = 'btn primary'; next.id = 'btn-next';
+  next.textContent = 'Próxima etapa →'; next.onclick = () => step(1);
+  nav.appendChild(prev); nav.appendChild(next); r.appendChild(nav);
+
+  const ticks = document.createElement('div'); ticks.className = 'ticks'; ticks.id = 'ticks';
+  const starts = {}; flowsOf(d).forEach(f => starts[f.from] = true);
+  d.elements.forEach((e, i) => {
+    const t = document.createElement('button'); t.className = 'tick'; t.dataset.i = i;
+    t.title = (i + 1) + '. ' + e.name;
+    if (i > 0 && starts[i]) t.classList.add('flowstart');
+    t.onclick = () => go({ step:i });
+    ticks.appendChild(t);
+  });
+  r.appendChild(ticks);
+  const c = document.createElement('span'); c.className = 'count'; c.id = 'count'; r.appendChild(c);
+  return r;
+}
+
+function step(dir){
+  const d = D[S.dg];
+  const n = Math.max(0, Math.min(d.elements.length - 1, S.step + dir));
+  if (n === S.step) return;
+  S.step = n;
+  const svg = app.querySelector('svg.diagram');
+  paintStep(d, svg, app.querySelector('#side-scroll'));
+  focusStep(svg, d, true);
+}
+
+function focusStep(svg, d, animate){
+  const e = d.elements[S.step];
+  const nd = e && e.shape ? svg._nodes[e.shape] : null;
+  if (S.all || !nd) { setView(svg, svg._base, animate); return; }
+  setView(svg, focusRect(svg, nd.box), animate);
+}
+
+function paintStep(d, svg, sc){
+  /* diagram state */
+  for (const id in svg._nodes){
+    const n = svg._nodes[id];
+    const revealed = S.all || (n.step != null && n.step <= S.step);
+    n.g.classList.toggle('dim', !revealed);
+    n.g.classList.toggle('cur', n.step === S.step);
+  }
+  svg._edges.forEach(e => e.g.classList.toggle('dim', !(S.all || e.need <= S.step)));
+  const halo = svg.querySelector('.halo'); if (halo) halo.remove();
+
+  /* rail */
+  const ticks = app.querySelector('#ticks');
+  if (ticks) Array.from(ticks.children).forEach((t, i) => {
+    const m = getNote(d.id, i).mark;
+    t.className = 'tick' + (t.classList.contains('flowstart') ? ' flowstart' : '') +
+      (i === S.step ? ' cur' : i < S.step ? ' done' : '') + (m ? ' ' + m : '');
+  });
+  const cnt = app.querySelector('#count');
+  if (cnt) cnt.textContent = (S.step + 1) + ' / ' + d.elements.length;
+  const p = app.querySelector('#btn-prev'), nx = app.querySelector('#btn-next');
+  if (p) p.disabled = S.step === 0;
+  if (nx) nx.textContent = S.step === d.elements.length - 1 ? 'Concluir ✓' : 'Próxima etapa →';
+  if (nx) nx.onclick = () => S.step === d.elements.length - 1 ? go({ view:'closing' }) : step(1);
+
+  /* card */
+  const e = d.elements[S.step];
+  const kind = kindOf(e.type);
+  const note = getNote(d.id, S.step);
+  const flow = flowsOf(d).find(f => f.idx.indexOf(S.step) >= 0);
+  const dec = kind === 'gateway' ? (d.decisions || []).find(x => x.name === e.name) : null;
+  const msgs = (d.messages || []).filter(m => m.from === e.name || m.to === e.name);
+
+  sc.innerHTML =
+    '<span class="lane-tag"><i style="background:' + laneColor(d, e.lane) + '"></i>' + esc(e.lane || d.pool) + '</span>' +
+    '<div class="step-head"><span class="step-n">Etapa ' + (S.step + 1) + ' de ' + d.elements.length + '</span>' +
+      '<span class="kind ' + kind + '">' + esc(kindWord[kind] || kind) + '</span>' +
+      (flow && flow.from !== 0 ? '<span class="step-n">fluxo: ' + esc(flow.name) + '</span>' : '') + '</div>' +
+    '<h2 class="step-title">' + esc(e.name) + '</h2>' +
+    '<p class="step-doc' + (e.doc && e.doc !== '—' ? '' : ' empty') + '">' +
+      esc(e.doc && e.doc !== '—' ? e.doc : 'Sem detalhamento no estudo — boa oportunidade para o grupo descrever como isso acontece.') + '</p>' +
+    (dec ? '<div class="branches">' + dec.paths.map(pp =>
+      '<div class="branch"><b>' + esc(pp.label) + '</b><span>' + esc(pp.target) + '</span></div>').join('') + '</div>' : '') +
+    (msgs.length ? '<div class="msgs">' + msgs.map(m =>
+      '<div class="msg"><b>' + (m.from === e.name ? 'envia →' : '← recebe') + '</b><span>' +
+      esc(m.msg) + ' <span style="color:var(--ink-3)">(' + esc(m.from === e.name ? m.to : m.from) + ')</span></span></div>').join('') + '</div>' : '') +
+    '<div class="block-label">Conferindo com o grupo</div>' +
+    '<div class="marks">' +
+      '<button class="mark ok" data-m="ok" aria-pressed="' + (note.mark === 'ok') + '">✓ Confere</button>' +
+      '<button class="mark warn" data-m="warn" aria-pressed="' + (note.mark === 'warn') + '">⚠ Precisa ajustar</button>' +
+      '<button class="mark bad" data-m="bad" aria-pressed="' + (note.mark === 'bad') + '">✕ Não é assim</button>' +
+    '</div>' +
+    '<div class="field"><label for="f-quem">Quem faz isso aqui hoje?</label>' +
+      '<textarea id="f-quem" placeholder="nome, função ou grupo responsável">' + esc(note.quem || '') + '</textarea></div>' +
+    '<div class="field"><label for="f-obs">Como acontece na prática — ajustes e dúvidas</label>' +
+      '<textarea id="f-obs" placeholder="o que muda, o que falta, o que trava">' + esc(note.obs || '') + '</textarea></div>';
+
+  sc.querySelectorAll('.mark').forEach(b => b.onclick = () => {
+    const m = b.dataset.m;
+    setNote(d.id, S.step, { mark: getNote(d.id, S.step).mark === m ? null : m });
+    paintStep(d, svg, sc);
+  });
+  const q = sc.querySelector('#f-quem'), o = sc.querySelector('#f-obs');
+  q.oninput = () => setNote(d.id, S.step, { quem:q.value });
+  o.oninput = () => setNote(d.id, S.step, { obs:o.value });
+  sc.scrollTop = 0;
+}
+
+/* ---------- closing ---------- */
+function collect(){
+  const out = [];
+  U.diagrams.forEach(d => d.elements.forEach((e, i) => {
+    const n = getNote(d.id, i);
+    if (n.mark || (n.quem || '').trim() || (n.obs || '').trim())
+      out.push({ d:d, i:i, e:e, n:n });
+  }));
+  return out;
+}
+function closingView(){
+  const s = document.createElement('div'); s.className = 'scroll';
+  const w = document.createElement('div'); w.className = 'wrap';
+  const items = collect();
+  const byD = {};
+  items.forEach(it => { (byD[it.d.id] = byD[it.d.id] || []).push(it); });
+  const tally = { ok:0, warn:0, bad:0 };
+  items.forEach(it => { if (it.n.mark) tally[it.n.mark]++; });
+
+  let html = '<div class="kicker">Fase 4</div>' +
+    '<h1 style="font-size:clamp(1.7rem,4vw,2.5rem)">O que o grupo ajustou</h1>' +
+    '<p class="lede">Tudo que foi marcado e anotado durante a oficina, em ordem. Copie e leve para a revisão do modelo.</p>' +
+    '<div class="facts" style="margin-bottom:22px">' +
+      '<span>✓ ' + tally.ok + ' confere</span><span>⚠ ' + tally.warn + ' ajustar</span>' +
+      '<span>✕ ' + tally.bad + ' não é assim</span><span>' + items.length + ' etapas anotadas</span></div>';
+  if (!items.length){
+    html += '<div class="empty-state">Nenhuma anotação ainda. Volte para uma fase, marque as etapas com o grupo e elas aparecem aqui.</div>';
+  } else {
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">' +
+      '<button class="btn primary" id="copy">Copiar tudo</button>' +
+      '<button class="btn" id="clear">Limpar anotações</button></div>';
+    for (const id in byD){
+      const d = D[id];
+      html += '<h2 class="sec">' + esc(d.title) + '</h2>';
+      byD[id].forEach(it => {
+        html += '<div class="note-card"><h4>' + esc(it.e.name) + '</h4>' +
+          '<div class="src">etapa ' + (it.i + 1) + ' · ' + esc(it.e.lane) + '</div>' +
+          (it.n.mark ? '<span class="pill ' + it.n.mark + '">' +
+            ({ ok:'✓ confere', warn:'⚠ precisa ajustar', bad:'✕ não é assim' }[it.n.mark]) + '</span>' : '') +
+          '<dl>' + (it.n.quem ? '<dt>Quem faz</dt><dd>' + esc(it.n.quem) + '</dd>' : '') +
+          (it.n.obs ? '<dt>Na prática</dt><dd>' + esc(it.n.obs) + '</dd>' : '') + '</dl></div>';
+      });
+    }
+  }
+  w.innerHTML = html;
+  const cp = w.querySelector('#copy');
+  if (cp) cp.onclick = () => {
+    let md = '# Oficina ' + U.short + '\n\n';
+    for (const id in byD){
+      md += '## ' + D[id].title + '\n\n';
+      byD[id].forEach(it => {
+        md += '- **' + it.e.name + '** (etapa ' + (it.i + 1) + ', ' + it.e.lane + ')\n';
+        if (it.n.mark) md += '  - marcação: ' + ({ ok:'confere', warn:'precisa ajustar', bad:'não é assim' }[it.n.mark]) + '\n';
+        if (it.n.quem) md += '  - quem faz: ' + it.n.quem + '\n';
+        if (it.n.obs) md += '  - na prática: ' + it.n.obs + '\n';
+      });
+      md += '\n';
+    }
+    navigator.clipboard.writeText(md).then(
+      () => { cp.textContent = 'Copiado ✓'; setTimeout(() => cp.textContent = 'Copiar tudo', 1800); },
+      () => { cp.textContent = 'Não deu — selecione o texto'; });
+  };
+  const cl = w.querySelector('#clear');
+  if (cl) cl.onclick = () => {
+    if (cl.dataset.armed){ notes = {}; save(); render(); }
+    else { cl.dataset.armed = '1'; cl.textContent = 'Confirmar: apagar tudo'; }
+  };
+  s.appendChild(w); return s;
+}
+
+/* ---------- legend ---------- */
+function showLegend(){
+  const veil = document.createElement('div'); veil.className = 'veil';
+  const m = document.createElement('div'); m.className = 'modal';
+  const S1 = (inner) => '<svg viewBox="0 0 52 30" width="52" height="30">' + inner + '</svg>';
+  m.innerHTML = '<h3>Como ler o desenho</h3>' +
+    '<p style="color:var(--ink-2);margin:0">O desenho é a planta do processo. Cada figura quer dizer uma coisa:</p>' +
+    '<div class="leg">' +
+      '<div>' + S1('<rect x="4" y="7" width="44" height="17" rx="3" fill="var(--surface)" stroke="var(--line-2)"/>') + '</div>' +
+      '<p><b>Caixa</b> — uma tarefa: alguém faz alguma coisa.</p>' +
+      '<div>' + S1('<rect x="4" y="7" width="44" height="17" rx="3" fill="var(--accent-soft)" stroke="var(--accent)"/><rect x="22" y="17" width="6" height="6" fill="none" stroke="var(--ink-2)"/>') + '</div>' +
+      '<p><b>Caixa com +</b> — um processo inteiro guardado ali dentro; tem um diagrama só para ele.</p>' +
+      '<div>' + S1('<path d="M26,4 L40,15 L26,26 L12,15 Z" fill="var(--surface)" stroke="var(--gate)" stroke-width="1.4"/><path d="M22,11 L30,19 M30,11 L22,19" stroke="var(--ink-2)"/>') + '</div>' +
+      '<p><b>Losango</b> — uma decisão: o caminho se abre em sim e não.</p>' +
+      '<div>' + S1('<circle cx="16" cy="15" r="9" fill="none" stroke="var(--start)" stroke-width="1.6"/><circle cx="38" cy="15" r="9" fill="none" stroke="var(--end)" stroke-width="2.8"/>') + '</div>' +
+      '<p><b>Círculos</b> — começo (linha fina) e fim (linha grossa) do fluxo.</p>' +
+      '<div>' + S1('<path d="M4,15 H44" stroke="var(--ink-3)" stroke-width="1.4"/><path d="M40,11 L47,15 L40,19 z" fill="var(--ink-3)"/>') + '</div>' +
+      '<p><b>Seta cheia</b> — a ordem: o que vem depois do quê.</p>' +
+      '<div>' + S1('<path d="M4,15 H44" stroke="var(--ext)" stroke-width="1.4" stroke-dasharray="5 4"/><path d="M40,11 L47,15 L40,19 z" fill="var(--ext)"/>') + '</div>' +
+      '<p><b>Seta tracejada</b> — conversa com quem está de fora: fornecedor, cliente, órgão ambiental.</p>' +
+      '<div style="font-family:var(--f-body);font-size:11px;font-weight:600;color:var(--ink-2);writing-mode:vertical-rl;transform:rotate(180deg);background:var(--surface-3);border:1px solid var(--line-2);border-radius:3px;padding:4px;text-align:center">raia</div>' +
+      '<p><b>Faixa horizontal (raia)</b> — quem é responsável: tudo que está naquela faixa é feito por aquela pessoa ou equipe.</p>' +
+    '</div>' +
+    '<div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="btn primary" id="lclose">Entendi</button></div>' +
+    '<p style="color:var(--ink-3);font-size:.88em;margin-top:14px">Atalhos: setas ← → ou barra de espaço para andar; <b>T</b> para ver o diagrama inteiro; <b>Esc</b> fecha.</p>';
+  veil.appendChild(m); document.body.appendChild(veil);
+  const close = () => veil.remove();
+  m.querySelector('#lclose').onclick = close;
+  veil.onclick = ev => { if (ev.target === veil) close(); };
+  m.querySelector('#lclose').focus();
+}
+
+/* ---------- keys ---------- */
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape'){ const v = document.querySelector('.veil'); if (v) v.remove(); return; }
+  const tag = (ev.target.tagName || '').toLowerCase();
+  if (tag === 'textarea' || tag === 'input' || tag === 'select') return;
+  if (S.view !== 'player') return;
+  if (ev.key === 'ArrowRight' || ev.key === ' '){ ev.preventDefault(); step(1); }
+  else if (ev.key === 'ArrowLeft'){ ev.preventDefault(); step(-1); }
+  else if (ev.key === 't' || ev.key === 'T'){ go({ all:!S.all }); }
+});
+
+/* ---------- boot ---------- */
+function start(snap){
+  if (snap && snap.view) Object.assign(S, snap);
+  render();
+}
+if (window.claude && window.claude.hot){
+  window.claude.hot.snapshot(() => ({ view:S.view, dg:S.dg, step:S.step, all:S.all, ui:S.ui }));
+  window.claude.hot.ready ? window.claude.hot.ready(start) : start(window.claude.hot.data || {});
+} else start({});
+})();
+</script>
+
+</body>
+</html>
