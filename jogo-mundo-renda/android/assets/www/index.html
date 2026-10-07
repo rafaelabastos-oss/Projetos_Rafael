@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#14261f">
+<title>Mundo Renda</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <header id="topbar">
+    <button id="btn-project" class="proj">
+      <span id="proj-emoji" class="proj-emoji">🌱</span>
+      <span class="proj-txt"><b id="proj-name">Projeto</b><small id="proj-level">Nível 1</small></span>
+    </button>
+    <div id="chips">
+      <div class="chip gold">💰<b id="v-money">R$ 0</b></div>
+      <div class="chip">👷<b id="v-jobs">0/0</b></div>
+      <div class="chip">👥<b id="v-pop">0</b></div>
+      <div class="chip">😊<b id="v-well">50%</b></div>
+    </div>
+    <div id="timebox">
+      <div id="v-date">Dia 1</div>
+      <div id="speeds"><button data-speed="0" aria-label="Pausar">⏸</button><button data-speed="1" aria-label="Normal">▶</button><button data-speed="2" aria-label="Rápido">⏩</button><button data-speed="4" aria-label="Muito rápido">⏭</button></div>
+    </div>
+    <button id="btn-menu" class="round" aria-label="Menu">☰</button>
+    <div id="lvbar"><i id="lvfill"></i></div>
+  </header>
+  <div id="mid">
+    <button id="mission"><span class="m-icon">🎯</span><span class="m-txt"><b id="m-title"></b><small id="m-prog"></small></span></button>
+    <div id="events"></div>
+    <div id="side">
+      <canvas id="minimap"></canvas>
+      <div class="zoom"><button id="z-in" class="round" aria-label="Aproximar">＋</button><button id="z-out" class="round" aria-label="Afastar">－</button></div>
+    </div>
+    <div id="walk" class="hidden">
+      <div id="walk-info" class="hidden"></div>
+      <div id="joy"><div id="joy-knob"></div></div>
+      <button id="walk-exit" class="btn">✕ Sair do passeio</button>
+    </div>
+  </div>
+  <div id="bottom">
+    <div id="hint" class="hidden"><span id="hint-icon"></span><span id="hint-txt"></span><span id="hint-extra"></span><button id="hint-close" class="round" aria-label="Fechar ferramenta">✕</button></div>
+    <div id="palette" class="hidden"></div>
+    <nav id="toolbar"></nav>
+  </div>
+</div>
+
+<section id="card" class="hidden"></section>
+
+<div id="modal" class="hidden">
+  <div class="modal-box">
+    <header><h2 id="modal-title"></h2><button id="modal-close" class="round" aria-label="Fechar">✕</button></header>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="title" class="screen hidden">
+  <div class="title-box">
+    <div class="logo"><span class="logo-icon">🌱</span><h1>Mundo <em>Renda</em></h1></div>
+    <p class="tagline">Construa seu projeto de geração de trabalho e renda num mundo aberto, do seu jeito.</p>
+    <div class="menu-btns">
+      <button id="t-continue" class="btn big hidden">▶ Continuar</button>
+      <button id="t-new" class="btn big">✨ Novo projeto</button>
+      <button id="t-load" class="btn ghost hidden">📂 Meus projetos</button>
+      <button id="t-help" class="btn ghost">❔ Como jogar</button>
+    </div>
+    <small class="ver">v1.0 · funciona sem internet</small>
+  </div>
+</div>
+
+<div id="wizard" class="screen hidden"></div>
+
+<div id="dialog" class="hidden">
+  <div class="dialog-box">
+    <h3 id="dlg-title"></h3>
+    <p id="dlg-text"></p>
+    <div class="dlg-btns"><button id="dlg-cancel" class="btn ghost">Cancelar</button><button id="dlg-ok" class="btn">OK</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<div id="loading"><div class="ld-logo">🌱</div><div class="ld-txt">Mundo Renda</div><div class="ld-bar"><i></i></div></div>
+
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/world.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/render.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/input.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
