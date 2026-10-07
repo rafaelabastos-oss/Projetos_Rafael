@@ -183,7 +183,7 @@ var Render = (function () {
   var wbCache = { key: '', box: null };
   function waterBox(v) {
     var key = v.imin + ',' + v.imax + ',' + v.jmin + ',' + v.jmax + ',' + w.mapVersion;
-    if (wbCache.key === key) return wbCache.box;
+    if (wbCache.key === key) return clampBox(wbCache.box, v);
     var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, any = false;
     for (var j = v.jmin; j <= v.jmax; j++) {
       var row = j * w.W;
@@ -194,9 +194,14 @@ var Render = (function () {
         any = true;
       }
     }
-    var box = any ? { x0: Math.max(v.x0, x0 - 64), x1: Math.min(v.x1, x1 + 64), y0: Math.max(v.y0, y0 - 32), y1: Math.min(v.y1, y1 + 32) } : null;
-    wbCache.key = key; wbCache.box = box;
-    return box;
+    // guarda a caixa sem recorte: a vista pode mudar sem mudar os índices (presos na borda do mapa)
+    wbCache.key = key; wbCache.box = any ? { x0: x0 - 64, x1: x1 + 64, y0: y0 - 32, y1: y1 + 32 } : null;
+    return clampBox(wbCache.box, v);
+  }
+  function clampBox(r, v) {
+    if (!r) return null;
+    var b = { x0: Math.max(v.x0, r.x0), x1: Math.min(v.x1, r.x1), y0: Math.max(v.y0, r.y0), y1: Math.min(v.y1, r.y1) };
+    return b.x1 > b.x0 && b.y1 > b.y0 ? b : null;    // água fora da tela: nada a pintar
   }
   function drawWater(vv) {
     var v = waterBox(vv);
@@ -624,7 +629,7 @@ var Render = (function () {
         var spr2 = Sprites.object(o.id, o.lv, Sprites.varFor(k, o.id), time, k);
         var icon = st.alert === 'road' ? '🛣️' : '📦';
         // spr.top é negativo (para cima); se as placas estão visíveis, o alerta fica acima delas
-        var badgeH = Game.settings.badges !== false && cam.z >= 0.5 ? 34 * U.clamp(1 / cam.z, 0.55, 1.6) * 0.8 : 0;
+        var badgeH = Sprites.hasBadge(o.id) && Game.settings.badges !== false && cam.z >= 0.5 ? 34 * U.clamp(1 / cam.z, 0.55, 1.6) * 0.8 : 0;
         var y = c.y + (spr2.top || -50) - 14 - badgeH;
         ctx.fillStyle = st.alert === 'road' ? 'rgba(220,60,60,0.92)' : 'rgba(240,160,30,0.92)';
         roundRect(c.x - 10, y - 9, 20, 18, 6); ctx.fill();

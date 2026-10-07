@@ -5,7 +5,7 @@ var Game = (function () {
   var G = {
     s: null,
     ui: { tool: null, hover: -1, hoverOk: false, linePath: [], selected: -1, moving: -1 },
-    settings: { sound: true, music: true, ambience: true, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta', badges: true, weather: true },
+    settings: { sv: 2, sound: true, music: true, ambience: true, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta', badges: true, weather: true },
     walk: false, walkVec: { x: 0, y: 0 }
   };
   var perfT = 0, perfN = 0, perfSkip = 2;
@@ -13,6 +13,8 @@ var Game = (function () {
 
   function boot() {
     var st = Store.getJSON('mr_settings', null);
+    // configurações da v1: 'music' era a música sintetizada (desligada por padrão); a trilha nova começa ligada
+    if (st && !st.sv) { delete st.music; st.sv = 2; Store.setJSON('mr_settings', st); }
     if (st) for (var k in st) G.settings[k] = st[k];
     var cv = U.el('game');
     Render.init(cv);
@@ -103,15 +105,21 @@ var Game = (function () {
     dirtySave = true;
   }
 
-  function checkMissions() {
-    var s = G.s, guard = 0;
+  // quiet: o dia acabou de subir de nível (que já tem confete e som), então só o aviso
+  function checkMissions(quiet) {
+    var s = G.s, guard = 0, titles = [], sum = 0;
     while (s && guard++ < 30) {
       var m = DATA.MISSIONS[s.mission];
       if (!m || Sim.missionStat(s, m.stat) < m.goal) break;
       s.mission++;
-      if (s.mode !== 'criativo' && m.reward) s.money += m.reward;
+      if (s.mode !== 'criativo' && m.reward) { s.money += m.reward; sum += m.reward; }
+      titles.push(m.title);
+    }
+    if (!titles.length) return;
+    // várias missões de uma vez: um aviso, um confete e um som
+    UI.toast('🎯 ' + (titles.length > 1 ? 'Missões cumpridas: ' : 'Missão cumprida: ') + '<b>' + titles.join(', ') + '</b>' + (sum ? ' · +' + U.money(sum) : ''), 'good', 3500 + 600 * (titles.length - 1));
+    if (!quiet) {
       if (typeof Fx !== 'undefined') Fx.confetti();
-      UI.toast('🎯 Missão cumprida: <b>' + m.title + '</b>' + (m.reward && s.mode !== 'criativo' ? ' · +' + U.money(m.reward) : ''), 'good', 3500);
       Sfx.play('mission');
     }
   }
@@ -133,7 +141,7 @@ var Game = (function () {
     if (s.mode !== 'criativo' && s.money < 0 && s.day % 3 === 0) {
       UI.toast('💸 O caixa está negativo! Pegue microcrédito no painel do projeto ou reduza custos.', 'bad', 5000);
     }
-    checkMissions();
+    checkMissions(res.leveled);
     UI.refreshHUD(true);
     if (s.day % 2 === 0) save();
   }
@@ -218,7 +226,9 @@ var Game = (function () {
     chatT -= dt;
     var ws = Render.walkers();
     for (var n = 0; n < ws.length && chatT <= 0; n++) {
-      var a = ws[n], d = Math.abs(a.i - hero.i) + Math.abs(a.j - hero.j);
+      var a = ws[n];
+      if (a.veh) continue;                       // veículos não conversam (e não desenham balão)
+      var d = Math.abs(a.i - hero.i) + Math.abs(a.j - hero.j);
       if (d < 1.6 && !(a.sayT > 0)) { a.say = DATA.PHRASES[Math.floor(Math.random() * DATA.PHRASES.length)]; a.sayT = 3.5; chatT = 3; }
     }
     // construção mais próxima

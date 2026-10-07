@@ -1641,6 +1641,7 @@ var Sprites = (function () {
     TW: TW, TH: TH, setScale: setScale, setBrand: setBrand, clearCache: clearCache, object: object, road: road,
     shadowShapes: shadowShapes, drawAnim: drawAnim, drawBadges: drawBadges, emissive: emissive, thumb: thumb,
     diamondPath: diamondPath, person: person, iso: iso, varFor: varFor,
-    scale: function () { return SS; }, brand: function () { return brand; }
+    scale: function () { return SS; }, brand: function () { return brand; },
+    hasBadge: function (id) { var it = DATA.BY_ID[id]; return !!it && !NOBADGE[it.kind]; }
   };
 })();

@@ -469,7 +469,7 @@ var Terrain = (function () {
   // cor média de cada textura do chão (para o rascunho combinar com o bloco final)
   function draftColors() {
     var sc = document.createElement('canvas'); sc.width = 32; sc.height = 16;
-    var sg = sc.getContext('2d');
+    var sg = sc.getContext('2d', { willReadFrequently: true });
     return DATA.TERRAIN.map(function (t, n) {
       var tx = Tex.tex[TEXN[n]];
       if (tx) {
@@ -502,6 +502,9 @@ var Terrain = (function () {
       d = drafts[c] = { cv: cv, ver: ver[c] };
     }
     ctx.save();
+    // cresce ~2 unidades para cada lado: rascunhos vizinhos se sobrepõem (sem frestas de antisserrilhado)
+    var cx = (G.left[0] + G.right[0]) / 2, cy = (G.top[1] + G.bottom[1]) / 2, sc = 1 + 4 / (G.bottom[1] - G.top[1]);
+    ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
     ctx.transform(32, 16, -32, 16, 32 * (G.i0 - G.j0), 16 * (G.i0 + G.j0) - 16);
     ctx.drawImage(d.cv, 0, 0);
     ctx.restore();
