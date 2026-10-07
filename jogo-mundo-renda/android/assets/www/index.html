@@ -9,6 +9,7 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="vignette"></div>
 
 <div id="hud" class="hidden">
   <header id="topbar">
@@ -24,7 +25,7 @@
     </div>
     <div id="timebox">
       <div id="v-date">Dia 1</div>
-      <div id="speeds"><button data-speed="0" aria-label="Pausar">⏸</button><button data-speed="1" aria-label="Normal">▶</button><button data-speed="2" aria-label="Rápido">⏩</button><button data-speed="4" aria-label="Muito rápido">⏭</button></div>
+      <div id="speeds"><button data-speed="0" aria-label="Pausar"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><rect x="3" y="2.5" width="3" height="9" rx="0.8"/><rect x="8" y="2.5" width="3" height="9" rx="0.8"/></svg></button><button data-speed="1" aria-label="Normal"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M4 2.5v9l7.5-4.5z"/></svg></button><button data-speed="2" aria-label="Rápido"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M1.5 3v8l5.5-4z"/><path d="M7 3v8l5.5-4z"/></svg></button><button data-speed="4" aria-label="Muito rápido"><svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M0.8 3.5v7l4-3.5z"/><path d="M4.8 3.5v7l4-3.5z"/><path d="M8.8 3.5v7l4-3.5z"/></svg></button></div>
     </div>
     <button id="btn-menu" class="round" aria-label="Menu">☰</button>
     <div id="lvbar"><i id="lvfill"></i></div>
@@ -98,6 +99,7 @@
 <script src="js/gfx/people.js"></script>
 <script src="js/render.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/music.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/input.js"></script>
 <script src="js/ui.js"></script>

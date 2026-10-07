@@ -32,6 +32,8 @@ var Render = (function () {
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, high() ? scaleCap : 1);
+    var vg = document.getElementById('vignette');
+    if (vg) vg.className = high() ? '' : 'off';
     oceanGrad = null;
     cw = window.innerWidth; ch = window.innerHeight;
     canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
@@ -113,6 +115,12 @@ var Render = (function () {
       oceanGrad = ctx.createRadialGradient(0, cy * 2, mw * 0.3, 0, cy * 2, mw * 1.25);
       oceanGrad.addColorStop(0, '#2b93c6'); oceanGrad.addColorStop(0.35, '#1f78ad'); oceanGrad.addColorStop(1, '#0c3a63');
     }
+    // só fora da ilha (o miolo é coberto pelo terreno): recorte par-ímpar entre a vista e o losango do mapa
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0);
+    ctx.moveTo(0, -14); ctx.lineTo(-w.H * 32 + 2, (w.H - 1) * 16); ctx.lineTo(0, (w.W + w.H - 2) * 16 + 14); ctx.lineTo(w.W * 32 - 2, (w.W - 1) * 16); ctx.closePath();
+    ctx.clip('evenodd');
     ctx.save(); ctx.scale(1, 0.5);
     ctx.fillStyle = oceanGrad; ctx.fillRect(v.x0, v.y0 * 2, v.x1 - v.x0, (v.y1 - v.y0) * 2);
     ctx.restore();
@@ -120,8 +128,11 @@ var Render = (function () {
       var t = time;
       water.blobs.setTransform(new DOMMatrix([1.6, 0, 0, 1.6, (t * 1.5) % 410, (t * 0.8) % 205]));
       ctx.globalAlpha = 0.5; ctx.fillStyle = water.blobs; ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0);
-      water.a.setTransform(new DOMMatrix([1.4, 0, 0, 1.4, (t * 4) % 358, (t * 1.5) % 179]));
-      ctx.globalAlpha = high() ? 0.55 : 0.4; ctx.fillStyle = water.a; ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0);
+      // ondulações finas: invisíveis de longe, então só com a câmera perto
+      if (cam.z > 0.55) {
+        water.a.setTransform(new DOMMatrix([1.4, 0, 0, 1.4, (t * 4) % 358, (t * 1.5) % 179]));
+        ctx.globalAlpha = high() ? 0.55 : 0.4; ctx.fillStyle = water.a; ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0);
+      }
       ctx.globalAlpha = 1;
     }
     // faixa de água rasa em volta da base da ilha
@@ -129,6 +140,7 @@ var Render = (function () {
     ctx.globalAlpha = 0.55;
     ctx.drawImage(shallow, -w.H * 32 - mw * 0.16, -16 + EDGE - mh * 0.2, mw * 1.32, mh * 1.4);
     ctx.globalAlpha = 1;
+    ctx.restore();
     drawOceanSparkles(v);
   }
   function drawOceanSparkles(v) {
@@ -146,8 +158,19 @@ var Render = (function () {
     }
     ctx.globalAlpha = 1;
   }
+  // fração da tela ocupada pelo mar (amostra 4 × 4 pontos), usada pelo som das ondas
+  var oceanFrac = 0;
+  function measureOcean(v) {
+    var c = 0;
+    for (var a = 0; a < 4; a++) for (var b = 0; b < 4; b++) {
+      var x = v.x0 + (v.x1 - v.x0) * (a + 0.5) / 4, y = v.y0 + (v.y1 - v.y0) * (b + 0.5) / 4;
+      if (!insideMap(x, y - EDGE * 0.5)) c++;
+    }
+    oceanFrac = c / 16;
+  }
   function drawIslandBase(v) {
-    if (allLand(v)) return false;
+    if (allLand(v)) { oceanFrac = 0; return false; }
+    measureOcean(v);
     drawOcean(v);
     var mw = (w.W + w.H) * 32, mh = (w.W + w.H) * 16;
     ctx.globalAlpha = 0.4;
@@ -156,7 +179,28 @@ var Render = (function () {
     drawEdges(v);
     return true;
   }
-  function drawWater(v) {
+  // caixa (no mundo) dos ladrilhos de água visíveis, com folga de um ladrilho para as margens
+  var wbCache = { key: '', box: null };
+  function waterBox(v) {
+    var key = v.imin + ',' + v.imax + ',' + v.jmin + ',' + v.jmax + ',' + w.mapVersion;
+    if (wbCache.key === key) return wbCache.box;
+    var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, any = false;
+    for (var j = v.jmin; j <= v.jmax; j++) {
+      var row = j * w.W;
+      for (var i = v.imin; i <= v.imax; i++) {
+        if (w.ter[row + i] !== T.AGUA) continue;
+        var x = (i - j) * 32, y = (i + j) * 16;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        any = true;
+      }
+    }
+    var box = any ? { x0: Math.max(v.x0, x0 - 64), x1: Math.min(v.x1, x1 + 64), y0: Math.max(v.y0, y0 - 32), y1: Math.min(v.y1, y1 + 32) } : null;
+    wbCache.key = key; wbCache.box = box;
+    return box;
+  }
+  function drawWater(vv) {
+    var v = waterBox(vv);
+    if (!v) return;
     ctx.save();
     mapDiamond(ctx, 0);
     ctx.clip();
@@ -199,14 +243,7 @@ var Render = (function () {
   // laterais da ilha (falésia com camadas de terra), degradê úmido perto do mar, espuma e cachoeiras
   var strataL = null, strataR = null, edgeGrad = {};
   function drawEdges(v) {
-    if (!strataL) {
-      strataL = Tex.freshPattern('strata'); strataR = Tex.freshPattern('strata');
-      // cisalhamento acompanhando a borda + deslocamento para a grama ficar exatamente no topo
-      if (strataL.setTransform && window.DOMMatrix) {
-        strataL.setTransform(new DOMMatrix([1, 0.5, 0, 1, 0, 32 * (w.H - 1) + 16]));
-        strataR.setTransform(new DOMMatrix([1, -0.5, 0, 1, 0, 32 * (w.W - 1) + 16]));
-      }
-    }
+    if (!strataL) { strataL = Tex.freshPattern('strata'); strataR = strataL; }
     if (v.imax === w.W - 1) edgeSide(1, Math.max(0, v.jmin), Math.min(w.H - 1, v.jmax));
     if (v.jmax === w.H - 1) edgeSide(-1, Math.max(0, v.imin), Math.min(w.W - 1, v.imax));
   }
@@ -216,7 +253,11 @@ var Render = (function () {
     if (sd > 0) { var i = w.W - 1; xa = (i - a0) * 32 + 32; ya = (i + a0) * 16; xb = (i - a1) * 32; yb = (i + a1) * 16 + 16; top = 32 * i + 16; }
     else { var j = w.H - 1; xa = (a0 - j) * 32 - 32; ya = (a0 + j) * 16; xb = (a1 - j) * 32; yb = (a1 + j) * 16 + 16; top = 32 * j + 16; }
     ctx.beginPath(); ctx.moveTo(xa, ya - 0.5); ctx.lineTo(xb, yb - 0.5); ctx.lineTo(xb, yb + D); ctx.lineTo(xa, ya + D); ctx.closePath();
-    ctx.fillStyle = sd > 0 ? strataR : strataL; ctx.fill();
+    // a textura acompanha a borda inclinada (cisalhamento) com a grama exatamente no topo; a transformação vai no
+    // contexto na hora de pintar (o caminho já está pronto), o que funciona mesmo sem CanvasPattern.setTransform
+    ctx.save(); ctx.transform(1, sd > 0 ? -0.5 : 0.5, 0, 1, 0, top);
+    ctx.fillStyle = strataL; ctx.fill();
+    ctx.restore();
     // degradê vertical medido a partir da borda de cima (inclinada): transformação de cisalhamento deixa a borda reta
     ctx.save(); ctx.clip();
     ctx.transform(1, sd > 0 ? -0.5 : 0.5, 0, 1, 0, 0);
@@ -389,8 +430,11 @@ var Render = (function () {
       (buckets[dk] || (buckets[dk] = [])).push(a);
     }
     var dark = s && Game.settings.daynight ? darkness(s.t) : 0;
-    var lights = [], ems = [];
+    var lights = [];
     var fx = typeof Fx !== 'undefined' ? Fx : null;
+    // camada das janelas acesas, montada na mesma ordem de profundidade: cada objeto apaga as janelas que cobre
+    var emOn = typeof Light !== 'undefined' && s && Game.settings.daynight && Light.windowsAlpha(s.t) > 0;
+    if (emOn) emBegin();
     for (var d = dmin; d <= dmax; d++) {
       var ia = Math.max(vo.imin, d - vo.jmax), ib = Math.min(vo.imax, d - vo.jmin);
       for (var i = ia; i <= ib; i++) {
@@ -402,10 +446,10 @@ var Render = (function () {
         if (ui && ui.moving === k) ctx.globalAlpha = 0.35;
         if (!(fx && fx.drawGrow(ctx, k, spr, wx, wy))) ctx.drawImage(spr.c, wx - spr.ox, wy - spr.oy, spr.w, spr.h);
         ctx.globalAlpha = 1;
+        if (emOn) emAdd(spr, wx, wy);
         if (spr.anim && Sprites.drawAnim) Sprites.drawAnim(ctx, spr, wx, wy, time, k);
         if (fx && spr.emit && spr.emit.length && s) fx.smoke(k, spr, wx, wy);
         if (dark > 0.02) {
-          if (spr.wins && spr.wins.length) ems.push([spr, wx, wy]);
           if (spr.lights) for (var q = 0; q < spr.lights.length; q++) { var L = spr.lights[q]; lights.push([wx + L[0], wy + L[1], L[2], spr, wx, wy, L[3] || null]); }
           else {
             var it = I[o.id];
@@ -426,7 +470,7 @@ var Render = (function () {
     if (typeof Light !== 'undefined' && s && Game.settings.daynight) {
       if (dark > 0.02 && typeof People !== 'undefined' && People.lights) People.lights(lights);
       if (fx) fx.drawSky(ctx, vo, cam.z, time);
-      Light.apply(ctx, s.t, lights, ems, cam, dpr, time, high());
+      Light.apply(ctx, s.t, lights, emOn && emBox ? emCv : null, cam, dpr, time, high());
       worldTransform();
     } else {
       if (fx) fx.drawSky(ctx, vo, cam.z, time);
@@ -439,8 +483,31 @@ var Render = (function () {
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (fx) fx.drawScreen(ctx, cw, ch, dpr, time);
-    if (typeof Light !== 'undefined' && high()) Light.vignette(ctx, canvas.width, canvas.height);
     drawMini();
+  }
+
+  var emCv = null, emG = null, emBox = null;
+  function emBegin() {
+    if (!emCv) { emCv = document.createElement('canvas'); emG = emCv.getContext('2d'); }
+    if (emCv.width !== canvas.width || emCv.height !== canvas.height) { emCv.width = canvas.width; emCv.height = canvas.height; }
+    else if (emBox) { emG.setTransform(1, 0, 0, 1, 0, 0); emG.clearRect(0, 0, emCv.width, emCv.height); }
+    var z = cam.z * dpr;
+    emG.setTransform(z, 0, 0, z, (cw / 2 - cam.x * cam.z) * dpr, (ch / 2 - cam.y * cam.z) * dpr);
+    emBox = null;
+  }
+  function emAdd(spr, wx, wy) {
+    var x0 = wx - spr.ox, y0 = wy - spr.oy, x1 = x0 + spr.w, y1 = y0 + spr.h;
+    if (emBox && x0 < emBox[2] && x1 > emBox[0] && y0 < emBox[3] && y1 > emBox[1]) {
+      emG.globalCompositeOperation = 'destination-out';
+      emG.drawImage(spr.c, x0, y0, spr.w, spr.h);
+      emG.globalCompositeOperation = 'source-over';
+    }
+    if (!spr.wins || !spr.wins.length) return;
+    var em = Sprites.emissive(spr);
+    if (!em) return;
+    emG.drawImage(em, x0, y0, spr.w, spr.h);
+    if (!emBox) emBox = [x0, y0, x1, y1];
+    else { emBox[0] = Math.min(emBox[0], x0); emBox[1] = Math.min(emBox[1], y0); emBox[2] = Math.max(emBox[2], x1); emBox[3] = Math.max(emBox[3], y1); }
   }
 
   function bridgeMask(i, j) {
@@ -473,7 +540,7 @@ var Render = (function () {
 
   function drawFloats(dt) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = 'bold 12px sans-serif';
+    ctx.font = 'bold 12px sans-serif, MREmoji';
     for (var n = floats.length - 1; n >= 0; n--) {
       var f = floats[n];
       f.t += dt;
@@ -556,11 +623,13 @@ var Render = (function () {
         if (c.x < v.x0 || c.x > v.x1 || c.y < v.y0 || c.y > v.y1) continue;
         var spr2 = Sprites.object(o.id, o.lv, Sprites.varFor(k, o.id), time, k);
         var icon = st.alert === 'road' ? '🛣️' : '📦';
-        var y = c.y - (spr2.top || 50) - 26;
+        // spr.top é negativo (para cima); se as placas estão visíveis, o alerta fica acima delas
+        var badgeH = Game.settings.badges !== false && cam.z >= 0.5 ? 34 * U.clamp(1 / cam.z, 0.55, 1.6) * 0.8 : 0;
+        var y = c.y + (spr2.top || -50) - 14 - badgeH;
         ctx.fillStyle = st.alert === 'road' ? 'rgba(220,60,60,0.92)' : 'rgba(240,160,30,0.92)';
         roundRect(c.x - 10, y - 9, 20, 18, 6); ctx.fill();
         ctx.beginPath(); ctx.moveTo(c.x - 4, y + 8); ctx.lineTo(c.x + 4, y + 8); ctx.lineTo(c.x, y + 13); ctx.fill();
-        ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '11px sans-serif, MREmoji'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#fff'; ctx.fillText(icon, c.x, y + 1);
       }
     }
@@ -575,7 +644,7 @@ var Render = (function () {
   }
 
   function speech(x, y, text) {
-    ctx.font = 'bold 7px sans-serif';
+    ctx.font = 'bold 7px sans-serif, MREmoji';
     var tw = ctx.measureText(text).width + 9, bx = x - tw / 2, by = y - 30;
     ctx.fillStyle = 'rgba(0,0,0,0.22)';
     roundRect(bx + 0.8, by + 1.2, tw, 13, 6.5); ctx.fill();
@@ -676,7 +745,7 @@ var Render = (function () {
     walkers: function () { return typeof People !== 'undefined' ? People.list() : walkers; }, setHero: setHero, darkness: darkness,
     downscale: downscale, resetScale: function () { scaleCap = 2; resize(); }, speech: speech, roundRect: roundRect,
     size: function () { return { w: cw, h: ch }; }, high: high, time: function () { return time; },
-    visibleRange: visibleRange,
+    visibleRange: visibleRange, oceanAmount: function () { return Math.min(1, oceanFrac * 1.6); },
     resetWalkers: function () { walkers = []; floats = []; roadVersion = -1; miniVersion = -1; if (typeof People !== 'undefined') People.reset(); if (typeof Fx !== 'undefined') Fx.reset(); }
   };
 })();

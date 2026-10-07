@@ -444,21 +444,67 @@ var Terrain = (function () {
       vis.push([c, dx * dx + dy * dy]);
     }
     vis.sort(function (a, b) { return a[1] - b[1]; });
-    var t0 = performance.now(), done = 0, quick = Math.min(want, 2);
+    var t0 = performance.now(), done = 0, quick = Math.min(want, 2), quickLeft = 3;
     for (var n = 0; n < vis.length; n++) {
       var cc = vis[n][0], e = entries[cc][want];
       if (e && e.ver === ver[cc]) { e.used = frameNo; continue; }
       var b = best(cc, want);
-      if (!b) { render(cc, quick); if (quick === want) continue; }
+      if (!b) {
+        // sem nada em cache: no máximo algumas versões rápidas por quadro (o resto usa o rascunho)
+        if (quickLeft <= 0 || (done > 0 && performance.now() - t0 > budgetMs * 2)) continue;
+        render(cc, quick); quickLeft--; done++;
+        if (quick === want) continue;
+      }
       if (done === 0 || performance.now() - t0 < budgetMs) { render(cc, want); done++; }
     }
     for (n = 0; n < vis.length; n++) {
       var bb = best(vis[n][0], want);
-      if (!bb) continue;
+      if (!bb) { drawDraft(ctx, vis[n][0]); continue; }
       bb.used = frameNo;
       ctx.drawImage(bb.cv, bb.ox, bb.oy, bb.wpx, bb.hpx);
     }
     evict(budgetPx);
+  }
+
+  // cor média de cada textura do chão (para o rascunho combinar com o bloco final)
+  function draftColors() {
+    var sc = document.createElement('canvas'); sc.width = 32; sc.height = 16;
+    var sg = sc.getContext('2d');
+    return DATA.TERRAIN.map(function (t, n) {
+      var tx = Tex.tex[TEXN[n]];
+      if (tx) {
+        try {
+          sg.clearRect(0, 0, 32, 16); sg.drawImage(tx, 0, 0, 32, 16);
+          var d = sg.getImageData(0, 0, 32, 16).data, r = 0, g = 0, b = 0, m = d.length / 4;
+          for (var q = 0; q < d.length; q += 4) { r += d[q]; g += d[q + 1]; b += d[q + 2]; }
+          return [r / m, g / m, b / m];
+        } catch (e) { /* cai para a cor da tabela */ }
+      }
+      var h = t.color.replace('#', '');
+      return [parseInt(h.substr(0, 2), 16) * 0.86, parseInt(h.substr(2, 2), 16) * 0.86, parseInt(h.substr(4, 2), 16) * 0.86];
+    });
+  }
+
+  // rascunho de um bloco ainda não desenhado: um pixel por ladrilho (água transparente), esticado no losango
+  var drafts = [], DRAFT = null;
+  function drawDraft(ctx, c) {
+    var d = drafts[c], G = geoms[c];
+    if (!d || d.ver !== ver[c]) {
+      if (!DRAFT) DRAFT = draftColors();
+      var cv = d ? d.cv : document.createElement('canvas'), nw = G.i1 - G.i0 + 1, nh = G.j1 - G.j0 + 1;
+      cv.width = nw; cv.height = nh;
+      var g = cv.getContext('2d'), img = g.createImageData(nw, nh), px = img.data;
+      for (var b = 0; b < nh; b++) for (var a = 0; a < nw; a++) {
+        var k = (G.j0 + b) * w.W + G.i0 + a, t = w.ter[k], q = (b * nw + a) * 4, col = DRAFT[t];
+        px[q] = col[0]; px[q + 1] = col[1]; px[q + 2] = col[2]; px[q + 3] = t === T.AGUA ? 0 : 255;
+      }
+      g.putImageData(img, 0, 0);
+      d = drafts[c] = { cv: cv, ver: ver[c] };
+    }
+    ctx.save();
+    ctx.transform(32, 16, -32, 16, 32 * (G.i0 - G.j0), 16 * (G.i0 + G.j0) - 16);
+    ctx.drawImage(d.cv, 0, 0);
+    ctx.restore();
   }
 
   function evict(budgetPx) {

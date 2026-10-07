@@ -1,10 +1,10 @@
 /* Mundo Renda - iluminação: cor do céu ao longo do dia, mapa de luz noturno (multiplicativo),
-   janelas acesas, brilho das lâmpadas e vinheta */
+   janelas acesas e brilho das lâmpadas (a vinheta é uma camada CSS, #vignette) */
 'use strict';
 
 var Light = (function () {
   var lc = null, lg = null, LS = 0.5, cwCss = 0, chCss = 0, dprv = 1;
-  var glow = null, tinted = {}, vig = null, vigKey = '';
+  var glow = null, tinted = {};
 
   // cor ambiente por hora do dia (multiplica a cena)
   var KEYS = [
@@ -53,8 +53,15 @@ var Light = (function () {
 
   function darknessOf(amb) { return U.clamp(1 - (amb[0] * 0.3 + amb[1] * 0.55 + amb[2] * 0.15) / 255, 0, 1); }
 
-  // aplica a luz sobre a cena já desenhada (ctx em transformação de mundo)
-  function apply(ctx, t, lights, ems, cam, dpr, time, high) {
+  // intensidade das janelas acesas pela hora do dia (0 de dia)
+  function windowsAlpha(t) {
+    var amb = ambient(t), night = U.clamp((darknessOf(amb) - 0.12) / 0.5, 0, 1);
+    return night > 0.15 ? Math.min(1, (night - 0.15) * 1.4) : 0;
+  }
+
+  // aplica a luz sobre a cena já desenhada (ctx em transformação de mundo);
+  // emLayer: canvas do tamanho da tela com as janelas acesas já recortadas pela profundidade (ou null)
+  function apply(ctx, t, lights, emLayer, cam, dpr, time, high) {
     var amb = ambient(t);
     if (amb[0] > 254 && amb[1] > 254 && amb[2] > 254) return;
     var dark = darknessOf(amb);
@@ -83,10 +90,11 @@ var Light = (function () {
     ctx.restore();
     if (night > 0.15) {
       // janelas acesas
-      ctx.globalAlpha = Math.min(1, (night - 0.15) * 1.4);
-      for (n = 0; n < ems.length; n++) {
-        var e = ems[n], em = Sprites.emissive(e[0]);
-        if (em) ctx.drawImage(em, e[1] - e[0].ox, e[2] - e[0].oy, e[0].w, e[0].h);
+      if (emLayer) {
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = Math.min(1, (night - 0.15) * 1.4);
+        ctx.drawImage(emLayer, 0, 0);
+        ctx.restore();
       }
       // brilho (bloom) das lâmpadas
       if (high) {
@@ -104,18 +112,5 @@ var Light = (function () {
     }
   }
 
-  function vignette(ctx, W, H) {
-    var key = W + 'x' + H;
-    if (vigKey !== key) {
-      vigKey = key;
-      vig = document.createElement('canvas'); vig.width = Math.ceil(W / 4); vig.height = Math.ceil(H / 4);
-      var g = vig.getContext('2d'), R = Math.sqrt(vig.width * vig.width + vig.height * vig.height) / 2;
-      var gr = g.createRadialGradient(vig.width / 2, vig.height / 2, R * 0.45, vig.width / 2, vig.height / 2, R);
-      gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(5,20,15,0.38)');
-      g.fillStyle = gr; g.fillRect(0, 0, vig.width, vig.height);
-    }
-    ctx.drawImage(vig, 0, 0, W, H);
-  }
-
-  return { resize: resize, apply: apply, vignette: vignette, ambient: ambient, darknessOf: darknessOf };
+  return { resize: resize, apply: apply, ambient: ambient, darknessOf: darknessOf, windowsAlpha: windowsAlpha };
 })();

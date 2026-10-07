@@ -7,10 +7,7 @@ var Input = (function () {
 
   function init(cv) {
     canvas = cv;
-    canvas.addEventListener('pointerdown', onDown);
-    canvas.addEventListener('pointermove', onMove);
-    canvas.addEventListener('pointerup', onUp);
-    canvas.addEventListener('pointercancel', onCancel);
+    U.pointer(canvas, { down: onDown, move: onMove, up: onUp, cancel: onCancel });
     canvas.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && !pointers[e.pointerId]) { Game.ui.hover = -1; } });
     canvas.addEventListener('wheel', function (e) {
       e.preventDefault();

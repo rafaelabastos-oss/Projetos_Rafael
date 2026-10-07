@@ -199,7 +199,7 @@ var Sprites = (function () {
     poly([F(a0, z0), F(a1, z0), F(a1, z1), F(a0, z1)], col, sh(col, -0.35), 0.4);
     if (icon) {
       var c = F((a0 + a1) / 2, (z0 + z1) / 2);
-      g.font = ((z1 - z0) * 0.95).toFixed(1) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = ((z1 - z0) * 0.95).toFixed(1) + 'px sans-serif, MREmoji'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText(icon, c[0], c[1] + 0.3);
     }
   }
@@ -985,7 +985,7 @@ var Sprites = (function () {
     }
     var sp = iso(-0.44, 0.38, 0); line(sp, [sp[0], sp[1] - 10], '#666', 0.7);
     poly([[sp[0] - 4, sp[1] - 15], [sp[0] + 4, sp[1] - 13], [sp[0] + 4, sp[1] - 9], [sp[0] - 4, sp[1] - 11]], '#2f9e4f');
-    g.font = '4px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('♻️', sp[0], sp[1] - 12);
+    g.font = '4px sans-serif, MREmoji'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('♻️', sp[0], sp[1] - 12);
   }
 
   function feiraP(lv) {
@@ -1262,11 +1262,35 @@ var Sprites = (function () {
     B = { vols: [], lights: [], wins: [], emit: [], anim: null, minY: 0, roofTop: 0 };
     fn();
     var meta = B; B = null;
-    var spr = { c: (opts && opts.outline === false) ? c : outline(c, opts && opts.outlineAlpha), ox: ox, oy: oy, w: w, h: h,
+    var full = (opts && opts.outline === false) ? c : outline(c, opts && opts.outlineAlpha);
+    var spr = { c: full, ox: ox, oy: oy, w: w, h: h,
       top: meta.minY, shadow: shadowFrom(meta.vols), lights: meta.lights.length ? meta.lights : null,
       wins: meta.wins, emit: meta.emit, anim: meta.anim };
+    crop(spr);
+    if (full !== c) c.width = c.height = 0;
     cache[key] = spr;
     return spr;
+  }
+
+  // recorta a borda transparente do sprite (as caixas fixas têm 75-95% de vazio): menos memória e menos pixels por quadro
+  function crop(spr) {
+    var c = spr.c, W = c.width, H = c.height, d;
+    try { d = c.getContext('2d').getImageData(0, 0, W, H).data; } catch (e) { return; }
+    var x0 = W, y0 = H, x1 = -1, y1 = -1, x, y, row;
+    for (y = 0; y < H; y++) {
+      row = y * W * 4 + 3;
+      for (x = 0; x < W; x++) if (d[row + x * 4] > 3) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; y1 = y; }
+    }
+    if (x1 < 0) { x0 = y0 = 0; x1 = y1 = 0; }
+    x0 = Math.max(0, x0 - 1); y0 = Math.max(0, y0 - 1); x1 = Math.min(W - 1, x1 + 1); y1 = Math.min(H - 1, y1 + 1);
+    var cw = x1 - x0 + 1, chh = y1 - y0 + 1;
+    if (cw * chh > W * H * 0.85) return;
+    var o = document.createElement('canvas'); o.width = cw; o.height = chh;
+    o.getContext('2d').drawImage(c, x0, y0, cw, chh, 0, 0, cw, chh);
+    c.width = c.height = 0;
+    spr.c = o;
+    spr.ox -= x0 / SS; spr.oy -= y0 / SS;
+    spr.w = cw / SS; spr.h = chh / SS;
   }
 
   // contorno escuro suave (destaca o objeto sobre o chão texturizado)
@@ -1279,9 +1303,10 @@ var Sprites = (function () {
     tg.fillStyle = 'rgba(28,36,30,' + (a || 0.5) + ')';
     tg.fillRect(0, 0, t.width, t.height);
     var out = document.createElement('canvas'); out.width = c.width; out.height = c.height;
-    var og = out.getContext('2d');
+    var og = out.getContext('2d', { willReadFrequently: true });   // lido uma vez por crop()
     og.drawImage(t, o, 0); og.drawImage(t, -o, 0); og.drawImage(t, 0, o); og.drawImage(t, 0, -o);
     og.drawImage(c, 0, 0);
+    t.width = t.height = 0;
     return out;
   }
 
@@ -1324,6 +1349,8 @@ var Sprites = (function () {
   }
 
   var TREES = { tree: 1, pine: 1, palm: 1, ipe: 1 };
+  // desenhos que de fato mudam com a variação (os demais compartilham um único sprite por nível)
+  var USES_VAR = { house: 1, sobrado: 1, tree: 1, pine: 1, palm: 1, ipe: 1, bush: 1, rock: 1, wildflowers: 1, flowers: 1, praca: 1, mural: 1, pomar: 1 };
   function swayFrame(k, time) {
     if (!time || typeof Render === 'undefined' || !Render.high || !Render.high()) return 0;
     var f = Math.floor(time * 1.4 + U.hash2(k % 96, (k / 96) | 0, 9) * 4) % 4;
@@ -1333,6 +1360,7 @@ var Sprites = (function () {
   function object(id, lv, variant, time, k) {
     var it = DATA.BY_ID[id], d = it.draw || {}, p = d.p;
     var sway = TREES[p] && k !== undefined ? swayFrame(k, time) : 0;
+    if (!USES_VAR[p]) variant = 0;
     var key = 'o' + id + '_' + lv + '_' + variant + '_' + sway;
     if (cache[key]) return cache[key];
     var kind = it.kind;
@@ -1413,7 +1441,7 @@ var Sprites = (function () {
       ctx.fillStyle = a.color; ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.4; ctx.stroke();
       if (!a.small && Game.s) {
-        ctx.font = '4px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '4px sans-serif, MREmoji'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(Game.s.project.emoji, x + L * 0.5, y + H * 0.5 + Math.sin(t * 6 + 2.7 + k) * 0.5);
       }
     } else if (a.type === 'fountain') {
@@ -1454,9 +1482,9 @@ var Sprites = (function () {
     bg.beginPath(); bg.moveTo(11, 21); bg.lineTo(17, 21); bg.lineTo(14, 25.5); bg.closePath(); bg.fillStyle = brand; bg.fill();
     bg.beginPath(); bg.arc(14, 12, 10, 0, Math.PI * 2); bg.fillStyle = brand; bg.fill();
     bg.beginPath(); bg.arc(14, 12, 8.4, 0, Math.PI * 2); bg.fillStyle = '#ffffff'; bg.fill();
-    bg.font = '11px sans-serif'; bg.textAlign = 'center'; bg.textBaseline = 'middle'; bg.fillText(icon, 14, 12.6);
+    bg.font = '11px sans-serif, MREmoji'; bg.textAlign = 'center'; bg.textBaseline = 'middle'; bg.fillText(icon, 14, 12.6);
     if (lv > 1) {
-      bg.font = 'bold 6px sans-serif'; bg.fillStyle = '#ffcf3a'; bg.strokeStyle = '#6b4d00'; bg.lineWidth = 1.4;
+      bg.font = 'bold 6px sans-serif, MREmoji'; bg.fillStyle = '#ffcf3a'; bg.strokeStyle = '#6b4d00'; bg.lineWidth = 1.4;
       var st = lv === 2 ? '★★' : '★★★';
       bg.strokeText(st, 14, 30); bg.fillText(st, 14, 30);
     }

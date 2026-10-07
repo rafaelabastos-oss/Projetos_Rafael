@@ -1,4 +1,4 @@
-/* Mundo Renda - efeitos sonoros e música ambiente sintetizados (Web Audio, sem arquivos) */
+/* Mundo Renda - efeitos sonoros sintetizados (Web Audio) e música sintetizada de reserva (a trilha principal está em music.js) */
 'use strict';
 
 var Sfx = (function () {
@@ -11,9 +11,10 @@ var Sfx = (function () {
       try { ac = new AC(); } catch (e) { return; }
       master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination);
       musicGain = ac.createGain(); musicGain.gain.value = 0.0; musicGain.connect(master);
-      setMusic(Game.settings && Game.settings.music);
+      if (typeof Music === 'undefined') setMusic(Game.settings && Game.settings.music);
     }
     if (ac.state === 'suspended') ac.resume();
+    if (typeof Music !== 'undefined') Music.unlock();
   }
 
   function tone(freq, dur, type, vol, when, dest, slide) {

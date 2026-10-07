@@ -20,13 +20,17 @@ Jogo para **Android** em que você cria **o seu projeto de geração de trabalho
 
 Toda a arte é desenhada por código (sem arquivos de imagem): terreno contínuo com texturas e bordas orgânicas, água animada com profundidade, a ilha cercada de mar com falésia e espuma, construções detalhadas com sombras projetadas, árvores brasileiras (ipês, araucárias, coqueiros), moradores animados e veículos nas ruas, ciclo de dia e noite com janelas e postes acesos, fumaça, poeira, pássaros, nuvens, chuva e confete. Em celulares mais simples, desligue **Gráficos em alta qualidade** no menu; a resolução também se ajusta sozinha.
 
+## Som
+
+Trilha sonora original composta e sintetizada por código (sem samples de terceiros): tema de abertura, bossa nova de manhã, baião/forró de feira e música calma à noite, além de ambiências (passarinhos, grilos e sapos, chuva e ondas do mar). As faixas trocam suavemente conforme a hora do dia e o clima. Para regerar: `python3 tools/audio/<faixa>.py` (requer Python 3, numpy, scipy e ffmpeg).
+
 ## Instalar no celular
 
 1. Baixe o arquivo `dist/MundoRenda.apk` no celular (pelo GitHub: abra o arquivo e toque em *Download raw file* / *Baixar*).
 2. Toque no arquivo baixado. Se o Android pedir, permita **"Instalar apps desconhecidos"** para o navegador ou o gerenciador de arquivos.
 3. Abra **Mundo Renda**.
 
-> Requer Android 5.0 ou mais novo (recomendado Android 9+ para todos os emojis aparecerem). O APK é assinado com uma **chave de testes** (`keystore/mundorenda-debug.jks`, senha `android`): ótima para instalar e atualizar o jogo, mas **não use essa chave para publicar na Play Store** — gere a sua própria (veja abaixo).
+> Requer Android 5.0 ou mais novo (os emojis vêm embutidos no app, então aparecem iguais em qualquer versão). O APK é assinado com uma **chave de testes** (`keystore/mundorenda-debug.jks`, senha `android`): ótima para instalar e atualizar o jogo, mas **não use essa chave para publicar na Play Store** — gere a sua própria (veja abaixo).
 
 ## Como jogar (resumo)
 
@@ -67,6 +71,7 @@ cd android/assets/www && python3 -m http.server 8000   # abra http://localhost:8
 PROMPT_MESTRE.md          especificação completa do jogo (prompt mestre)
 build-apk.sh              build do APK (aapt2 + javac + dx + zipalign + apksigner)
 tools/gen_icons.py        gera os ícones do app
+tools/audio/              síntese da trilha sonora (synth.py + um script por faixa)
 keystore/                 chave de testes
 dist/MundoRenda.apk       APK pronto
 android/
@@ -82,4 +87,6 @@ android/
     js/render.js             câmera, mar e ilha, ordem de desenho e camadas
     js/input.js, ui.js       controles e interface
     js/main.js               estado, laço principal, salvar/carregar, modo passeio
+    js/music.js, audio/      trilha sonora e ambiências (OGG)
+    fonts/                   fonte de emojis embutida (Noto Color Emoji, OFL)
 ```

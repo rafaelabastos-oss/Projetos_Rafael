@@ -27,7 +27,7 @@ var Fx = (function () {
     var g = c.getContext('2d');
     g.fillStyle = '#c98a0c'; g.beginPath(); g.arc(12, 12, 10, 0, Math.PI * 2); g.fill();
     g.fillStyle = '#ffcf3a'; g.beginPath(); g.arc(12, 11, 8.5, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#a86f00'; g.font = 'bold 10px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', 12, 11.5);
+    g.fillStyle = '#a86f00'; g.font = 'bold 10px sans-serif, MREmoji'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$', 12, 11.5);
     spr.coin = c;
     // nuvens
     spr.clouds = [];

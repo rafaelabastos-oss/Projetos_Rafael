@@ -1,4 +1,14 @@
 /* Mundo Renda - estilos (mobile primeiro, retrato e paisagem) */
+/* Emojis iguais em qualquer Android (Noto Color Emoji, licença OFL em fonts/OFL.txt).
+   O unicode-range limita a fonte aos emojis: números e texto continuam na fonte do sistema. */
+@font-face {
+  font-family: 'MREmoji';
+  src: url('../fonts/NotoColorEmoji.ttf') format('truetype');
+  font-display: swap;
+  unicode-range: U+00A9, U+00AE, U+200D, U+203C, U+2049, U+20E3, U+2122, U+2139, U+2194-21AA, U+231A-23FF, U+24C2,
+    U+25AA-25B5, U+25B7-27BF, U+2934-2935, U+2B05-2B55, U+3030, U+303D, U+3297, U+3299, U+FE0F, U+1F000-1FAFF, U+E0020-E007F;
+}
+
 :root {
   --bg: #0d221b;
   --panel: #14261f;
@@ -10,12 +20,16 @@
   --gold: #ffc94a;
   --danger: #ff6b6b;
   --brand: #2e86de;
-  --safe-t: env(safe-area-inset-top, 0px);
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: 0px;
+  --safe-b: 0px;
+}
+/* áreas seguras (entalhe/barra de gestos) só onde env() existe; em WebViews antigos ficam 0 e o calc() continua válido */
+@supports (top: env(safe-area-inset-top)) {
+  :root { --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
-  font-family: system-ui, -apple-system, 'Roboto', 'Segoe UI', sans-serif; font-size: 14px;
+  font-family: system-ui, -apple-system, 'Roboto', 'Segoe UI', sans-serif, 'MREmoji'; font-size: 14px;
   -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; touch-action: manipulation; }
 input { font: inherit; -webkit-user-select: text; user-select: text; }
@@ -23,10 +37,14 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
 
-#game { position: fixed; inset: 0; touch-action: none; display: block; }
+#game { position: fixed; top: 0; right: 0; bottom: 0; left: 0; touch-action: none; display: block; }
+/* vinheta suave sobre o mapa (composta pelo navegador, sem custo no canvas) */
+#vignette { position: fixed; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at 50% 50%, rgba(5, 20, 15, 0) 52%, rgba(5, 20, 15, 0.36) 100%); }
+#vignette.off { display: none; }
 
 /* ---------- HUD ---------- */
-#hud { position: fixed; inset: 0; display: flex; flex-direction: column; pointer-events: none; z-index: 5; }
+#hud { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; pointer-events: none; z-index: 5; }
 #hud > * { pointer-events: auto; }
 #topbar { position: relative; display: flex; align-items: center; gap: 6px; padding: calc(var(--safe-t) + 6px) 8px 8px;
   background: linear-gradient(rgba(9, 22, 17, 0.94), rgba(9, 22, 17, 0.78)); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
@@ -48,7 +66,9 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 #timebox { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; }
 #v-date { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 #speeds { display: flex; gap: 2px; }
-#speeds button { width: 30px; height: 24px; border-radius: 7px; background: rgba(255, 255, 255, 0.08); font-size: 12px; }
+#speeds button { width: 30px; height: 24px; border-radius: 7px; background: rgba(255, 255, 255, 0.08); font-size: 12px;
+  display: flex; align-items: center; justify-content: center; }
+#speeds svg { fill: currentColor; display: block; }
 #speeds button.on { background: var(--accent); color: #062113; }
 #lvbar { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: rgba(255, 255, 255, 0.08); }
 #lvbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #ffe79a); transition: width 0.4s; }
@@ -103,7 +123,7 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 .tool.on .tl { color: var(--text); }
 
 /* ---------- Passeio ---------- */
-#walk { position: absolute; inset: 0; pointer-events: none !important; }
+#walk { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none !important; }
 #walk > * { pointer-events: auto; }
 #joy { position: absolute; left: 22px; bottom: calc(var(--safe-b) + 24px); width: 136px; height: 136px; border-radius: 50%;
   background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.35); touch-action: none; }
@@ -156,7 +176,7 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 .card-actions .btn { flex: 1 1 auto; padding: 10px 10px; font-size: 14px; }
 
 /* ---------- Modal ---------- */
-#modal { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.55); display: flex; align-items: center; justify-content: center;
+#modal { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; background: rgba(0, 0, 0, 0.55); display: flex; align-items: center; justify-content: center;
   padding: calc(var(--safe-t) + 10px) 10px calc(var(--safe-b) + 10px); }
 .modal-box { width: min(580px, 100%); max-height: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
   display: flex; flex-direction: column; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); animation: up 0.18s ease-out; }
@@ -212,7 +232,7 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 .help li { margin: 5px 0; line-height: 1.4; }
 
 /* ---------- Telas ---------- */
-.screen { position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-t) + 12px) 12px calc(var(--safe-b) + 12px); }
+.screen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 25; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-t) + 12px) 12px calc(var(--safe-b) + 12px); }
 #title { background: radial-gradient(ellipse at center, rgba(9, 22, 17, 0.15), rgba(9, 22, 17, 0.8)); }
 .title-box { text-align: center; padding: 22px 26px; border-radius: 26px; background: rgba(9, 22, 17, 0.55); backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px); border: 1px solid var(--line); max-width: 440px; width: 100%; }
@@ -256,7 +276,7 @@ input:focus { border-color: var(--accent); }
 .pick.on { border-color: var(--accent); background: rgba(60, 207, 122, 0.15); }
 
 /* ---------- Diálogo, avisos e carregamento ---------- */
-#dialog { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
+#dialog { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
 .dialog-box { width: min(360px, 88vw); background: var(--panel2); border: 1px solid var(--line); border-radius: 18px; padding: 18px; animation: up 0.15s ease-out; }
 .dialog-box h3 { margin: 0 0 6px; }
 .dialog-box p { color: var(--muted); margin: 0 0 14px; line-height: 1.4; }
@@ -270,7 +290,7 @@ input:focus { border-color: var(--accent); }
 .toast.event { border-left-color: var(--gold); background: rgba(40, 34, 14, 0.96); }
 .toast.out { opacity: 0; transform: translateY(-8px); }
 @keyframes tin { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
-#loading { position: fixed; inset: 0; z-index: 100; background: var(--panel); display: flex; flex-direction: column; align-items: center;
+#loading { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: var(--panel); display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 10px; transition: opacity 0.5s; }
 #loading.out { opacity: 0; pointer-events: none; }
 .ld-logo { font-size: 60px; animation: bob 2s ease-in-out infinite; }

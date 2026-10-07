@@ -317,14 +317,23 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 - **Luz:** cor ambiente por hora do dia (mapa de luz multiplicativo), janelas acesas à noite (camada emissiva por sprite), brilho (bloom) de postes e lampiões, faróis dos veículos, vinheta suave nas bordas da tela.
 - Telhados das construções do projeto na **cor escolhida** pelo jogador; o Centro tem bandeira tremulando e o símbolo do projeto; placas redondas com o emoji do que cada construção produz (podem ser ocultadas).
 - Paleta da interface: verde-escuro (#14261F), verde de destaque (#3CCF7A), dourado (#FFC94A).
-- **Áudio sintetizado** (Web Audio, sem arquivos): clique, construir, erro, moedas, missão, nível, evento, demolir; música ambiente pentatônica opcional. Vibração curta ao construir (Android).
+- **Trilha sonora original** (arquivos OGG Vorbis em `assets/www/audio/`, compostos e sintetizados por código em `tools/audio/`, sem samples de terceiros), com loops sem emenda e volume normalizado (LUFS):
+  - **Tema** (tela inicial): violão, cordas, flauta e vibrafone, Sol maior, com modulação no clímax;
+  - **Manhã na Horta** (dia): bossa nova com violão na batida, contrabaixo, vassourinha, flauta e vibrafone;
+  - **Dia de Feira** (dia, alternando com a manhã e durante o evento de feira): baião/forró pé-de-serra com sanfona, zabumba e triângulo;
+  - **Noite na Vila** (noite): pads, violão dedilhado e melodia suave.
+  - **Ambiências** em camada separada: passarinhos brasileiros (bem-te-vi, sabiá, tico-tico, rolinha) de dia; grilos, sapos e coruja à noite; chuva com trovões no evento de chuva; **ondas do mar** com volume proporcional ao quanto de oceano aparece na tela.
+  - Troca suave (crossfade) entre faixas conforme a hora do dia, o clima e o modo passeio; pausa quando o app vai para segundo plano.
+- **Efeitos sonoros sintetizados** (Web Audio): clique, construir, erro, moedas, missão, nível, evento, demolir. Sem os arquivos de música, cai para uma música pentatônica sintetizada. Vibração curta ao construir (Android).
+- **Emojis embutidos:** fonte Noto Color Emoji (OFL) em `assets/www/fonts/`, aplicada só aos caracteres de emoji (`unicode-range`) na interface e no canvas, para os ícones ficarem iguais em qualquer Android, inclusive versões antigas.
 
 ## 11. Requisitos técnicos
 
-- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~240 KB.
+- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~30 MB (trilha sonora + fonte de emojis).
+- **Compatibilidade com WebView antigo** (Android 5–7 sem atualização): toque por eventos de ponteiro com reserva para eventos de toque, polyfill de `TypedArray.fill`, CSS sem `inset` e com áreas seguras (`env()`) só via `@supports`, texturas inclinadas sem depender de `CanvasPattern.setTransform`.
 - **Arquitetura:** app nativo mínimo em Java (`MainActivity`) com **WebView em tela cheia imersiva** carregando `file:///android_asset/www/index.html`; o jogo é **HTML5 Canvas 2D + JavaScript puro** (ES5, sem frameworks, sem CDN, sem internet).
 - **Ponte nativa (`AndroidBridge`):** `save/load/remove` em arquivos privados do app (gravação atômica), `vibrate`, `share` (compartilhar resumo do projeto) e `exitApp`. No navegador, cai para `localStorage`.
-- **Ciclo de vida:** salva ao pausar o app, a cada 2 dias de jogo e alguns segundos após mudanças no mapa; tela sempre ligada durante o jogo; sem permissões perigosas (apenas `VIBRATE`).
+- **Ciclo de vida:** salva e pausa a trilha ao pausar o app (`onAppPause`), retoma a trilha ao voltar (`onAppResume`), salva a cada 2 dias de jogo e alguns segundos após mudanças no mapa; tela sempre ligada durante o jogo; sem permissões perigosas (apenas `VIBRATE`).
 - **Desempenho:** o terreno é desenhado em **blocos de 8 × 8 ladrilhos guardados em cache em várias resoluções** (refinados aos poucos dentro de um orçamento de milissegundos por quadro, com descarte LRU por memória) e redesenhados só quando um ladrilho próximo muda; sprites e quadros de animação em cache; desenha só o que está na tela; resolução limitada a 2× e **resolução dinâmica** (reduz sozinha se o FPS cair abaixo de ~34); opção de gráficos leves (menos camadas de água, sem pássaros/nuvens/chuva/brilhos, menos moradores, mapa de luz em resolução menor).
 - **Build sem Android Studio:** `build-apk.sh` usa `aapt2`, `javac`, `d8/dx`, `zipalign` e `apksigner` (pacotes do Ubuntu/Debian) e gera `dist/MundoRenda.apk`.
 
@@ -350,10 +359,15 @@ android/
     js/render.js      ← câmera, mar e ilha, desenho por profundidade, camadas de efeitos e luz, minimapa, resolução dinâmica
     js/input.js     ← toque/mouse: tocar, arrastar estradas, pincéis, pinça
     js/ui.js        ← HUD, paleta, cartões, painéis, assistente, diálogos, avisos, joystick
-    js/audio.js     ← efeitos e música sintetizados
+    js/audio.js     ← efeitos sonoros sintetizados (e música de reserva)
+    js/music.js     ← trilha sonora e ambiências (canais com crossfade por hora do dia, clima e mar)
+    audio/          ← tema, manha, feira, noite + amb_dia, amb_noite, amb_chuva, amb_mar (OGG)
+    fonts/          ← NotoColorEmoji.ttf + OFL.txt
     js/storage.js   ← salvar/carregar (AndroidBridge ou localStorage)
     js/main.js      ← estado do jogo, laço principal, passeio, salvar/carregar, botão voltar
 tools/gen_icons.py  ← gera os ícones
+tools/audio/        ← synth.py (biblioteca de síntese: violão Karplus-Strong, baixo, sanfona, flauta, vibrafone,
+                       percussão brasileira, natureza, reverb, loop sem emenda, LUFS, OGG) + um script por faixa
 build-apk.sh        ← gera o APK
 ```
 
@@ -363,7 +377,7 @@ Regras: todo o balanceamento fica em `data.js` (editar números não exige mexer
 
 - Até 12 projetos salvos, com índice (nome, símbolo, cor, dia, caixa, nível, modo).
 - Formato JSON: estado do jogo + terreno compactado em texto (1 caractere por ladrilho) + lista de objetos `[ladrilho, item, nível]` + posição da câmera.
-- Configurações separadas: som, música, vibração, dia/noite, alertas, placas das construções, clima (nuvens, pássaros e chuva), grade, qualidade.
+- Configurações separadas: efeitos sonoros, trilha sonora, sons da natureza, vibração, dia/noite, alertas, placas das construções, clima (nuvens, pássaros e chuva), grade, qualidade.
 
 ## 14. Critérios de aceite
 

@@ -5,7 +5,7 @@ var Game = (function () {
   var G = {
     s: null,
     ui: { tool: null, hover: -1, hoverOk: false, linePath: [], selected: -1, moving: -1 },
-    settings: { sound: true, music: false, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta', badges: true, weather: true },
+    settings: { sound: true, music: true, ambience: true, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta', badges: true, weather: true },
     walk: false, walkVec: { x: 0, y: 0 }
   };
   var perfT = 0, perfN = 0, perfSkip = 2;
@@ -21,10 +21,16 @@ var Game = (function () {
     window.addEventListener('resize', function () { Render.resize(); });
     document.addEventListener('visibilitychange', function () { if (document.hidden) save(); else perfSkip = 1; });
     window.onAndroidBack = function () { return UI.back(); };
-    window.onAppPause = function () { save(); };
+    window.onAppPause = function () { save(); Music.setHidden(true); };
+    window.onAppResume = function () { perfSkip = 1; Music.setHidden(false); };
+    Music.init();
     U.el('walk-info').addEventListener('click', function () { if (G.walkTarget >= 0) UI.openBuilding(G.walkTarget); });
     startTitle();
     requestAnimationFrame(loop);
+    // fonte de emojis embutida: o canvas não redesenha sozinho quando ela chega, então limpa os caches das placas
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('16px MREmoji', '🥬🏪').then(function () { Sprites.clearCache(); if (UI.refreshPalette) UI.refreshPalette(); }, function () { /* segue com os emojis do sistema */ });
+    }
     var ld = U.el('loading');
     ld.classList.add('out');
     setTimeout(function () { ld.style.display = 'none'; }, 600);
@@ -150,6 +156,7 @@ var Game = (function () {
       Render.cam.y = titleBase.y + Math.sin(titleT * 0.045) * 120;
     }
     Render.draw(dt);
+    Music.update(dt);
     if (s) UI.refreshHUD();
     // monitora o FPS a cada 4 s (ignora as primeiras janelas)
     perfT += dt; perfN++;
@@ -276,7 +283,7 @@ var Game = (function () {
   function setSetting(key, val) {
     G.settings[key] = val;
     Store.setJSON('mr_settings', G.settings);
-    if (key === 'music') { Sfx.unlock(); Sfx.setMusic(val); }
+    if (key === 'music' || key === 'ambience') Sfx.unlock();
     if (key === 'quality') { Render.resetScale(); Sprites.clearCache(); }
   }
 

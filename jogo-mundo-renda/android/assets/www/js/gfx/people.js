@@ -92,7 +92,7 @@ var People = (function () {
   function iso(u, v, z) { return [(u - v) * 32, (u + v) * 16 - (z || 0)]; }
   function vframe(type, dir, col) {
     // dir: 0 = +u (baixo-direita), 1 = -u (cima-esquerda), 2 = +v (baixo-esquerda), 3 = -v (cima-direita)
-    var key = type + dir + col;
+    var key = type + dir + col + (type === 'moto' && Sprites.brand ? Sprites.brand() : '');
     if (vframes[key]) return vframes[key];
     var Wd = 40, Hd = 32, c = document.createElement('canvas');
     c.width = Wd * SS; c.height = Hd * SS;

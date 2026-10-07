@@ -128,6 +128,7 @@ public class MainActivity extends Activity {
         super.onResume();
         if (web != null) {
             web.onResume();
+            web.evaluateJavascript("window.onAppResume && window.onAppResume()", null);
             hideSystemUi();
         }
     }

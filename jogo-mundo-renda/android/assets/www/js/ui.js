@@ -34,9 +34,11 @@ var UI = (function () {
       var r = mm.getBoundingClientRect(), p = Render.miniToWorld(e.clientX - r.left, e.clientY - r.top);
       Render.cam.x = p.x; Render.cam.y = p.y; Render.clampCam();
     };
-    mm.addEventListener('pointerdown', function (e) { e.preventDefault(); mm.setPointerCapture(e.pointerId); mm._drag = true; miniMove(e); });
-    mm.addEventListener('pointermove', function (e) { if (mm._drag) miniMove(e); });
-    mm.addEventListener('pointerup', function () { mm._drag = false; });
+    U.pointer(mm, {
+      down: function (e) { e.preventDefault(); try { mm.setPointerCapture(e.pointerId); } catch (er) { /* ignora */ } mm._drag = true; miniMove(e); },
+      move: function (e) { if (mm._drag) miniMove(e); },
+      up: function () { mm._drag = false; }
+    });
     Render.setMini(mm);
     initJoystick();
 
@@ -403,7 +405,8 @@ var UI = (function () {
         '<button class="btn ghost" id="m-help">❔ Como jogar</button>' +
         '<button class="btn ghost" id="m-title">🏠 Voltar ao início</button></div>' +
         '<h4>Configurações</h4><div class="toggles">' +
-        tog('sound', '🔊 Efeitos sonoros', set.sound) + tog('music', '🎵 Música ambiente', set.music) +
+        tog('sound', '🔊 Efeitos sonoros', set.sound) + tog('music', '🎵 Trilha sonora', set.music) +
+        tog('ambience', '🌳 Sons da natureza (pássaros, mar, grilos, chuva)', set.ambience !== false) +
         (Store.native ? tog('vibrate', '📳 Vibração', set.vibrate) : '') +
         tog('daynight', '🌙 Ciclo de dia e noite', set.daynight) + tog('alerts', '⚠️ Alertas nas construções', set.alerts) +
         tog('badges', '🏷️ Placas com o que cada construção produz', set.badges !== false) + tog('weather', '🌦️ Nuvens, pássaros e chuva', set.weather !== false) +
@@ -475,7 +478,7 @@ var UI = (function () {
     cv.width = wd * d; cv.height = ht * d;
     var g = cv.getContext('2d'); g.scale(d, d);
     g.fillStyle = 'rgba(255,255,255,0.04)'; g.fillRect(0, 0, wd, ht);
-    if (hst.length < 2) { g.fillStyle = '#9fb8ab'; g.font = '12px sans-serif'; g.textAlign = 'center'; g.fillText('Os dados aparecem depois de alguns dias.', wd / 2, ht / 2); return; }
+    if (hst.length < 2) { g.fillStyle = '#9fb8ab'; g.font = '12px sans-serif, MREmoji'; g.textAlign = 'center'; g.fillText('Os dados aparecem depois de alguns dias.', wd / 2, ht / 2); return; }
     var max = 1, min = 0;
     hst.forEach(function (h) { max = Math.max(max, h.rev, h.wag); min = Math.min(min, h.pro); });
     var pad = 6, sy = (ht - pad * 2) / (max - min), y0 = ht - pad + min * sy, bw = (wd - pad * 2) / hst.length;
@@ -567,10 +570,12 @@ var UI = (function () {
       knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
       Game.walkVec.x = dx / max; Game.walkVec.y = dy / max;
     }
-    joy.addEventListener('pointerdown', function (e) { e.preventDefault(); active = e.pointerId; joy.setPointerCapture(e.pointerId); upd(e); });
-    joy.addEventListener('pointermove', function (e) { if (active === e.pointerId) upd(e); });
-    var end = function () { active = null; knob.style.transform = ''; Game.walkVec.x = 0; Game.walkVec.y = 0; };
-    joy.addEventListener('pointerup', end); joy.addEventListener('pointercancel', end);
+    var end = function (e) { if (e && active !== null && e.pointerId !== active) return; active = null; knob.style.transform = ''; Game.walkVec.x = 0; Game.walkVec.y = 0; };
+    U.pointer(joy, {
+      down: function (e) { e.preventDefault(); active = e.pointerId; try { joy.setPointerCapture(e.pointerId); } catch (er) { /* ignora */ } upd(e); },
+      move: function (e) { if (active === e.pointerId) upd(e); },
+      up: end, cancel: end
+    });
   }
   function showWalk(on) {
     $('walk').classList.toggle('hidden', !on);

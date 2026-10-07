@@ -1,6 +1,15 @@
 /* Mundo Renda - utilitários: aleatoriedade com semente, ruído, formatação */
 'use strict';
 
+// pequenos complementos para WebViews antigos (Android 5/6 sem atualização)
+(function () {
+  [window.Uint8Array, window.Uint16Array, window.Int32Array, window.Uint32Array, window.Float32Array, window.Float64Array].forEach(function (T) {
+    if (T && !T.prototype.fill) T.prototype.fill = function (v) { for (var n = 0; n < this.length; n++) this[n] = v; return this; };
+  });
+  if (window.Element && !Element.prototype.setPointerCapture) Element.prototype.setPointerCapture = function () {};
+  if (window.Element && !Element.prototype.releasePointerCapture) Element.prototype.releasePointerCapture = function () {};
+})();
+
 var U = (function () {
   function rng(seed) {
     var a = seed >>> 0;
@@ -79,8 +88,34 @@ var U = (function () {
 
   function el(id) { return document.getElementById(id); }
 
+  // eventos de ponteiro com reserva para WebViews antigos (antes do 55, só eventos de toque):
+  // os toques viram objetos no mesmo formato (pointerId, clientX, clientY, pointerType, button, preventDefault)
+  function pointer(node, h) {
+    if (window.PointerEvent) {
+      if (h.down) node.addEventListener('pointerdown', h.down);
+      if (h.move) node.addEventListener('pointermove', h.move);
+      if (h.up) node.addEventListener('pointerup', h.up);
+      if (h.cancel) node.addEventListener('pointercancel', h.cancel);
+      return;
+    }
+    function wrap(fn) {
+      return function (e) {
+        if (!fn) return;
+        for (var n = 0; n < e.changedTouches.length; n++) {
+          var t = e.changedTouches[n];
+          fn({ pointerId: t.identifier + 1, clientX: t.clientX, clientY: t.clientY, pointerType: 'touch', button: 0, target: e.target,
+            preventDefault: function () { if (e.cancelable) e.preventDefault(); } });
+        }
+      };
+    }
+    node.addEventListener('touchstart', wrap(h.down), { passive: false });
+    node.addEventListener('touchmove', wrap(h.move), { passive: false });
+    node.addEventListener('touchend', wrap(h.up), { passive: false });
+    node.addEventListener('touchcancel', wrap(h.cancel || h.up), { passive: false });
+  }
+
   return {
     rng: rng, hash2: hash2, noise: noise, fbm: fbm, clamp: clamp, money: money, num: num,
-    shortMoney: shortMoney, esc: esc, shade: shade, pick: pick, el: el
+    shortMoney: shortMoney, esc: esc, shade: shade, pick: pick, el: el, pointer: pointer
   };
 })();
