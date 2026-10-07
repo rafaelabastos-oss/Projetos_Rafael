@@ -1,6 +1,6 @@
 """Gera a Rev. 187 da qualificação com controle de alterações (Capítulos 4 e 5 e Referências).
 
-Uso: python gerar_rev187.py <pasta_rev186_descompactada> <pasta_saida_descompactada>
+Uso: python gerar_rev187.py <pasta_rev186_descompactada> <saida_com_alteracoes> [<saida_limpa>]
 
 Os parágrafos inalterados são preservados byte a byte; parágrafos revisados
 recebem diff por palavra (<w:del>/<w:ins>); parágrafos, figuras e tabelas novos
@@ -333,6 +333,8 @@ def main(origem: str, destino: str):
     doc = inserir_referencias(doc, doc.rfind("<w:t>REFERÊNCIAS</w:t>"))
     doc_path.write_text(doc, encoding="utf-8")
 
+    restaurar_paginacao_original(destino)
+
     st = destino / "word/settings.xml"
     s = st.read_text(encoding="utf-8")
     if "<w:trackRevisions" not in s:
@@ -341,5 +343,161 @@ def main(origem: str, destino: str):
     print("ok")
 
 
+def restaurar_paginacao_original(pasta: Path) -> None:
+    """Paginação da versão original (Rev. 181): número no canto superior direito,
+    somente a partir da Introdução. Remove o rodapé centralizado "Página N"
+    acrescentado na Rev. 186, que aparecia em todas as páginas."""
+    doc_path = pasta / "word/document.xml"
+    doc = doc_path.read_text(encoding="utf-8")
+    rels_path = pasta / "word/_rels/document.xml.rels"
+    rels = rels_path.read_text(encoding="utf-8")
+    ids = set(re.findall(r'<w:footerReference [^>]*r:id="(\w+)"/>', doc))
+    doc = re.sub(r'<w:footerReference [^>]*/>', "", doc)
+    for rid in ids:
+        rel = re.search(rf'<Relationship [^>]*Id="{rid}"[^>]*/>', rels).group(0)
+        alvo = re.search(r'Target="([^"]+)"', rel).group(1)
+        rels = rels.replace(rel, "")
+        (pasta / "word" / alvo).unlink(missing_ok=True)
+        ct_path = pasta / "[Content_Types].xml"
+        ct = ct_path.read_text(encoding="utf-8")
+        ct_path.write_text(re.sub(rf'<Override PartName="/word/{re.escape(alvo)}"[^>]*/>', "", ct), encoding="utf-8")
+    doc = restaurar_pre_textuais(doc)
+    doc_path.write_text(doc, encoding="utf-8")
+    rels_path.write_text(rels, encoding="utf-8")
+
+
+PPR_LISTA_TITULO = ('<w:pPr><w:pageBreakBefore/><w:spacing w:after="0" w:line="360" w:lineRule="auto"/><w:jc w:val="center"/>'
+                    '<w:rPr><w:rFonts w:ascii="Calibri" w:eastAsia="Times New Roman" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/>'
+                    '<w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:pPr>')
+RPR_LISTA_TITULO = ('<w:rFonts w:ascii="Calibri" w:eastAsia="Times New Roman" w:hAnsi="Calibri" w:cs="Calibri"/><w:b/><w:bCs/>'
+                    '<w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="24"/><w:szCs w:val="24"/>')
+PPR_LISTA_ITEM = '<w:pPr><w:pStyle w:val="ndicedeilustraes"/><w:tabs><w:tab w:val="right" w:leader="dot" w:pos="8494"/></w:tabs></w:pPr>'
+
+
+def lista_de_codigos(paginas=None) -> str:
+    """Lista de Códigos da Rev. 187, no mesmo formato das demais listas pré-textuais."""
+    paginas = paginas or {}
+    itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
+    xml = [f'<w:p>{PPR_LISTA_TITULO}<w:r><w:rPr>{RPR_LISTA_TITULO}</w:rPr><w:t>LISTA DE CÓDIGOS</w:t></w:r></w:p>']
+    for it in itens:
+        pg = str(paginas.get(it, ""))
+        xml.append(f'<w:p w:rsidRDefault="EV187C0D">{PPR_LISTA_ITEM}<w:r><w:t xml:space="preserve">{escape(it)}</w:t></w:r>'
+                   f'<w:r><w:tab/></w:r><w:r><w:t>{pg}</w:t></w:r></w:p>')
+    return "".join(xml)
+
+
+def restaurar_pre_textuais(doc: str) -> str:
+    """Estrutura pré-textual da Rev. 181: remove os dois sumários duplicados e as
+    notas de instrução inseridos na Rev. 186 e posiciona a Lista de Códigos entre
+    as listas, antes do Sumário (fora da seção numerada)."""
+    corpo_ini = doc.index("<w:body>") + len("<w:body>")
+    intro = doc.index("aquicultura consolidou")
+    elems = list(re.finditer(r"<w:p\b[^>]*/>|<w:p\b[^>]*>.*?</w:p>|<w:tbl>.*?</w:tbl>|<w:sdt>.*?</w:sdt>",
+                             doc[corpo_ini:intro], flags=re.S))
+    texto = lambda m: "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", m.group(0)))
+    i_nota = next((k for k, m in enumerate(elems) if texto(m).startswith("Sumário automático")), None)
+    if i_nota is None:
+        return doc   # já restaurado
+    i_abrev = next(k for k, m in enumerate(elems) if texto(m) == "LISTA DE ABREVIATURAS E SIGLAS")
+    i_sdt = next(k for k, m in enumerate(elems) if m.group(0).startswith("<w:sdt>"))
+    i_cod = next(k for k, m in enumerate(elems) if texto(m) == "LISTA DE CÓDIGOS" and k > i_sdt)
+    i_cod_fim = next(k for k, m in enumerate(elems) if k > i_cod and not texto(m).startswith("Código "))
+    pos = lambda k: corpo_ini + elems[k].start()
+    fim = lambda k: corpo_ini + elems[k].end()
+    # da última posição para a primeira, para manter os índices válidos
+    doc = doc[:pos(i_cod)] + doc[pos(i_cod_fim):]                      # remove a lista antiga (seção numerada)
+    doc = doc[:pos(i_sdt)] + "<!--LISTA_CODIGOS-->" + doc[pos(i_sdt):]  # insere antes do Sumário
+    doc = doc[:pos(i_nota)] + doc[pos(i_abrev):]                       # remove sumários duplicados e notas
+    return doc.replace("<!--LISTA_CODIGOS-->", lista_de_codigos())
+
+
+def atualizar_paginas(pasta: Path, pdf: Path) -> None:
+    """Preenche os números de página exibidos no Sumário e na Lista de Códigos a
+    partir da paginação renderizada (o Word os recalcula ao atualizar os campos)."""
+    import subprocess
+    paginas_pdf = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout.split("\f")
+    norm = lambda s: re.sub(r"\s+", " ", s).strip()
+
+    def pagina_impressa(i):
+        linhas = [l.strip() for l in paginas_pdf[i].split("\n") if l.strip()]
+        return linhas[0] if linhas and linhas[0].isdigit() else None
+
+    def achar(titulo, legenda=False):
+        alvo = norm(titulo)
+        for i, pg in enumerate(paginas_pdf):
+            if pagina_impressa(i) is None:
+                continue
+            linhas = [norm(l) for l in pg.split("\n") if l.strip()]
+            for l in linhas:
+                if (l == alvo or (legenda and l.startswith(alvo[:60]))) or (not legenda and alvo.startswith(l) and len(l) > 25 and l == alvo[:len(l)]):
+                    return pagina_impressa(i)
+        return None
+
+    p = pasta / "word/document.xml"
+    doc = p.read_text(encoding="utf-8")
+    # Lista de Códigos
+    ini = doc.index("<w:t>LISTA DE CÓDIGOS</w:t>")
+    ini = doc.rfind("<w:p>", 0, ini)
+    fim = doc.index("<w:sdt>", ini)
+    itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
+    doc = doc[:ini] + lista_de_codigos({it: achar(it, legenda=True) or "" for it in itens}) + doc[fim:]
+    # Sumário (resultado em cache dos campos PAGEREF dentro do SDT)
+    s0 = doc.index("<w:sdt>", ini)
+    s1 = doc.index("</w:sdt>", s0)
+    sdt = doc[s0:s1]
+
+    carga = [""]   # início do campo TOC preservado de uma entrada removida
+
+    def corrigir(m):
+        par = m.group(0)
+        entrada = "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", par))
+        entrada = re.sub(r"\d+$", "", entrada).strip()
+        if entrada in ("SUMÁRIO", "LISTA DE CÓDIGOS"):
+            # remove a entrada, mas preserva o início do campo TOC, se estiver nela
+            if "TOC \\" in par:
+                ini_hl = par.index("<w:hyperlink")
+                fim_ppr = par.index("</w:pPr>") + len("</w:pPr>") if "</w:pPr>" in par else par.index(">") + 1
+                carga[0] += par[fim_ppr:ini_hl]
+            return ""
+        if carga[0]:
+            fim_ppr = par.index("</w:pPr>") + len("</w:pPr>")
+            par = par[:fim_ppr] + carga[0] + par[fim_ppr:]
+            carga[0] = ""
+        pg = achar(entrada.replace("&amp;", "&"))
+        if pg is None:
+            return par
+        return re.sub(r'(PAGEREF[^<]*</w:instrText>.*?<w:fldChar w:fldCharType="separate"/>.*?<w:t[^>]*>)(\d*)(</w:t>)',
+                      lambda mm: mm.group(1) + pg + mm.group(3), par, count=1, flags=re.S)
+
+    sdt = re.sub(r"<w:p\b[^>]*>(?:(?!</w:p>).)*?PAGEREF.*?</w:p>", corrigir, sdt, flags=re.S)
+    doc = doc[:s0] + sdt + doc[s1:]
+    p.write_text(doc, encoding="utf-8")
+
+
+def aceitar_alteracoes(origem: Path, destino: Path) -> None:
+    """Gera a versão limpa aceitando as revisões diretamente no XML (sem
+    regravar o arquivo em outro editor, o que alteraria a paginação)."""
+    if destino.exists():
+        shutil.rmtree(destino)
+    shutil.copytree(origem, destino)
+    p = destino / "word/document.xml"
+    doc = p.read_text(encoding="utf-8")
+    # parágrafos excluídos (marca de parágrafo excluída e todo o conteúdo excluído)
+    doc = re.sub(r"<w:p\b(?:(?!<w:p\b).)*?<w:rPr><w:del w:id[^>]*/>.*?</w:p>", "", doc, flags=re.S)
+    doc = re.sub(r"<w:del w:id[^>]*>.*?</w:del>", "", doc, flags=re.S)
+    doc = re.sub(r"<w:ins w:id[^>]*/>", "", doc)
+    doc = re.sub(r"<w:ins w:id[^>]*>(.*?)</w:ins>", r"\1", doc, flags=re.S)
+    doc = doc.replace("<w:rPr></w:rPr>", "")
+    assert "<w:del " not in doc and "<w:ins " not in doc and "w:delText" not in doc
+    p.write_text(doc, encoding="utf-8")
+    st = destino / "word/settings.xml"
+    st.write_text(st.read_text(encoding="utf-8").replace("<w:trackRevisions/>", ""), encoding="utf-8")
+
+
 if __name__ == "__main__":
     main(*sys.argv[1:3])
+    if len(sys.argv) > 3:
+        aceitar_alteracoes(Path(sys.argv[2]), Path(sys.argv[3]))
+    if len(sys.argv) > 4:                       # PDF renderizado da versão limpa
+        for pasta in sys.argv[2:4]:
+            atualizar_paginas(Path(pasta), Path(sys.argv[4]))

@@ -294,16 +294,21 @@ def test_config_json_ida_e_volta(cfg, tmp_path):
     assert isinstance(config_de_dict(config_para_dict(cfg)), EVTEASConfig)
 
 
-def test_wizard_aceita_enter_para_manter_valores(cfg):
-    respostas = iter([""] * 500)
-    c = wizard_evteas(entrada=lambda _: next(respostas), base=copy.deepcopy(cfg))
-    assert config_para_dict(c) == config_para_dict(cfg)
+def test_wizard_revisar_enter_mantem_resultado(cfg):
+    """Revisar todas as entradas pressionando Enter não altera o resultado (com migração do formato)."""
+    respostas = iter([""] * 2000)
+    c = wizard_evteas(entrada=lambda _: next(respostas), base=copy.deepcopy(cfg), saida=lambda *a, **k: None)
+    assert motor(c, None, 1)["economico"]["vpl"][0] == pytest.approx(motor(cfg, None, 1)["economico"]["vpl"][0], rel=1e-9)
+    assert monte_carlo(c, n=200)["amostra"]["VPL"].to_numpy() == pytest.approx(
+        monte_carlo(cfg, n=200)["amostra"]["VPL"].to_numpy(), rel=1e-9)
 
 
-def test_wizard_altera_valores(cfg):
-    respostas = iter(["Projeto X", "", "50000"] + [""] * 500)
-    c = wizard_evteas(entrada=lambda _: next(respostas), base=copy.deepcopy(cfg))
-    assert c.projeto == "Projeto X" and c.tecnico.area_lamina_m2 == 50000
+def test_wizard_revisar_altera_valor(cfg):
+    from usuario_simulado import UsuarioSimulado
+    u = UsuarioSimulado([(r"^Área de lâmina", "50000"), (r".*", "")], padrao_falha=False)
+    c = wizard_evteas(entrada=u.entrada, base=copy.deepcopy(cfg), saida=u.saida)
+    assert c.tecnico.area_lamina_m2 == 50000
+    assert c.tecnico.profundidade_media_m == pytest.approx(56000 / 50000)
 
 
 def test_analise_precos():

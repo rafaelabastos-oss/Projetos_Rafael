@@ -25,6 +25,7 @@ def criar_config_caso_base() -> EVTEASConfig:
     cfg.ambiental = AmbientalConfig()
     cfg.social = SocialConfig()
     cfg.economico.fomento_nao_reembolsavel_pct = 70.0
+    cfg.economico.cooperados_fornecedores = 14      # associados que não atuam na operação (mínimo legal de 20)
     cfg.fontes = {
         "economico.fomento_nao_reembolsavel_pct": Fonte("autor", "Hipótese de aporte por projeto de compensação do licenciamento federal (IBAMA, 2010, 2012)"),
         "tecnico.fcr": Fonte("bibliografico", REF_KUBITZA),

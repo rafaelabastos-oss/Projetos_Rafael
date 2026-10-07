@@ -176,20 +176,51 @@ def preco_medio(cfg: EVTEASConfig) -> float:
     return float((part / part.sum() * preco).sum())
 
 
+BASES_TRIBUTARIAS = {
+    # base interna: apelidos aceitos (inclui os nomes das versões anteriores do notebook)
+    "faturamento": ("faturamento", "faturamento_bruto"),
+    "produtos": ("produtos",),
+    "servicos": ("servicos", "serviços"),
+    "lucro": ("lucro", "lucro_antes_ir_csll"),
+    "folha": ("folha",),
+    "folha_clt": ("folha_clt",),
+    "pro_labore": ("pro_labore", "pro_labore_cooperados"),
+}
+
+
 def aliquotas_configuradas(cfg: EVTEASConfig) -> Dict[str, float]:
-    """Consolida alíquotas individuais (ICMS, PIS, COFINS, IRPJ, CSLL, INSS...) por base."""
-    base = {"faturamento": pct(cfg.economico.taxa_impostos_faturamento_pct).item(),
-            "lucro": pct(cfg.economico.taxa_impostos_lucro_pct).item(),
-            "folha": pct(cfg.economico.encargos_mao_obra_pct).item()}
+    """Consolida alíquotas individuais (ICMS, IPI, ISS, PIS, COFINS, CSLL, IRPJ, INSS, FGTS) por base."""
+    base = {k: 0.0 for k in BASES_TRIBUTARIAS}
+    base["faturamento"] = float(cfg.economico.taxa_impostos_faturamento_pct) / 100
+    base["lucro"] = float(cfg.economico.taxa_impostos_lucro_pct) / 100
+    base["folha"] = float(cfg.economico.encargos_mao_obra_pct) / 100
+    apelidos = {a: k for k, v in BASES_TRIBUTARIAS.items() for a in v}
     for imp in cfg.economico.impostos_configurados:
-        b = imp.get("base", "faturamento")
-        if b not in base:
-            raise ValueError(f"Base tributária desconhecida: {b}")
-        base[b] += float(imp.get("aliquota_pct", 0)) / 100
+        b = apelidos.get(imp.get("base", "faturamento"))
+        if b is None:
+            raise ValueError(f"Base tributária desconhecida: {imp.get('base')}")
+        aliq = imp["aliquota_pct"] / 100 if "aliquota_pct" in imp else float(imp.get("aliquota", 0))
+        base[b] += float(aliq)
     return base
 
 
+def remuneracao_mensal(cfg: EVTEASConfig) -> Dict[str, float]:
+    """Remuneração bruta mensal: CLT (por cargo), retirada dos cooperados e mão de obra genérica."""
+    e = cfg.economico
+    clt = float(sum(e.salarios_clt_por_cargo.values()))
+    ret = float(e.retirada_cooperados_mes)
+    outros = float(e.mao_obra_mes)
+    return {"clt": clt, "retirada": ret, "outros": outros, "total": clt + ret + outros}
+
+
+def custo_pessoal_mensal(cfg: EVTEASConfig, aliq: Dict[str, float]) -> float:
+    r = remuneracao_mensal(cfg)
+    return r["clt"] * (1 + aliq["folha_clt"]) + r["retirada"] * (1 + aliq["pro_labore"]) + r["outros"] * (1 + aliq["folha"])
+
+
 def meses_ate_despesca(cfg: EVTEASConfig) -> int:
+    if cfg.economico.meses_ate_primeira_receita > 0:
+        return int(cfg.economico.meses_ate_primeira_receita)
     return int(math.ceil(cfg.tecnico.ciclo_dias / 30.4375))
 
 
@@ -211,8 +242,13 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
     fator_preco = ((1 + e.crescimento_preco_aa_pct / 100) ** (ano - 1))[None, :]
     fator_custo = ((1 + e.crescimento_custos_aa_pct / 100) ** (ano - 1))[None, :]
 
+    fator_vendas = ((1 + e.crescimento_vendas_aa_pct / 100) ** (ano - 1))[None, :]
     prod_mes = tec["producao_kg_mes"][:, None]
-    em_engorda = prod_mes * rampa                                   # kg/mês em crescimento
+    if e.producao_vendas_kg_mes > 0:
+        # volume de vendas informado no mix; a incerteza técnica é preservada pela razão amostra/base
+        base_tec = float(calcular_tecnico(Contexto(cfg))["producao_kg_mes"][0])
+        prod_mes = e.producao_vendas_kg_mes * safe_div(prod_mes, base_tec, 1.0)
+    em_engorda = prod_mes * rampa * fator_vendas                    # kg/mês em crescimento
     vendida = np.zeros((n, M))
     vendida[:, L:] = em_engorda[:, : M - L]                        # despesca após o 1º ciclo
 
@@ -232,14 +268,15 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
 
     capex = e.capex_total * ctx.v("economico.capex_fator")
     fixos_fator = ctx.v("economico.custos_fixos_fator")[:, None]
-    pessoal = e.mao_obra_mes * (1 + aliq["folha"])
+    pessoal = custo_pessoal_mensal(cfg, aliq)
     manutencao = capex[:, None] * e.manutencao_capex_pct_aa / 100 / 12
     custos_fixos = (pessoal + e.assistencia_tecnica_mes + e.administrativo_mes + manutencao) * fixos_fator * fator_custo
 
     vida_meses = max(e.vida_util_anos, 0.0) * 12
     depreciacao = np.where(meses <= vida_meses, 1.0, 0.0)[None, :] * safe_div(capex, vida_meses, 0.0)[:, None]
 
-    impostos_fat = receita * aliq["faturamento"]
+    impostos_fat = (receita_produtos * (aliq["faturamento"] + aliq["produtos"])
+                    + receita_servicos * (aliq["faturamento"] + aliq["servicos"]))
     receita_liquida = receita - impostos_fat
     lucro_bruto = receita_liquida - custos_variaveis
     ebitda = lucro_bruto - custos_fixos
@@ -377,7 +414,8 @@ def distribuicao_sobras(cfg: EVTEASConfig, eco: Dict[str, Any]) -> Dict[str, flo
     trab = sobras * e.perc_sobras_trabalhadores / 100
     forn = sobras - trab
     n_trab = max(e.cooperados_trabalhadores, 0)
-    retirada_anual = e.mao_obra_mes * 12
+    r = remuneracao_mensal(cfg)
+    retirada_anual = (r["retirada"] + r["outros"]) * 12
     renda_mensal = safe_div(retirada_anual + trab, n_trab * 12, 0.0) if n_trab else 0.0
     return {
         "termo_resultado": "Lucro líquido" if e.tipo_organizacao == "empresa" else "Sobras líquidas",
@@ -396,11 +434,12 @@ def distribuicao_sobras(cfg: EVTEASConfig, eco: Dict[str, Any]) -> Dict[str, flo
 
 def fator_emissao_energia(cfg: EVTEASConfig) -> float:
     a = cfg.ambiental
+    fatores = dict(FATORES_EMISSAO_ENERGIA, rede=a.fator_emissao_rede_kgco2_kwh)
     if a.fonte_energia == "mista":
-        return FATORES_EMISSAO_ENERGIA["rede"] * (1 - a.fracao_renovavel_mista)
-    if a.fonte_energia not in FATORES_EMISSAO_ENERGIA:
+        return fatores["rede"] * (1 - a.fracao_renovavel_mista)
+    if a.fonte_energia not in fatores:
         raise ValueError(f"Fonte de energia desconhecida: {a.fonte_energia}")
-    return FATORES_EMISSAO_ENERGIA[a.fonte_energia]
+    return fatores[a.fonte_energia]
 
 
 def score_conformidade(cfg: EVTEASConfig) -> Dict[str, Any]:
@@ -510,7 +549,8 @@ def eco_horizonte(cfg: EVTEASConfig) -> int:
 
 def calcular_social(ctx: Contexto, eco: Dict[str, Any]) -> Dict[str, Any]:
     cfg, s = ctx.cfg, ctx.cfg.social
-    massa_anual = cfg.economico.mao_obra_mes * 12
+    rem = remuneracao_mensal(cfg)
+    massa_anual = rem["total"] * 12
     massa_local = massa_anual * s.mao_obra_local_pct / 100
     compras = (eco["custos_variaveis_regime"] + eco["custos_fixos_regime"] - eco["pessoal_regime"])
     compras_locais = np.maximum(compras, 0) * s.compras_locais_pct / 100
@@ -522,9 +562,12 @@ def calcular_social(ctx: Contexto, eco: Dict[str, Any]) -> Dict[str, Any]:
         sobras = np.zeros(ctx.n)
     renda_local = massa_local + sobras * s.mao_obra_local_pct / 100
     iil = safe_div(renda_local, eco["receita_regime"], 0.0)
-    n_trab = max(cfg.economico.cooperados_trabalhadores if cfg.economico.tipo_organizacao != "empresa"
-                 else s.empregos_diretos, 1)
-    renda_mensal = (massa_anual + sobras) / n_trab / 12
+    if cfg.economico.tipo_organizacao != "empresa":
+        n_trab = max(cfg.economico.cooperados_trabalhadores, 1)
+        renda_mensal = ((rem["retirada"] + rem["outros"]) * 12 + sobras) / n_trab / 12
+    else:
+        n_trab = max(s.empregos_diretos, 1)
+        renda_mensal = np.full(ctx.n, (rem["clt"] + rem["outros"]) / n_trab)
     renda_sm = renda_mensal / s.salario_minimo
 
     relacao = RELACAO_COMUNIDADE.get(s.relacao_comunidade)

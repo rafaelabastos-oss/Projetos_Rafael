@@ -202,6 +202,14 @@ class EconomicoConfig:
     capex_fator: float = 1.0                     # multiplicador para incerteza (AACE)
     # Fomento não reembolsável (fundos mitigatórios/compensatórios, editais)
     fomento_nao_reembolsavel_pct: float = 0.0    # % do CAPEX doado ao beneficiário
+    # Pessoal detalhado (entradas das versões anteriores; somam-se a mao_obra_mes)
+    salarios_clt_por_cargo: Dict[str, float] = field(default_factory=dict)   # salário bruto mensal por cargo
+    retirada_cooperados_mes: float = 0.0          # pró-labore/retirada mensal total dos cooperados
+    nome_materia_prima: str = ""
+    # Vendas e calendário
+    producao_vendas_kg_mes: float = 0.0           # 0 => produção calculada pelo módulo técnico
+    meses_ate_primeira_receita: int = 0           # 0 => calculado pela duração do ciclo
+    crescimento_vendas_aa_pct: float = 0.0
 
     @property
     def capex_total(self) -> float:
@@ -224,6 +232,13 @@ CHECKLIST_AMBIENTAL = {
     "gestao_residuos": ("Plano de gestão de resíduos sólidos e lodo", 0.75, False),
     "prevencao_escape": ("Barreiras e plano de prevenção de escape de espécie exótica", 0.75, False),
     "energia_renovavel": ("Uso de energia renovável ou eficiência energética", 0.5, False),
+}
+
+# Limites de N e P total (mg/L) para águas doces classe 2 (Resolução CONAMA nº 357/2005)
+CLASSES_CORPO_RECEPTOR = {
+    "classe 2 — ambiente lótico": {"n_max_mg_l": 2.18, "p_max_mg_l": 0.10},
+    "classe 2 — ambiente intermediário": {"n_max_mg_l": 2.18, "p_max_mg_l": 0.05},
+    "classe 2 — ambiente lêntico": {"n_max_mg_l": 1.27, "p_max_mg_l": 0.03},
 }
 
 FATORES_EMISSAO_ENERGIA = {  # kgCO2e/kWh — atualizar ao ano-base do estudo
@@ -256,6 +271,7 @@ class AmbientalConfig:
     energia_kwh_kg: Optional[float] = None        # None => referência do sistema
     fonte_energia: str = "rede"                   # rede | solar | biomassa | mista
     fracao_renovavel_mista: float = 0.0
+    fator_emissao_rede_kgco2_kwh: float = 0.0817  # fator médio do SIN (atualizar ao ano-base)
     fator_emissao_racao_kgco2_kg: float = 1.1
     diesel_l_ano: float = 600.0
     fator_emissao_diesel_kgco2_l: float = 2.6

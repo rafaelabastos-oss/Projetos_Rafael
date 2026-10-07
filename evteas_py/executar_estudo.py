@@ -9,13 +9,21 @@ import time
 from evteas_py import (comparar_alternativas, criar_alternativas, criar_config_caso_base, criar_config_legado_rev186,
                        diagrama_arquitetura, executar_evteas, exemplo_validacao_especialistas, exportar,
                        gerar_graficos, resumo_executivo, teste_regressao_deterministica)
+from evteas_py.interface import carregar_config, salvar_config
 from evteas_py.relatorios import serializar
+
+ENTRADAS_CASO_BASE = "entradas/entradas_caso_base_rev187.json"
 
 
 def main(pasta="saidas"):
     t0 = time.perf_counter()
     assert teste_regressao_deterministica()
-    cfg = criar_config_caso_base()
+    # As premissas do caso-base ficam em um arquivo de entradas, como as de qualquer projeto:
+    # no notebook, ele é aberto pela opção "Carregar arquivo de entradas e revisar".
+    from pathlib import Path
+    Path(ENTRADAS_CASO_BASE).parent.mkdir(exist_ok=True)
+    salvar_config(criar_config_caso_base(), ENTRADAS_CASO_BASE)
+    cfg = carregar_config(ENTRADAS_CASO_BASE)
     r = executar_evteas(cfg, executar_mc=True, executar_sens=True)
     comp = comparar_alternativas(criar_alternativas(), n_mc=10000)
     legado = executar_evteas(criar_config_legado_rev186(), executar_mc=True, executar_sens=False)

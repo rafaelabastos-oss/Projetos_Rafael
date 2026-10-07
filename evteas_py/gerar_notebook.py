@@ -13,7 +13,7 @@ TITULOS = {
     "vv": "7. Verificação (V&V): invariantes e testes de regressão",
     "casos": "8. Caso-base, alternativas e preset legado da Rev. 186",
     "relatorios": "9. Resumo executivo, exportação e gráficos",
-    "interface": "10. Entrada interativa (wizard), arquivos JSON e análise de preços",
+    "interface": "10. Entrada de dados: menu inicial, wizard completo, arquivos JSON e análise de preços",
 }
 
 
@@ -29,9 +29,17 @@ c = [nbf.v4.new_markdown_cell(
     "# EVTEAS-Py 2.0 (Rev. 187)\n\n"
     "Framework computacional para Estudo de Viabilidade Técnica, Econômica, Ambiental e Social (EVTEAS) "
     "aplicado à piscicultura — dissertação de Rafael Alves Bastos (UFF/MESC).\n\n"
-    "Este notebook é autocontido: reúne o código do pacote `evteas_py` em células, na ordem "
-    "Input → Processamento → Output → Verificação. As premissas do caso-base são ilustrativas e "
-    "devem ser substituídas pelos dados do projeto avaliado e calibradas na validação com especialistas."),
+    "**Como usar**\n\n"
+    "1. Execute as células das Seções 1 a 10 (definições do framework). Elas não calculam nenhum resultado.\n"
+    "2. Execute a célula da **Seção 11 — Entrada de dados** e responda às perguntas. Há três opções:\n"
+    "   - **Novo projeto**: todas as entradas são digitadas (sem valores prontos). Só os coeficientes técnicos com "
+    "referência normativa ou bibliográfica aparecem como sugestão, aceita com Enter e registrada como tal;\n"
+    "   - **Carregar arquivo**: reabre um arquivo `entradas_*.json` salvo anteriormente e permite revisar cada valor;\n"
+    "   - **Exemplo**: carrega o caso ilustrativo da dissertação, apenas para demonstração.\n"
+    "3. Confira o resumo das entradas, confirme e execute as Seções 12 a 14.\n\n"
+    "Os resultados dependem integralmente das entradas informadas. Ao final da entrada, o arquivo "
+    "`entradas_<projeto>.json` é salvo (e baixado no Colab) para que o estudo possa ser reaberto e revisado. "
+    "Digite `sair` em qualquer pergunta para interromper."),
     nbf.v4.new_code_cell("# Dependências (no Colab, apenas numpy-financial costuma faltar)\n"
                          "%pip install -q numpy pandas matplotlib openpyxl numpy-financial"),
     nbf.v4.new_code_cell("from __future__ import annotations\nimport warnings\nwarnings.filterwarnings('ignore', category=RuntimeWarning)")]
@@ -39,14 +47,18 @@ for m in MODULOS:
     c.append(nbf.v4.new_markdown_cell(f"## {TITULOS[m]}"))
     c.append(nbf.v4.new_code_cell(limpar(open(f"evteas_py/{m}.py", encoding="utf-8").read()).strip()))
 c += [
-    nbf.v4.new_markdown_cell("## 11. Execução do caso-base\n\nPara usar outro projeto: `cfg = wizard_evteas()` "
-                             "(entrada interativa) ou `cfg = carregar_config('meu_projeto.json')`."),
+    nbf.v4.new_markdown_cell("## 11. Entrada de dados do projeto\n\n"
+                             "Execute a célula e responda às perguntas. Nenhum resultado é calculado antes desta etapa."),
+    nbf.v4.new_code_cell("cfg = iniciar_entradas()"),
+    nbf.v4.new_markdown_cell("## 12. Análise com as entradas informadas"),
     nbf.v4.new_code_cell("assert teste_regressao_deterministica()\n"
-                         "cfg = criar_config_caso_base()\n"
-                         "# cfg = wizard_evteas()            # entrada interativa completa\n"
-                         "resultado = executar_evteas(cfg, executar_mc=True, executar_sens=True)\n"
+                         "resultado = executar_evteas(cfg, executar_mc=True, executar_sens=True,\n"
+                         "                            n_mc=int(cfg.monte_carlo.iteracoes))\n"
+                         "print('Classificação:', resultado['decisao']['classificacao'])\n"
+                         "for motivo in resultado['decisao']['vetos'] + resultado['decisao']['ressalvas']:\n"
+                         "    print(' -', motivo)\n"
                          "resumo_executivo(resultado)"),
-    nbf.v4.new_code_cell("print(resultado['decisao'])\nresultado['premissas'].head(20)"),
+    nbf.v4.new_code_cell("resultado['premissas']   # valor, origem e distribuição de cada premissa"),
     nbf.v4.new_code_cell("resultado['dre_anual'].round(0)"),
     nbf.v4.new_code_cell("st = resultado['monte_carlo']['estatisticas']\n"
                          "{k: v for k, v in st.items() if not isinstance(v, dict)}"),
@@ -54,15 +66,15 @@ c += [
     nbf.v4.new_code_cell("display(resultado['valores_criticos'])\ndisplay(resultado['cenarios'])"),
     nbf.v4.new_code_cell("resultado['ods']"),
     nbf.v4.new_code_cell("import pandas as pd\npd.DataFrame(resultado['vv']['verificacoes'])"),
-    nbf.v4.new_markdown_cell("## 12. Comparação de alternativas (TOPSIS) e parametrização por especialistas (Likert)"),
-    nbf.v4.new_code_cell("comparacao = comparar_alternativas(criar_alternativas(), n_mc=5000)\ncomparacao['ranking']"),
-    nbf.v4.new_code_cell("r_likert = executar_evteas(exemplo_validacao_especialistas(cfg), executar_mc=False, executar_sens=False)\n"
-                         "display(r_likert['indice']['pesos']['likert_dimensoes']['tabela'])\nprint(r_likert['decisao'])"),
-    nbf.v4.new_markdown_cell("## 13. Exportação e gráficos"),
-    nbf.v4.new_code_cell("arquivos = exportar(resultado, 'evteas_output')\n"
-                         "figuras = gerar_graficos(resultado, 'evteas_output/figuras', comparacao)\n"
-                         "diagrama_arquitetura('evteas_output/figuras/00_arquitetura.png')\n"
-                         "salvar_config(cfg, 'evteas_output/config_caso_base.json')\n"
+    nbf.v4.new_markdown_cell("## 13. Comparação com alternativas de projeto (opcional, TOPSIS)\n\n"
+                             "Cada alternativa parte das entradas do projeto; escolha os blocos a alterar e informe os novos valores."),
+    nbf.v4.new_code_cell("comparacao = definir_e_comparar_alternativas(cfg)\n"
+                         "comparacao['ranking'] if comparacao else 'Comparação não solicitada.'"),
+    nbf.v4.new_markdown_cell("## 14. Exportação e gráficos"),
+    nbf.v4.new_code_cell("pasta = 'evteas_output'\n"
+                         "arquivos = exportar(resultado, pasta)\n"
+                         "figuras = gerar_graficos(resultado, pasta + '/figuras', comparacao)\n"
+                         "diagrama_arquitetura(pasta + '/figuras/00_arquitetura.png')\n"
                          "from IPython.display import Image\n"
                          "for f in sorted(figuras.values()):\n    display(Image(f))\narquivos"),
 ]
