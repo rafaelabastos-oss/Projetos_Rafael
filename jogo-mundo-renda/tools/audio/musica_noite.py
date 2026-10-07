@@ -42,7 +42,6 @@ sys.path.insert(0, HERE)
 
 import numpy as np                      # noqa: E402
 from scipy import signal               # noqa: E402
-from scipy.ndimage import maximum_filter1d  # noqa: E402
 
 import synth as sy                     # noqa: E402
 
@@ -702,22 +701,6 @@ def cyclic_compress(y, **kw):
     return ext[:, P:-P]
 
 
-def limiter_loopsafe(x, ceiling_db=-1.0, lookahead=0.004, release=0.08):
-    """Mesmo limitador de synth.py, mas com o filtro de recuperação iniciado no estado de
-    repouso (ganho = need[0]) em vez de zero. O original começa com ganho ~0 e sobe em ~0,3 s,
-    o que abafa os primeiros ms do arquivo e cria um degrau/estalo na emenda do loop.
-    Usado só neste processo (sy.limiter é substituído em tempo de execução; synth.py não muda)."""
-    ceil = 10 ** (ceiling_db / 20)
-    peak = np.max(np.abs(x), axis=0)
-    la = sy.nsamp(lookahead)
-    peak = maximum_filter1d(peak, size=2 * la + 1)
-    need = np.minimum(1.0, ceil / np.maximum(peak, 1e-9))
-    a_r = np.exp(-1 / (release * SR))
-    sm, _ = signal.lfilter([1 - a_r], [1, -a_r], need, zi=[a_r * need[0]])
-    g = np.minimum(need, sm)
-    return np.clip(x * g, -ceil, ceil)
-
-
 def main():
     t0 = time.time()
     print('Noite na Vila: %d compassos, %.2f s, %d BPM' % (NBARS, LOOP, BPM))
@@ -729,7 +712,6 @@ def main():
     rms = np.sqrt(np.mean(y ** 2))
     y *= 10 ** (-21 / 20) / rms
     y = cyclic_compress(y, thresh_db=-22, ratio=1.8, attack=0.03, release=0.3)
-    sy.limiter = limiter_loopsafe               # ver docstring: evita o 'fade-in' de 0,3 s no início do arquivo
     res = sy.master_and_export(y, OUT, target_lufs=TARGET_LUFS, ceiling_db=-1.2, quality=QUALITY,
                                loop=True, title='Noite na Vila')
     print(res)

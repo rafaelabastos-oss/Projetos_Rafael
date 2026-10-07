@@ -44,7 +44,6 @@ import time
 import numpy as np
 from scipy import signal
 from scipy.interpolate import PchipInterpolator
-from scipy.ndimage import maximum_filter1d
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -147,21 +146,6 @@ def cyclic(fn, y, pad_s=2.0):
     P = idx(pad_s)
     ext = np.concatenate([y[:, -P:], y, y[:, :P]], axis=1)
     return fn(ext)[:, P:-P]
-
-
-def limiter_loopsafe(x, ceiling_db=-1.0, lookahead=0.004, release=0.08):
-    """Mesmo limitador de synth.py, mas com o filtro de recuperação começando em repouso
-    (ganho = need[0]). O original parte de ganho ~0 e sobe em ~0,3 s, o que abafaria o início do
-    arquivo e criaria um degrau na emenda do loop. Trocado só neste processo (synth.py não muda)."""
-    ceil = 10 ** (ceiling_db / 20)
-    peak = np.max(np.abs(x), axis=0)
-    la = nsamp(lookahead)
-    peak = maximum_filter1d(peak, size=2 * la + 1)
-    need = np.minimum(1.0, ceil / np.maximum(peak, 1e-9))
-    a_r = np.exp(-1 / (release * SR))
-    sm, _ = signal.lfilter([1 - a_r], [1, -a_r], need, zi=[a_r * need[0]])
-    g = np.minimum(need, sm)
-    return np.clip(x * g, -ceil, ceil)
 
 
 def reverb_wet(x, t60=1.6, predelay=0.02, bright=0.4, seed=7, hp=150):
@@ -324,7 +308,6 @@ def close_bed(bed, pre, L, X):
 def finish(y, fname, target, title, hp=30, shelf_f=6500, shelf_db=-3.0):
     """EQ final cíclica (grave limpo, agudos macios), master e exportação."""
     y = cyclic(lambda z: shelf(sy.highpass(z, hp, order=2), shelf_f, shelf_db), y)
-    sy.limiter = limiter_loopsafe
     path = os.path.join(OUT_DIR, fname)
     res = sy.master_and_export(y, path, target_lufs=target, ceiling_db=-1.2, quality=QUALITY, loop=True, title=title)
     return path, res

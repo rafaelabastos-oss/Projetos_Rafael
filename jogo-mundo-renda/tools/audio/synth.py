@@ -694,9 +694,10 @@ def limiter(x, ceiling_db=-1.0, lookahead=0.004, release=0.08):
     peak = maximum_filter1d(peak, size=2 * la + 1)
     need = np.minimum(1.0, ceil / np.maximum(peak, 1e-9))
     a_r = np.exp(-1 / (release * SR))
-    g = need.copy()
-    # suavização: queda imediata, recuperação lenta (aproximação vetorizada em blocos)
-    g = np.minimum(need, signal.lfilter([1 - a_r], [1, -a_r], need))
+    # suavização: queda imediata, recuperação lenta; o filtro começa em repouso (zi) para não
+    # abafar o início do arquivo (o que criava um estalo na emenda dos loops)
+    sm, _ = signal.lfilter([1 - a_r], [1, -a_r], need, zi=[a_r * need[0]])
+    g = np.minimum(need, sm)
     y = x * g
     return np.clip(y, -ceil, ceil)
 
@@ -792,7 +793,9 @@ def master_and_export(x, out_path, target_lufs=-18.0, ceiling_db=-1.2, quality=4
     tmp.close()
     try:
         _write_wav(tmp.name, y)
-        cmd = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', tmp.name, '-c:a', 'libvorbis', '-q:a', str(quality)]
+        # bitexact: sem número de série aleatório no Ogg, então o mesmo script gera exatamente o mesmo arquivo
+        cmd = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', tmp.name, '-fflags', '+bitexact', '-flags:a', '+bitexact',
+               '-c:a', 'libvorbis', '-q:a', str(quality)]
         if title:
             cmd += ['-metadata', 'title=' + title, '-metadata', 'artist=Mundo Renda (trilha procedural)']
         cmd.append(out_path)

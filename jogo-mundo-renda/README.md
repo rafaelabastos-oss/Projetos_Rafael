@@ -2,7 +2,7 @@
 
 Jogo para **Android** em que você cria **o seu projeto de geração de trabalho e renda** e o constrói, do seu jeito, num **mundo aberto** isométrico. Funciona 100% offline.
 
-- 📱 **APK pronto:** [`dist/MundoRenda.apk`](dist/MundoRenda.apk)
+- 📱 **APK pronto:** [`dist/MundoRenda.apk`](dist/MundoRenda.apk) (~26 MB, com trilha sonora e emojis embutidos)
 - 🧠 **Prompt mestre** (especificação completa para recriar ou expandir com IA): [`PROMPT_MESTRE.md`](PROMPT_MESTRE.md)
 
 ## O que dá para fazer

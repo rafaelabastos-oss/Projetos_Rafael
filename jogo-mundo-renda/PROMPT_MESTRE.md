@@ -329,7 +329,7 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 
 ## 11. Requisitos técnicos
 
-- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~30 MB (trilha sonora + fonte de emojis).
+- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~26 MB (≈15 MB de trilha sonora + 10,8 MB de fonte de emojis).
 - **Compatibilidade com WebView antigo** (Android 5–7 sem atualização): toque por eventos de ponteiro com reserva para eventos de toque, polyfill de `TypedArray.fill`, CSS sem `inset` e com áreas seguras (`env()`) só via `@supports`, texturas inclinadas sem depender de `CanvasPattern.setTransform`.
 - **Arquitetura:** app nativo mínimo em Java (`MainActivity`) com **WebView em tela cheia imersiva** carregando `file:///android_asset/www/index.html`; o jogo é **HTML5 Canvas 2D + JavaScript puro** (ES5, sem frameworks, sem CDN, sem internet).
 - **Ponte nativa (`AndroidBridge`):** `save/load/remove` em arquivos privados do app (gravação atômica), `vibrate`, `share` (compartilhar resumo do projeto) e `exitApp`. No navegador, cai para `localStorage`.

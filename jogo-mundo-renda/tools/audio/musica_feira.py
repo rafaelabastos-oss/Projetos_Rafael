@@ -38,7 +38,6 @@ sys.path.insert(0, HERE)
 
 import numpy as np                      # noqa: E402
 from scipy import signal               # noqa: E402
-from scipy.ndimage import maximum_filter1d  # noqa: E402
 
 import synth as sy                     # noqa: E402
 
@@ -810,20 +809,6 @@ def mixdown(st, report=True):
     return mix
 
 
-def limiter_sem_rampa(x, ceiling_db=-1.0, lookahead=0.004, release=0.08):
-    """Mesmo algoritmo do sy.limiter, mas o filtro de recuperação começa em regime
-    (zi = need[0]); o original começa em zero e atenua o início do arquivo."""
-    ceil = 10 ** (ceiling_db / 20)
-    peak = np.max(np.abs(x), axis=0)
-    la = sy.nsamp(lookahead)
-    peak = maximum_filter1d(peak, size=2 * la + 1)
-    need = np.minimum(1.0, ceil / np.maximum(peak, 1e-9))
-    a_r = np.exp(-1 / (release * SR))
-    sm, _ = signal.lfilter([1 - a_r], [1, -a_r], need, zi=[need[0] * a_r])
-    g = np.minimum(need, sm)
-    return np.clip(x * g, -ceil, ceil)
-
-
 def cyclic(fn, y, pad_s=3.0, **kw):
     P = sy.nsamp(pad_s)
     ext = np.concatenate([y[:, -P:], y, y[:, :P]], axis=1)
@@ -842,7 +827,6 @@ def main():
     rms = np.sqrt(np.mean(y ** 2))
     y *= 10 ** (-20 / 20) / rms
     y = cyclic(sy.compress, y, thresh_db=-20, ratio=2.0, attack=0.015, release=0.2)
-    sy.limiter = limiter_sem_rampa          # só neste processo; synth.py não é alterado
     res = sy.master_and_export(y, OUT, target_lufs=TARGET_LUFS, ceiling_db=-1.2, quality=QUALITY,
                                loop=True, title='Dia de Feira')
     print(res)
