@@ -1,0 +1,28 @@
+name: Mundo Renda - APK
+
+on:
+  push:
+    paths:
+      - 'jogo-mundo-renda/**'
+      - '.github/workflows/mundo-renda-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar ferramentas Android (pacotes do Ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aapt apksigner zipalign dalvik-exchange android-sdk-platform-23 zip
+
+      - name: Gerar APK
+        run: ./jogo-mundo-renda/build-apk.sh
+
+      - name: Publicar APK como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: MundoRenda-apk
+          path: jogo-mundo-renda/dist/MundoRenda.apk
