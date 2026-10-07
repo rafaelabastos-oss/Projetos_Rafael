@@ -89,7 +89,7 @@ COD_TECNICO = trecho(modelo.calcular_tecnico, "# Restrição dupla", "oee = disp
 COD_ECONOMICO = juntar(
     trecho(modelo.calcular_economico, "prod_mes = tec", "receita = receita_produtos"),
     "\n".join(fonte(modelo.calcular_economico).split("\n")[
-        next(k for k, l in enumerate(fonte(modelo.calcular_economico).split("\n")) if "impostos_fat = receita" in l):
+        next(k for k, l in enumerate(fonte(modelo.calcular_economico).split("\n")) if "impostos_fat = (" in l):
         next(k for k, l in enumerate(fonte(modelo.calcular_economico).split("\n")) if "il = safe_div" in l) + 1]),
 )
 COD_AMBIENTAL = juntar(
@@ -97,7 +97,7 @@ COD_AMBIENTAL = juntar(
     "\n".join(l for l in fonte(modelo.calcular_ambiental).split("\n")
               if "va = eco[" in l or "Ecoeficiência (WBCSD)" in l or "eco_carbono = " in l),
 )
-COD_SOCIAL = trecho(modelo.calcular_social, "massa_anual = cfg", "risco = 1 /")
+COD_SOCIAL = trecho(modelo.calcular_social, "rem = remuneracao_mensal(cfg)", "risco = 1 /")
 COD_DECISAO = fonte(ponderacao.classificar)
 COD_TIR = fonte(financeiro.tir)
 COD_MC = trecho(incerteza.monte_carlo, "n = int(n or", 'amostra["VPL"] = eco["vpl"]')

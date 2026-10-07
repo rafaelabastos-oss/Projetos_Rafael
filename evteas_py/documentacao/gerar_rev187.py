@@ -42,7 +42,7 @@ FMT = {
           TNR + '<w:sz w:val="24"/>'),
     "cap": ('<w:pPr><w:pStyle w:val="Legenda"/><w:keepNext/><w:spacing w:before="160" w:after="60"/><w:ind w:firstLine="0"/></w:pPr>',
             TNR + '<w:b/><w:sz w:val="18"/>'),
-    "code": ('<w:pPr><w:spacing w:line="240" w:lineRule="auto" w:before="40" w:after="40"/><w:ind w:firstLine="0" w:left="283" w:right="113"/><w:jc w:val="left"/><w:shd w:fill="F2F2F2"/></w:pPr>',
+    "code": ('<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="F2F2F2"/><w:spacing w:line="240" w:lineRule="auto" w:before="40" w:after="40"/><w:ind w:firstLine="0" w:left="283" w:right="113"/><w:jc w:val="left"/></w:pPr>',
              '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="16"/>'),
     "fonte": ('<w:pPr><w:pStyle w:val="Legenda"/><w:ind w:firstLine="0"/></w:pPr>', TNR + '<w:sz w:val="18"/>'),
     "bullet": ('<w:pPr><w:spacing w:line="360" w:lineRule="auto"/><w:ind w:left="567" w:hanging="283"/></w:pPr>', TNR + '<w:sz w:val="24"/>'),
@@ -307,6 +307,109 @@ def inserir_referencias(doc: str, inicio_refs: int) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Apêndices: código-fonte completo e testes
+# ---------------------------------------------------------------------------
+
+RAIZ_CODIGO = Path(__file__).resolve().parents[1]
+APENDICES = [
+    ("APÊNDICE A – CÓDIGO-FONTE COMPLETO DO EVTEAS-Py",
+     ["Este apêndice reproduz o código-fonte completo da versão 2.0 do EVTEAS-Py, utilizada nas execuções "
+      "apresentadas no Capítulo 4. O pacote é organizado em dez módulos, cuja responsabilidade e vínculo com a "
+      "dissertação estão sintetizados no Quadro 10, e é acompanhado do script que executa o estudo completo. "
+      "O notebook autocontido EVTEAS_Py_Rev187, destinado à execução no Google Colab, reúne esse mesmo código em "
+      "células, seguido das etapas de entrada de dados, análise, comparação de alternativas e exportação.",
+      "As linhas estão numeradas para facilitar a referência. O código está versionado no repositório do projeto, "
+      "no diretório evteas_py, onde também se encontram o arquivo de entradas do caso-base, as saídas da execução de "
+      "referência e os scripts que geram esta revisão do texto."],
+     [("evteas_py/__init__.py", "Interface pública do pacote"),
+      ("evteas_py/config.py", "Configuração, premissas e rastreabilidade das fontes"),
+      ("evteas_py/financeiro.py", "Engenharia econômica vetorizada"),
+      ("evteas_py/modelo.py", "Núcleo de cálculo das dimensões técnica, econômica, ambiental e social"),
+      ("evteas_py/ponderacao.py", "Normalização, pesos, índice EVTEAS, decisão e TOPSIS"),
+      ("evteas_py/incerteza.py", "Monte Carlo, sensibilidade, valores críticos e cenários"),
+      ("evteas_py/pipeline.py", "Pipeline principal e comparação de alternativas"),
+      ("evteas_py/vv.py", "Verificação por invariantes e testes de regressão"),
+      ("evteas_py/casos.py", "Caso-base, alternativas e preset legado"),
+      ("evteas_py/relatorios.py", "Resumo executivo, exportação e gráficos"),
+      ("evteas_py/interface.py", "Entrada de dados, arquivos de entradas e análise de preços"),
+      ("executar_estudo.py", "Execução do estudo completo")]),
+    ("APÊNDICE B – TESTES AUTOMATIZADOS DE VERIFICAÇÃO",
+     ["Este apêndice reproduz a suíte de testes automatizados descrita na Seção 4.10, executada com a biblioteca "
+      "pytest. O arquivo test_evteas.py verifica as rotinas de cálculo; o arquivo test_entradas.py verifica a entrada "
+      "de dados com o usuário simulado definido em usuario_simulado.py, que responde ao wizard como uma pessoa "
+      "digitaria."],
+     [("tests/test_evteas.py", "Testes do núcleo de cálculo"),
+      ("tests/test_entradas.py", "Testes da entrada de dados"),
+      ("tests/usuario_simulado.py", "Usuário simulado para os testes do wizard"),
+      ("tests/conftest.py", "Configuração da suíte de testes")]),
+]
+PPR_CODIGO = ('<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="F7F7F7"/><w:spacing w:before="0" w:after="0" w:line="180" w:lineRule="exact"/>'
+              '<w:ind w:left="0" w:firstLine="0"/><w:jc w:val="left"/>{marca}</w:pPr>')
+RPR_CODIGO = '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/><w:sz w:val="14"/><w:szCs w:val="14"/>'
+PPR_AP_TITULO = '<w:pPr><w:pStyle w:val="Ttulo1"/><w:pageBreakBefore/><w:jc w:val="center"/>{marca}</w:pPr>'
+_bm = [990000]
+
+
+def _bookmark(nome, conteudo):
+    _bm[0] += 1
+    return f'<w:bookmarkStart w:id="{_bm[0]}" w:name="{nome}"/>{conteudo}<w:bookmarkEnd w:id="{_bm[0]}"/>'
+
+
+def apendices_xml():
+    """Retorna (xml dos apêndices, entradas do sumário [(nível, texto, marcador)])."""
+    xml, sumario = [], []
+    for k, (titulo, intro, arquivos) in enumerate(APENDICES):
+        letra = "AB"[k]
+        marcador = f"_TocRev187Ap{letra}"
+        corpo = f'<w:ins {ins_attr()}>{run(FMT["h1"][1], titulo)}</w:ins>'
+        xml.append(f'<w:p>{PPR_AP_TITULO.format(marca=f"<w:rPr><w:ins {ins_attr()}/></w:rPr>")}{_bookmark(marcador, corpo)}</w:p>')
+        sumario.append((1, titulo, marcador))
+        xml += [paragrafo_inserido("p", t) for t in intro]
+        for j, (caminho, descricao) in enumerate(arquivos, 1):
+            sub = f"{letra}.{j} {caminho} — {descricao}"
+            m2 = f"_TocRev187Ap{letra}{j}"
+            ppr = marca_ppr(FMT["h2"][0], f"<w:ins {ins_attr()}/>")
+            conteudo = f'<w:ins {ins_attr()}>{run(FMT["h2"][1], sub)}</w:ins>'
+            xml.append(f"<w:p>{ppr}{_bookmark(m2, conteudo)}</w:p>")
+            sumario.append((2, sub, m2))
+            linhas = (RAIZ_CODIGO / caminho).read_text(encoding="utf-8").rstrip("\n").split("\n")
+            largura = len(str(len(linhas)))
+            marca = f"<w:rPr><w:ins {ins_attr()}/></w:rPr>"
+            for i, linha in enumerate(linhas, 1):
+                texto = f"{i:>{largura}}  {linha.rstrip()}"
+                xml.append(f'<w:p>{PPR_CODIGO.format(marca=marca)}<w:ins {ins_attr()}>'
+                           f'<w:r><w:rPr>{RPR_CODIGO}</w:rPr><w:t xml:space="preserve">{escape(texto)}</w:t></w:r></w:ins></w:p>')
+    return "".join(xml), sumario
+
+
+def inserir_apendices(doc: str) -> str:
+    corpo, sumario = apendices_xml()
+    fim_body = doc.rindex("<w:sectPr")
+    ultimo = list(re.finditer(r"<w:p\b[^>]*>(?:(?!<w:p\b).)*?</w:p>", doc[:fim_body], flags=re.S))[-1]
+    # o documento termina com um parágrafo de quebra de página: os apêndices entram antes dele
+    pos = ultimo.start() if '<w:br w:type="page"/>' in ultimo.group(0) else fim_body
+    doc = doc[:pos] + corpo + doc[pos:]
+    # entradas no Sumário (resultado em cache do campo TOC), logo após REFERÊNCIAS
+    s0 = doc.index("<w:sdt>")
+    s1 = doc.index("</w:sdt>", s0)
+    ref = doc.rfind("<w:t>REFERÊNCIAS</w:t>", s0, s1)
+    fim_ref = doc.index("</w:p>", ref) + len("</w:p>")
+    modelo = doc[doc.rfind("<w:p ", s0, ref):fim_ref]
+    entradas = []
+    for nivel, texto, marcador in sumario:
+        p = re.sub(r'w:anchor="[^"]+"', f'w:anchor="{marcador}"', modelo)
+        p = re.sub(r"PAGEREF \S+", f"PAGEREF {marcador}", p)
+        p = p.replace("<w:t>REFERÊNCIAS</w:t>", f"<w:t>{escape(texto)}</w:t>")
+        if nivel == 2:
+            p = p.replace('w:val="Sumrio1"', 'w:val="Sumrio2"')
+        p = re.sub(r"(<w:hyperlink [^>]*>)(.*)(</w:hyperlink>)", lambda m: f"{m.group(1)}<w:ins {ins_attr()}>{m.group(2)}</w:ins>{m.group(3)}", p, flags=re.S)
+        p = marca_ppr(re.search(r"<w:pPr>.*?</w:pPr>", p, flags=re.S).group(0), f"<w:ins {ins_attr()}/>").join(
+            re.split(r"<w:pPr>.*?</w:pPr>", p, maxsplit=1, flags=re.S))
+        entradas.append(p)
+    return doc[:fim_ref] + "".join(entradas) + doc[fim_ref:]
+
+
+# ---------------------------------------------------------------------------
 
 def main(origem: str, destino: str):
     origem, destino = Path(origem), Path(destino)
@@ -332,8 +435,10 @@ def main(origem: str, destino: str):
     doc = doc[:ini] + novo_seg + doc[fim:]
     doc = inserir_referencias(doc, doc.rfind("<w:t>REFERÊNCIAS</w:t>"))
     doc_path.write_text(doc, encoding="utf-8")
-
     restaurar_paginacao_original(destino)
+    doc = doc_path.read_text(encoding="utf-8")
+    doc = inserir_apendices(doc)
+    doc_path.write_text(doc, encoding="utf-8")
 
     st = destino / "word/settings.xml"
     s = st.read_text(encoding="utf-8")
@@ -374,15 +479,22 @@ RPR_LISTA_TITULO = ('<w:rFonts w:ascii="Calibri" w:eastAsia="Times New Roman" w:
 PPR_LISTA_ITEM = '<w:pPr><w:pStyle w:val="ndicedeilustraes"/><w:tabs><w:tab w:val="right" w:leader="dot" w:pos="8494"/></w:tabs></w:pPr>'
 
 
-def lista_de_codigos(paginas=None) -> str:
-    """Lista de Códigos da Rev. 187, no mesmo formato das demais listas pré-textuais."""
+def lista_de_codigos(paginas=None, rastrear: bool = True) -> str:
+    """Lista de Códigos da Rev. 187, no mesmo formato das demais listas pré-textuais
+    (marcada como inserção na versão com controle de alterações)."""
     paginas = paginas or {}
     itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
-    xml = [f'<w:p>{PPR_LISTA_TITULO}<w:r><w:rPr>{RPR_LISTA_TITULO}</w:rPr><w:t>LISTA DE CÓDIGOS</w:t></w:r></w:p>']
+
+    def par(ppr, runs):
+        if not rastrear:
+            return f"<w:p>{ppr}{runs}</w:p>"
+        return f'<w:p>{marca_ppr(ppr, f"<w:ins {ins_attr()}/>")}<w:ins {ins_attr()}>{runs}</w:ins></w:p>'
+
+    xml = [par(PPR_LISTA_TITULO, f'<w:r><w:rPr>{RPR_LISTA_TITULO}</w:rPr><w:t>LISTA DE CÓDIGOS</w:t></w:r>')]
     for it in itens:
         pg = str(paginas.get(it, ""))
-        xml.append(f'<w:p w:rsidRDefault="EV187C0D">{PPR_LISTA_ITEM}<w:r><w:t xml:space="preserve">{escape(it)}</w:t></w:r>'
-                   f'<w:r><w:tab/></w:r><w:r><w:t>{pg}</w:t></w:r></w:p>')
+        xml.append(par(PPR_LISTA_ITEM, f'<w:r><w:t xml:space="preserve">{escape(it)}</w:t></w:r>'
+                                       f'<w:r><w:tab/></w:r><w:r><w:t>{pg}</w:t></w:r>'))
     return "".join(xml)
 
 
@@ -411,12 +523,12 @@ def restaurar_pre_textuais(doc: str) -> str:
     return doc.replace("<!--LISTA_CODIGOS-->", lista_de_codigos())
 
 
-def atualizar_paginas(pasta: Path, pdf: Path) -> None:
+def atualizar_paginas(pasta: Path, pdf: Path, rastrear: bool = True) -> None:
     """Preenche os números de página exibidos no Sumário e na Lista de Códigos a
     partir da paginação renderizada (o Word os recalcula ao atualizar os campos)."""
     import subprocess
     paginas_pdf = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout.split("\f")
-    norm = lambda s: re.sub(r"\s+", " ", s).strip()
+    norm = lambda s: re.sub(r"\s+", " ", s).strip().casefold()
 
     def pagina_impressa(i):
         linhas = [l.strip() for l in paginas_pdf[i].split("\n") if l.strip()]
@@ -440,7 +552,7 @@ def atualizar_paginas(pasta: Path, pdf: Path) -> None:
     ini = doc.rfind("<w:p>", 0, ini)
     fim = doc.index("<w:sdt>", ini)
     itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
-    doc = doc[:ini] + lista_de_codigos({it: achar(it, legenda=True) or "" for it in itens}) + doc[fim:]
+    doc = doc[:ini] + lista_de_codigos({it: achar(it, legenda=True) or "" for it in itens}, rastrear) + doc[fim:]
     # Sumário (resultado em cache dos campos PAGEREF dentro do SDT)
     s0 = doc.index("<w:sdt>", ini)
     s1 = doc.index("</w:sdt>", s0)
@@ -499,5 +611,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         aceitar_alteracoes(Path(sys.argv[2]), Path(sys.argv[3]))
     if len(sys.argv) > 4:                       # PDF renderizado da versão limpa
-        for pasta in sys.argv[2:4]:
-            atualizar_paginas(Path(pasta), Path(sys.argv[4]))
+        atualizar_paginas(Path(sys.argv[2]), Path(sys.argv[4]), rastrear=True)
+        atualizar_paginas(Path(sys.argv[3]), Path(sys.argv[4]), rastrear=False)
