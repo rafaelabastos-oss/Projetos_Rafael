@@ -112,11 +112,13 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 ### 7.8 Modo Passeio (mundo aberto em primeira pessoa)
 - Botão 🚶: um personagem com camiseta na cor do projeto aparece perto do Centro. **Joystick virtual** para andar; a câmera segue.
 - Anda em grama, estradas, pontes, praças e canteiros; árvores, prédios e água bloqueiam.
-- Ao chegar perto de uma construção, um cartão mostra o nome e o status (toque para detalhes). Moradores próximos falam frases sobre a vida no projeto.
+- Ao chegar perto de uma construção, um cartão mostra o nome e o status (toque para detalhes). Moradores próximos falam frases sobre a vida no projeto em **balões de fala** desenhados por cima de tudo.
 
 ### 7.9 Vida no mundo
-- Moradores andam pelas estradas (quantidade proporcional a empregos e casas, menos à noite).
-- Ciclo de dia e noite: anoitecer alaranjado, noite azulada com janelas e postes acesos.
+- **Moradores animados** andam pelas calçadas (ciclo de caminhada de 4 quadros, de frente e de costas, 18 visuais: tom de pele, cabelo, roupa, vestido, chapéu, bolsa). Quantidade proporcional a empregos e casas, menos à noite.
+- **Veículos** nas ruas, na mão direita: bicicletas, **motos de entrega** com baú na cor do projeto e caminhonetes (com faróis à noite); mais veículos com lojas, beneficiamento e a Central de Entregas.
+- **Ciclo de dia e noite com luz de verdade:** amanhecer rosado, meio-dia neutro, entardecer dourado, noite azulada; janelas acendem, postes e lampiões iluminam o chão ao redor, antenas piscam em vermelho.
+- **Efeitos:** construções "brotam" do chão com poeira; demolição solta poeira e entulho; chaminés soltam fumaça quando a construção está funcionando; moedas saltam de quem vendeu no fim do dia; bandeiras tremulam, a fonte jorra, o catavento gira, árvores balançam; bandos de pássaros cruzam o céu com sombra no chão; nuvens (com sombra) aparecem ao afastar a câmera; chuva e tom acinzentado no evento de chuva, tom quente na estiagem; confete ao cumprir missão ou subir de nível.
 - Ao fim de cada dia, números flutuantes mostram a produção (+16 🥬) e o lucro sobre o Centro.
 
 ### 7.10 Modos
@@ -211,6 +213,9 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 | 🎠 Parquinho | R$ 300 | +7 | 3 | 2 |
 | 🎨 Mural de Arte | R$ 200 | +6 | 3 | 3 |
 | 🗿 Monumento | R$ 500 | +9 | 4 | 4 |
+| 🌸 Ipê Florido | R$ 35 | +4 | 2 | 1 |
+| 🌀 Cata-vento | R$ 180 | +4 | 2 | 2 |
+| 🎶 Coreto | R$ 400 | +8 | 3 | 3 |
 
 ### Terreno
 
@@ -290,7 +295,8 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 
 - **Barra superior:** símbolo e nome do projeto, nível, caixa (∞ no Criativo), empregados/vagas (fica laranja se faltar gente), população, bem-estar com carinha, dia e hora, velocidades e menu. Uma barra fina dourada mostra o progresso do nível.
 - **Missão atual** no canto superior esquerdo; **minimapa** isométrico tocável no canto direito com o retângulo da câmera; botões ＋/－.
-- **Barra inferior:** 👆 Selecionar · 🏘️ Comunidade · 🌾 Produção · 🛒 Comércio · 🛣️ Vias · 🌳 Decorar · ⛰️ Terreno · 🧨 Demolir · ↩️ Desfazer · 🚶 Passear. Categorias abrem uma **paleta horizontal** com ícone, nome, custo ou cadeado com o nível.
+- **Barra inferior:** 👆 Selecionar · 🏘️ Comunidade · 🌾 Produção · 🛒 Comércio · 🛣️ Vias · 🌳 Decorar · ⛰️ Terreno · 🧨 Demolir · ↩️ Desfazer · 🚶 Passear. Categorias abrem uma **paleta horizontal** com **miniatura renderizada** da construção (ou do bloco de chão/via), nome, custo ou cadeado com o nível (miniatura em tons de cinza quando bloqueada). As miniaturas são geradas aos poucos em segundo plano.
+- **Cartão da construção** com miniatura do nível atual.
 - **Dica da ferramenta** acima da paleta: nome, como usar, números principais e custo total da estrada sendo traçada.
 - **Gestos:** um dedo arrasta o mapa (no modo Selecionar ou com ferramentas de toque), dois dedos movem e dão zoom (pinça), toque constrói ou seleciona. Mouse: botão direito arrasta, roda dá zoom. Teclado (para testes): setas/WASD, +/−, Esc, Ctrl+Z.
 - **Botão Voltar do Android:** fecha a camada de cima (diálogo → painel → passeio → cartão → ferramenta); por último pergunta se quer sair (salvando antes).
@@ -299,19 +305,27 @@ Escolher ferramenta → Construir/arrumar o layout → Dia passa (produção →
 
 ## 10. Direção de arte e áudio
 
-- **Isométrico 2:1** (ladrilho 64 × 32), estilo *flat* colorido e aconchegante, com sombras suaves.
-- **Toda a arte é procedural** (desenhada em canvas por código e guardada em cache): terreno com textura, água com espuma animada, estradas que se conectam sozinhas (terra, pedra e ponte de madeira), casas com telhados de cores variadas, prédios com janelas, toldos e chaminés, placas redondas com o emoji da construção, árvores, coqueiros, rochas, flores, fonte, parquinho, mural, monumento etc.
-- Telhados das construções do projeto na **cor escolhida** pelo jogador; o Centro tem bandeira e o símbolo do projeto.
+- **Isométrico 2:1** (ladrilho 64 × 32), estilo ilustrado colorido e aconchegante, com luz vindo do alto à esquerda e **sombras projetadas** suaves.
+- **Toda a arte é procedural** (desenhada em canvas por código e guardada em cache), sem arquivos de imagem:
+  - **Terreno contínuo** (sem grade aparente): texturas sem emenda para grama, campo, grama seca, areia, terra e pedregulho; as transições entre tipos são **bordas orgânicas** (cantos côncavos e convexos suavizados, prioridade de quem "derrama" sobre quem); variação de cor em grande escala; tufos, flores, cogumelos e pedrinhas espalhados.
+  - **Água em camadas animadas** (manchas, ondulações em dois sentidos, brilhos), **cor por profundidade** (mais clara na margem, mais escura no meio), espuma no litoral.
+  - **Estradas** com cantos arredondados que se ligam sozinhas: terra com trilhas de pneu, rua de pedra (paralelepípedos) com meio-fio, ponte de madeira sobre a água.
+  - **A ilha no mar:** o mapa é uma ilha com **falésia** em camadas de terra e rocha (grama caindo na borda, degradê úmido perto da água), **espuma batendo na base**, cachoeiras onde rios encontram a borda, faixa de água rasa turquesa e mar com gradiente de profundidade e brilhos.
+  - **Construções detalhadas** com volumes, telhados (duas águas, quatro águas, pirâmide, laje), telhas, janelas com caixilho, portas, toldos listrados, placas, chaminés, caixas d'água, antenas, ar-condicionado, painéis solares inclinados, cercas, vasos e arbustos; variações de cor nas casas; níveis 2 e 3 ganham andares e detalhes.
+  - **Natureza brasileira:** árvores frondosas, araucárias, coqueiros, **ipês amarelos e roxos**, arbustos, rochas, flores.
+  - Contorno suave em cada sprite e **sombras projetadas calculadas a partir dos volumes** (gravadas no chão do terreno).
+- **Luz:** cor ambiente por hora do dia (mapa de luz multiplicativo), janelas acesas à noite (camada emissiva por sprite), brilho (bloom) de postes e lampiões, faróis dos veículos, vinheta suave nas bordas da tela.
+- Telhados das construções do projeto na **cor escolhida** pelo jogador; o Centro tem bandeira tremulando e o símbolo do projeto; placas redondas com o emoji do que cada construção produz (podem ser ocultadas).
 - Paleta da interface: verde-escuro (#14261F), verde de destaque (#3CCF7A), dourado (#FFC94A).
 - **Áudio sintetizado** (Web Audio, sem arquivos): clique, construir, erro, moedas, missão, nível, evento, demolir; música ambiente pentatônica opcional. Vibração curta ao construir (Android).
 
 ## 11. Requisitos técnicos
 
-- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~200 KB.
+- **Plataforma:** Android 5.0+ (minSdk 21), targetSdk 34, APK assinado (esquemas v1, v2 e v3), ~240 KB.
 - **Arquitetura:** app nativo mínimo em Java (`MainActivity`) com **WebView em tela cheia imersiva** carregando `file:///android_asset/www/index.html`; o jogo é **HTML5 Canvas 2D + JavaScript puro** (ES5, sem frameworks, sem CDN, sem internet).
 - **Ponte nativa (`AndroidBridge`):** `save/load/remove` em arquivos privados do app (gravação atômica), `vibrate`, `share` (compartilhar resumo do projeto) e `exitApp`. No navegador, cai para `localStorage`.
 - **Ciclo de vida:** salva ao pausar o app, a cada 2 dias de jogo e alguns segundos após mudanças no mapa; tela sempre ligada durante o jogo; sem permissões perigosas (apenas `VIBRATE`).
-- **Desempenho:** desenha só o que está na tela (recorte por ladrilhos), sprites em cache, resolução limitada a 2× e **resolução dinâmica** (reduz sozinha se o FPS cair abaixo de ~34), opção de gráficos leves.
+- **Desempenho:** o terreno é desenhado em **blocos de 8 × 8 ladrilhos guardados em cache em várias resoluções** (refinados aos poucos dentro de um orçamento de milissegundos por quadro, com descarte LRU por memória) e redesenhados só quando um ladrilho próximo muda; sprites e quadros de animação em cache; desenha só o que está na tela; resolução limitada a 2× e **resolução dinâmica** (reduz sozinha se o FPS cair abaixo de ~34); opção de gráficos leves (menos camadas de água, sem pássaros/nuvens/chuva/brilhos, menos moradores, mapa de luz em resolução menor).
 - **Build sem Android Studio:** `build-apk.sh` usa `aapt2`, `javac`, `d8/dx`, `zipalign` e `apksigner` (pacotes do Ubuntu/Debian) e gera `dist/MundoRenda.apk`.
 
 ## 12. Arquitetura do código
@@ -327,8 +341,13 @@ android/
     js/data.js      ← TODO o conteúdo: produtos, construções, ramos, níveis, missões, eventos, frases
     js/world.js     ← mapa, geração procedural, regras de construção, desfazer, conexões, mapas de efeito
     js/sim.js       ← simulação diária (produção, beneficiamento, vendas, salários, bem-estar, níveis)
-    js/sprites.js   ← arte isométrica procedural em cache
-    js/render.js    ← câmera, desenho por profundidade, moradores, dia/noite, minimapa, resolução dinâmica
+    js/gfx/tex.js     ← texturas procedurais sem emenda (chão, estradas, água, falésia) e detalhes do chão
+    js/sprites.js     ← construções, natureza e pontes procedurais com volumes, sombras, luzes, janelas e animações; miniaturas
+    js/gfx/terrain.js ← terreno contínuo em blocos com cache multirresolução (bordas orgânicas, água, estradas, sombras)
+    js/gfx/light.js   ← cor do céu por hora, mapa de luz noturno, janelas acesas, brilho e vinheta
+    js/gfx/fx.js      ← partículas, construção brotando, fumaça, moedas, pássaros, nuvens, chuva, confete
+    js/gfx/people.js  ← moradores animados e veículos (bicicleta, moto de entrega, caminhonete)
+    js/render.js      ← câmera, mar e ilha, desenho por profundidade, camadas de efeitos e luz, minimapa, resolução dinâmica
     js/input.js     ← toque/mouse: tocar, arrastar estradas, pincéis, pinça
     js/ui.js        ← HUD, paleta, cartões, painéis, assistente, diálogos, avisos, joystick
     js/audio.js     ← efeitos e música sintetizados
@@ -344,7 +363,7 @@ Regras: todo o balanceamento fica em `data.js` (editar números não exige mexer
 
 - Até 12 projetos salvos, com índice (nome, símbolo, cor, dia, caixa, nível, modo).
 - Formato JSON: estado do jogo + terreno compactado em texto (1 caractere por ladrilho) + lista de objetos `[ladrilho, item, nível]` + posição da câmera.
-- Configurações separadas: som, música, vibração, dia/noite, alertas, grade, qualidade.
+- Configurações separadas: som, música, vibração, dia/noite, alertas, placas das construções, clima (nuvens, pássaros e chuva), grade, qualidade.
 
 ## 14. Critérios de aceite
 

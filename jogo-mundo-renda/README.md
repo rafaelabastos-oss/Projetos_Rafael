@@ -16,6 +16,10 @@ Jogo para **Android** em que você cria **o seu projeto de geração de trabalho
 - **Passear** pela comunidade com um personagem (joystick) e conversar com os moradores.
 - Modo **Desafio** (dinheiro e progresso) ou **Criativo** (tudo liberado e dinheiro infinito).
 
+## Gráficos
+
+Toda a arte é desenhada por código (sem arquivos de imagem): terreno contínuo com texturas e bordas orgânicas, água animada com profundidade, a ilha cercada de mar com falésia e espuma, construções detalhadas com sombras projetadas, árvores brasileiras (ipês, araucárias, coqueiros), moradores animados e veículos nas ruas, ciclo de dia e noite com janelas e postes acesos, fumaça, poeira, pássaros, nuvens, chuva e confete. Em celulares mais simples, desligue **Gráficos em alta qualidade** no menu; a resolução também se ajusta sozinha.
+
 ## Instalar no celular
 
 1. Baixe o arquivo `dist/MundoRenda.apk` no celular (pelo GitHub: abra o arquivo e toque em *Download raw file* / *Baixar*).
@@ -73,7 +77,9 @@ android/
     js/data.js               todo o conteúdo e balanceamento (fácil de editar)
     js/world.js              mundo aberto, geração procedural e regras de construção
     js/sim.js                economia e simulação social
-    js/sprites.js, render.js arte isométrica procedural e renderização
+    js/sprites.js            construções e natureza procedurais (volumes, sombras, luzes, miniaturas)
+    js/gfx/                  texturas, terreno em blocos, luz, efeitos, moradores e veículos
+    js/render.js             câmera, mar e ilha, ordem de desenho e camadas
     js/input.js, ui.js       controles e interface
     js/main.js               estado, laço principal, salvar/carregar, modo passeio
 ```

@@ -168,7 +168,13 @@ var DATA = (function () {
     { id: 'n_palmeira', name: 'Coqueiro', icon: '🌴', cat: 'none', kind: 'natural', beauty: 1, br: 1, draw: { p: 'palm' } },
     { id: 'n_arbusto', name: 'Arbusto', icon: '🌿', cat: 'none', kind: 'natural', beauty: 0, br: 0, draw: { p: 'bush' } },
     { id: 'n_pedra', name: 'Rocha', icon: '⛰️', cat: 'none', kind: 'natural', beauty: 0, br: 0, draw: { p: 'rock' } },
-    { id: 'n_flores', name: 'Flores do campo', icon: '🌼', cat: 'none', kind: 'natural', beauty: 1, br: 1, draw: { p: 'wildflowers' } }
+    { id: 'n_flores', name: 'Flores do campo', icon: '🌼', cat: 'none', kind: 'natural', beauty: 1, br: 1, draw: { p: 'wildflowers' } },
+
+    // ---------- Novos itens (sempre no fim da lista para manter os saves compatíveis) ----------
+    { id: 'ipe', name: 'Ipê Florido', icon: '🌸', cat: 'decor', kind: 'decor', cost: 35, beauty: 4, br: 2, lvl: 1, brush: 'paint', draw: { p: 'ipe' } },
+    { id: 'catavento', name: 'Cata-vento', icon: '🌀', cat: 'decor', kind: 'decor', cost: 180, beauty: 4, br: 2, lvl: 2, draw: { p: 'windmill' } },
+    { id: 'coreto', name: 'Coreto', icon: '🎶', cat: 'decor', kind: 'decor', cost: 400, beauty: 8, br: 3, lvl: 3, draw: { p: 'coreto' } },
+    { id: 'n_ipe', name: 'Ipê nativo', icon: '🌸', cat: 'none', kind: 'natural', beauty: 2, br: 1, draw: { p: 'ipe' } }
   ];
 
   var BY_ID = {};

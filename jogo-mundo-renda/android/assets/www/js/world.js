@@ -17,6 +17,10 @@ var World = (function () {
     counts: {}, undo: [], action: null
   };
 
+  var listeners = [];
+  function onChange(fn) { listeners.push(fn); }
+  function emit(k, prev, obj) { for (var n = 0; n < listeners.length; n++) listeners[n](k, prev, obj); }
+
   function idx(i, j) { return j * W + i; }
   function inside(i, j) { return i >= 0 && j >= 0 && i < W && j < H; }
   function iOf(k) { return k % W; }
@@ -27,6 +31,7 @@ var World = (function () {
     for (var k = 0; k < N; k++) w.obj[k] = null;
     w.hq = -1; w.undo = []; w.action = null;
     touch();
+    emit(-1);
   }
 
   function touch() { w.dirty = true; w.mapVersion++; }
@@ -117,17 +122,18 @@ var World = (function () {
         else if (rr < 0.035) id = 'n_pedra';
       } else {
         if (forest > 0.6) {
-          if (rr < 0.55) id = (U.hash2(i, j, seed) < 0.4 ? 'n_pinheiro' : 'n_arvore');
+          if (rr < 0.55) { var hz = U.hash2(i, j, seed); id = hz < 0.035 ? 'n_ipe' : hz < 0.4 ? 'n_pinheiro' : 'n_arvore'; }
           else if (rr < 0.62) id = 'n_arbusto';
         } else if (forest > 0.52) {
           if (rr < 0.15) id = 'n_arvore'; else if (rr < 0.2) id = 'n_arbusto';
-        } else if (rr < 0.012) id = 'n_arvore';
+        } else if (rr < 0.012) id = rr < 0.0025 ? 'n_ipe' : 'n_arvore';
         else if (rr < 0.03) id = 'n_flores';
         else if (rr < 0.036) id = 'n_pedra';
       }
       if (id) w.obj[k] = { id: id, lv: 1 };
     }
     touch();
+    emit(-1);
   }
 
   // procura um terreno livre perto do centro (para a câmera inicial)
@@ -260,6 +266,7 @@ var World = (function () {
     if (prev && prev.id === 'hq') w.hq = -1;
     if (obj && obj.id === 'hq') w.hq = k;
     touch();
+    emit(k, prev, obj);
   }
 
   function begin(label) { w.action = { label: label, changes: [], seen: {}, money: 0 }; }
@@ -283,6 +290,7 @@ var World = (function () {
       w.ter[c.k] = c.ter;
       w.obj[c.k] = c.obj ? { id: c.obj.id, lv: c.obj.lv } : null;
       if (c.obj && c.obj.id === 'hq') w.hq = c.k;
+      emit(c.k, cur, w.obj[c.k]);
     }
     touch();
     return a;
@@ -456,6 +464,7 @@ var World = (function () {
       if (it.id === 'hq') w.hq = e[0];
     }
     touch();
+    emit(-1);
   }
 
   /* ---------------- Vila de demonstração (tela inicial) ---------------- */
@@ -481,6 +490,7 @@ var World = (function () {
       if (inside(i, j) && !(w.obj[idx(i, j)] && I[w.obj[idx(i, j)].id].kind === 'road')) put(i, j, e[0]);
     });
     touch();
+    emit(-1);
     return c;
   }
 
@@ -489,6 +499,6 @@ var World = (function () {
     evaluate: evaluate, apply: apply, upgrade: upgrade, upgradeCost: upgradeCost, move: move, begin: begin, commit: commit, undo: undo,
     linePath: linePath, recompute: recompute, connected: connected, isRoad: isRoad, isBuilding: isBuilding,
     isNatural: isNatural, unlocked: unlocked, invested: invested, branchOf: branchOf, serialize: serialize,
-    deserialize: deserialize, buildDemo: buildDemo, touch: touch
+    deserialize: deserialize, buildDemo: buildDemo, touch: touch, onChange: onChange
   };
 })();

@@ -82,9 +82,12 @@ input { font: inherit; -webkit-user-select: text; user-select: text; }
 #hint .round { width: 32px; height: 32px; }
 #palette { display: flex; gap: 6px; overflow-x: auto; padding: 4px 8px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 #palette::-webkit-scrollbar { display: none; }
-.item { flex: 0 0 auto; width: 86px; height: 94px; border-radius: 14px; background: rgba(27, 51, 41, 0.95); border: 2px solid transparent;
+.item { flex: 0 0 auto; width: 86px; height: 104px; border-radius: 14px; background: rgba(27, 51, 41, 0.95); border: 2px solid transparent;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px; }
 .item .ii { font-size: 28px; line-height: 1.1; }
+.item .ii img { width: 52px; height: 52px; display: block; margin: -2px 0 -3px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
+.item.locked .ii img { filter: grayscale(0.85) brightness(0.8); }
+.card-icon img { width: 58px; height: 58px; display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
 .item .in { font-size: 10.5px; line-height: 1.15; text-align: center; max-height: 2.4em; overflow: hidden; }
 .item .ic { font-size: 11px; color: var(--gold); font-weight: 700; }
 .item.on { border-color: var(--accent); background: rgba(60, 207, 122, 0.2); }
@@ -292,8 +295,9 @@ input:focus { border-color: var(--accent); }
   #topbar { padding-top: calc(var(--safe-t) + 4px); padding-bottom: 6px; flex-wrap: nowrap; }
   .proj { max-width: 26%; }
   .proj-emoji { width: 30px; height: 30px; font-size: 17px; }
-  .item { width: 78px; height: 80px; }
+  .item { width: 80px; height: 88px; }
   .item .ii { font-size: 24px; }
+  .item .ii img { width: 40px; height: 40px; }
   .tool { min-width: 54px; padding: 3px 4px; }
   .tool .ti { font-size: 19px; }
   #card { left: auto; right: 8px; top: 64px; bottom: calc(var(--safe-b) + 8px); width: 360px; max-height: none; margin: 0; }

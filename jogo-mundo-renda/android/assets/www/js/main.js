@@ -5,7 +5,7 @@ var Game = (function () {
   var G = {
     s: null,
     ui: { tool: null, hover: -1, hoverOk: false, linePath: [], selected: -1, moving: -1 },
-    settings: { sound: true, music: false, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta' },
+    settings: { sound: true, music: false, vibrate: true, daynight: true, alerts: true, grid: true, quality: 'alta', badges: true, weather: true },
     walk: false, walkVec: { x: 0, y: 0 }
   };
   var perfT = 0, perfN = 0, perfSkip = 2;
@@ -104,6 +104,7 @@ var Game = (function () {
       if (!m || Sim.missionStat(s, m.stat) < m.goal) break;
       s.mission++;
       if (s.mode !== 'criativo' && m.reward) s.money += m.reward;
+      if (typeof Fx !== 'undefined') Fx.confetti();
       UI.toast('🎯 Missão cumprida: <b>' + m.title + '</b>' + (m.reward && s.mode !== 'criativo' ? ' · +' + U.money(m.reward) : ''), 'good', 3500);
       Sfx.play('mission');
     }
@@ -116,6 +117,7 @@ var Game = (function () {
       var news = DATA.ITEMS.filter(function (it) { return it.lvl === s.level && it.cat !== 'none'; }).map(function (it) { return it.icon; }).join(' ');
       UI.toast('⭐ Nível ' + s.level + ': <b>' + DATA.LEVEL_NAMES[s.level - 1] + '</b>!' + (news && s.mode !== 'criativo' ? ' Novidades: ' + news : ''), 'good', 5000);
       Sfx.play('level');
+      if (typeof Fx !== 'undefined') Fx.confetti();
       UI.refreshPalette();
     }
     if (res.event) {
@@ -199,6 +201,7 @@ var Game = (function () {
       if (walkable(Math.round(hero.i + di), Math.round(hero.j))) hero.i += di;
       if (walkable(Math.round(hero.i), Math.round(hero.j + dj))) hero.j += dj;
       hero.ph += dt * 12;
+      hero.dir = Math.abs(di) > Math.abs(dj) ? [di > 0 ? 1 : -1, 0] : [0, dj > 0 ? 1 : -1];
     }
     var p = Render.tileCenter(hero.i, hero.j);
     Render.cam.x += (p.x - Render.cam.x) * Math.min(1, dt * 6);

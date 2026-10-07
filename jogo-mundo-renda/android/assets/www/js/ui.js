@@ -63,6 +63,20 @@ var UI = (function () {
     $('hud').classList.remove('hidden');
     setCategory('info');
     refreshHUD(true);
+    warmThumbs();
+  }
+  // gera as miniaturas aos poucos, em segundo plano, para a paleta abrir sem travar
+  var warmQ = null;
+  function warmThumbs() {
+    if (!Sprites.thumb || Game.settings.thumbs === false) return;
+    var first = !warmQ;
+    warmQ = DATA.ITEMS.filter(function (it) { return it.cat !== 'none' && it.kind !== 'clear'; }).map(function (it) { return it.id; });
+    if (!first) return;
+    (function tick() {
+      if (!warmQ.length) { warmQ = null; return; }
+      if (Game.s) Sprites.thumb(warmQ.shift(), 1);
+      setTimeout(tick, Game.s && Game.s.speed > 1 ? 120 : 45);
+    })();
   }
 
   /* ---------------- Assistente de novo projeto ---------------- */
@@ -168,7 +182,7 @@ var UI = (function () {
       var lock = !World.unlocked(it);
       var cost = s.mode === 'criativo' ? 'Grátis' : (it.cost ? U.shortMoney(it.cost) : 'Grátis');
       return '<button class="item' + (lock ? ' locked' : '') + (Game.ui.tool === it.id ? ' on' : '') + '" data-id="' + it.id + '">' +
-        '<span class="ii">' + it.icon + '</span><span class="in">' + it.name + '</span>' +
+        '<span class="ii">' + thumbHtml(it.id, 1, it.icon) + '</span><span class="in">' + it.name + '</span>' +
         '<span class="ic">' + (lock ? '🔒 Nível ' + it.lvl : cost) + '</span></button>';
     }).join('');
     p.classList.remove('hidden');
@@ -178,6 +192,10 @@ var UI = (function () {
       if (!World.unlocked(it)) { toast('🔒 ' + it.name + ' desbloqueia no nível ' + it.lvl + ' (' + DATA.LEVEL_NAMES[it.lvl - 1] + ')', 'bad'); return; }
       setTool(it.id);
     });
+  }
+  function thumbHtml(id, lv, icon) {
+    var th = Game.settings.thumbs !== false && Sprites.thumb ? Sprites.thumb(id, lv) : null;
+    return th ? '<img src="' + th + '" alt="">' : icon;
   }
   function itemInfo(it) {
     var parts = [];
@@ -265,7 +283,7 @@ var UI = (function () {
     if (o.lv < 3 && it.kind !== 'decor') acts += '<button class="btn" data-act="up">⬆️ Melhorar <small>' + (upCost ? U.shortMoney(upCost) : 'grátis') + '</small></button>';
     if (o.id !== 'hq') acts += '<button class="btn ghost" data-act="move">✋ Mover</button><button class="btn danger" data-act="del">🧨 Demolir' + (s.mode === 'criativo' ? '' : ' <small>+' + U.shortMoney(refund) + '</small>') + '</button>';
     else acts += '<button class="btn ghost" data-act="move">✋ Mover</button>';
-    $('card').innerHTML = '<div class="card-head"><span class="card-icon">' + it.icon + '</span><div class="card-t"><h3>' + it.name + ' ' + stars + '</h3>' + status + '</div>' +
+    $('card').innerHTML = '<div class="card-head"><span class="card-icon">' + thumbHtml(o.id, o.lv, it.icon) + '</span><div class="card-t"><h3>' + it.name + ' ' + stars + '</h3>' + status + '</div>' +
       '<button class="round" id="card-close">✕</button></div>' +
       '<div class="card-body"><table>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>' + bonus +
       (it.eff ? '' : '<p class="desc">' + it.desc + '</p>') + '</div>' +
@@ -388,6 +406,7 @@ var UI = (function () {
         tog('sound', '🔊 Efeitos sonoros', set.sound) + tog('music', '🎵 Música ambiente', set.music) +
         (Store.native ? tog('vibrate', '📳 Vibração', set.vibrate) : '') +
         tog('daynight', '🌙 Ciclo de dia e noite', set.daynight) + tog('alerts', '⚠️ Alertas nas construções', set.alerts) +
+        tog('badges', '🏷️ Placas com o que cada construção produz', set.badges !== false) + tog('weather', '🌦️ Nuvens, pássaros e chuva', set.weather !== false) +
         tog('grid', '▦ Grade ao construir', set.grid) + tog('quality', '✨ Gráficos em alta qualidade', set.quality === 'alta') + '</div>' +
         '<p class="muted small">Mundo Renda v1.0 · jogo offline. Seu progresso é salvo automaticamente.</p>';
     } else if (modalType === 'carregar') {
