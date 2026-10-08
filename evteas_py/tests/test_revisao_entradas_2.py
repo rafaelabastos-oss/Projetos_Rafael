@@ -5,7 +5,7 @@ import json
 import numpy as np
 import pytest
 
-from evteas_py import (comparar_alternativas, criar_config_caso_base, criar_config_legado_rev186, executar_evteas,
+from evteas_py import (comparar_alternativas, criar_config_caso_base, criar_config_caso_controle, executar_evteas,
                        iniciar_entradas, motor, salvar_config, wizard_evteas)
 from evteas_py.config import Distribuicao
 from evteas_py.incerteza import distribuicoes_efetivas
@@ -198,8 +198,8 @@ def test_trocar_sistema_atualiza_referencias():
     assert novo.tecnico.capacidade_suporte_kg_m3 == pytest.approx(ref["capacidade_suporte_kg_m3"])
 
 
-def test_legado_e_rampa_revisados_com_enter_preservam_resultado():
-    for cfg in (criar_config_legado_rev186(), criar_config_caso_base()):
+def test_caso_controle_e_rampa_revisados_com_enter_preservam_resultado():
+    for cfg in (criar_config_caso_controle(), criar_config_caso_base()):
         if cfg.economico.capacidade_inicial_pct >= 100:
             cfg.economico.meses_rampa = 12
         u = UsuarioSimulado([(r".*", "")], padrao_falha=False)

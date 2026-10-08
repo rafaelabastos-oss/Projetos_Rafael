@@ -168,7 +168,7 @@ def classificar(cfg: EVTEASConfig, vpl: float, indice: float, lso: float, vetos_
                 prob_vpl_positivo: Optional[float] = None) -> Dict[str, Any]:
     """Regra de decisão em dois estágios: vetos não compensatórios + índice compensatório.
 
-    O índice agregado sozinho pode ocultar fragilidades (Rev. 186, Seção 5.4);
+    O índice agregado sozinho pode ocultar fragilidades;
     por isso VPL negativo, item ambiental eliminatório não atendido ou LSO abaixo
     do mínimo impedem a classificação "VIÁVEL", qualquer que seja o índice.
     """

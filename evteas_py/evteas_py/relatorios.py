@@ -143,7 +143,7 @@ def exportar(r: Dict[str, Any], pasta="evteas_output") -> List[str]:
 
 
 def relatorio_markdown(r: Dict[str, Any]) -> str:
-    linhas = [f"# Relatório EVTEAS-Py — {r['config']['projeto']}", "", f"Versão: {r['versao']}", "",
+    linhas = [f"# Relatório EVTEAS-Py — {r['config']['projeto']}", "", f"Gerado por: {r['versao']}", "",
               "## Resumo executivo", "", "| Indicador | Valor |", "|---|---|"]
     linhas += [f"| {a} | {b} |" for a, b in resumo_executivo(r).itertuples(index=False)]
     d = r["decisao"]
@@ -310,7 +310,7 @@ def diagrama_arquitetura(caminho="evteas_output/figuras/00_arquitetura.png") -> 
                                ((3.7, 3.25), (3.7, 2.25)), ((4.85, 1.4), (5.25, 1.4)), ((7.35, 1.4), (7.75, 1.4)),
                                ((8.85, 3.25), (8.85, 2.25))]:
         ax.annotate("", xy=(x2, y2), xytext=(x1, y1), arrowprops=seta)
-    ax.set_title("Arquitetura do EVTEAS-Py 2.0", fontsize=12)
+    ax.set_title("Arquitetura do EVTEAS-Py", fontsize=12)
     Path(caminho).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(caminho, bbox_inches="tight"); plt.close(fig)
     return caminho

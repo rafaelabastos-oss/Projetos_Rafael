@@ -1,4 +1,4 @@
-# EVTEAS-Py 2.0 (Rev. 187)
+# EVTEAS-Py
 
 Framework em Python para Estudo de Viabilidade Técnica, Econômica, Ambiental e
 Social (EVTEAS) aplicado à piscicultura — dissertação de Rafael Alves Bastos (UFF/MESC).
@@ -8,17 +8,17 @@ Social (EVTEAS) aplicado à piscicultura — dissertação de Rafael Alves Basto
 | Caminho | O que é |
 |---|---|
 | `evteas_py/` | Pacote: `config`, `financeiro`, `modelo`, `ponderacao`, `incerteza`, `pipeline`, `vv`, `casos`, `relatorios`, `interface`, `dsr` |
-| `EVTEAS_Py_Rev187.ipynb` | Notebook autocontido (Google Colab), gerado por `gerar_notebook.py` |
+| `EVTEAS_Py.ipynb` | Notebook autocontido (Google Colab), gerado por `gerar_notebook.py` |
 | `executar_estudo.py` | Roda o estudo completo e grava `saidas/` |
 | `tests/` | Testes automatizados (pytest); números atualizados em `saidas/verificacao_testes.json` |
 | `saidas/` | Resultados da execução de referência (Excel, JSON, relatório, figuras) |
-| `documentacao/` | Scripts que geram o texto da Rev. 187 com controle de alterações |
+| `documentacao/` | Scripts que geram os Capítulos 4 e 5 da dissertação (com controle de alterações) |
 
 ## Uso rápido
 
 ```bash
 pip install -r requirements.txt
-python executar_estudo.py saidas        # caso-base, alternativas, preset legado, Likert
+python executar_estudo.py saidas        # caso-base, alternativas, caso de controle, Likert
 python -m pytest -q --cov=evteas_py tests/
 ```
 
@@ -44,15 +44,16 @@ print(resumo_executivo(r))
   15 requisitos com a matriz requisito → função → teste conferida no código (`matriz_rastreabilidade()`,
   verificada em `tests/test_dsr.py`); e aprendizagens da Etapa 9.
 
-## Correções em relação à Rev. 186
+## Decisões de projeto
 
 1. Motor único vetorizado: o Monte Carlo usa o mesmo modelo mensal do cálculo determinístico.
-2. TIR com diagnóstico (`convencional`, `multiplas`, `multiplas_possiveis`, `sem_solucao`); nunca −0,95.
+2. TIR com diagnóstico (`convencional`, `multiplas`, `multiplas_possiveis`, `sem_solucao`); nunca um limite numérico.
 3. Ecoeficiência = valor adicionado / impacto (WBCSD); “não definida” quando VA ≤ 0.
 4. Qualidade do OEE = sobrevivência (Quadro 5); estocagem dimensionada e mortalidade incerta.
 5. RVL com denominador do Quadro 5 (custo operacional total).
 6. Receita após a 1ª despesca, depreciação, valor terminal e perspectiva do beneficiário de fomento.
 7. Decisão em dois estágios: vetos não compensatórios + índice + P(VPL>0).
 8. AHP e TOPSIS integrados ao pipeline.
+9. Entrada de dados obrigatória antes de qualquer resultado; arquivos incompletos geram pendências.
 
 As premissas do caso-base são **ilustrativas** e devem ser recalibradas na validação com especialistas.

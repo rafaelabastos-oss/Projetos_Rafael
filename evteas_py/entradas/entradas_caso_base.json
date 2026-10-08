@@ -1,7 +1,7 @@
 {
   "projeto": "Caso-base — PGTR de piscicultura de tilápia em viveiros escavados",
   "autor": "Rafael Alves Bastos",
-  "versao": "EVTEAS-Py 2.0 (Rev. 187)",
+  "versao": "EVTEAS-Py",
   "tecnico": {
     "sistema_produtivo": "semi-intensivo",
     "area_lamina_m2": 40000.0,

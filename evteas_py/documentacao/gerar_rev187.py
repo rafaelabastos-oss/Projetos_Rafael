@@ -158,7 +158,7 @@ class Midia:
         did = 70000 + self.k
         drawing = (
             f'<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" cy="{cy}"/>'
-            f'<wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="{did}" name="Figura Rev187 {self.k}"/>'
+            f'<wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="{did}" name="Figura EVTEAS-Py {self.k}"/>'
             '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'
             '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
             f'<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="{did}" name="{nome}"/><pic:cNvPicPr/></pic:nvPicPr>'
@@ -461,14 +461,14 @@ RAIZ_CODIGO = Path(__file__).resolve().parents[1]
 _REF = C.referencias()
 APENDICES = [
     ("APÊNDICE A – CÓDIGO-FONTE COMPLETO DO EVTEAS-Py",
-     ["Este apêndice reproduz o código-fonte completo da versão 2.0 do EVTEAS-Py, utilizada nas execuções "
+     ["Este apêndice reproduz o código-fonte completo do EVTEAS-Py, utilizado nas execuções "
       "apresentadas no Capítulo 4. O pacote é organizado em onze módulos, cuja responsabilidade e vínculo com a "
       f"dissertação estão sintetizados no {_REF[('Quadro', 'modulos')]}, e é acompanhado do script que executa o estudo completo. "
-      "O notebook autocontido EVTEAS_Py_Rev187, destinado à execução no Google Colab, reúne esse mesmo código em "
+      "O notebook autocontido EVTEAS_Py, destinado à execução no Google Colab, reúne esse mesmo código em "
       "células, seguido das etapas de entrada de dados, análise, comparação de alternativas e exportação.",
-      "As linhas estão numeradas para facilitar a referência. O código está versionado no repositório do projeto, "
+      "As linhas estão numeradas para facilitar a referência. O código está registrado no repositório do projeto, "
       "no diretório evteas_py, onde também se encontram o arquivo de entradas do caso-base, as saídas da execução de "
-      "referência e os scripts que geram esta revisão do texto."],
+      "referência e os scripts que geram os Capítulos 4 e 5."],
      [("evteas_py/__init__.py", "Interface pública do pacote"),
       ("evteas_py/config.py", "Configuração, premissas e rastreabilidade das fontes"),
       ("evteas_py/financeiro.py", "Engenharia econômica vetorizada"),
@@ -477,7 +477,7 @@ APENDICES = [
       ("evteas_py/incerteza.py", "Monte Carlo, sensibilidade, valores críticos e cenários"),
       ("evteas_py/pipeline.py", "Pipeline principal e comparação de alternativas"),
       ("evteas_py/vv.py", "Verificação por invariantes e testes de regressão"),
-      ("evteas_py/casos.py", "Caso-base, alternativas e preset legado"),
+      ("evteas_py/casos.py", "Caso-base, alternativas e caso de controle"),
       ("evteas_py/relatorios.py", "Resumo executivo, exportação e gráficos"),
       ("evteas_py/interface.py", "Entrada de dados, arquivos de entradas e análise de preços"),
       ("evteas_py/dsr.py", "Registro do ciclo da Design Science Research e rastreabilidade de requisitos"),

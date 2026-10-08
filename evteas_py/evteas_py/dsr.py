@@ -48,7 +48,7 @@ ETAPAS_DSR: Tuple[Etapa, ...] = (
     Etapa(2, "Compreensão do problema", FASE1,
           "Causas: variáveis dissimilares (custos, efluentes, aceitação comunitária) sem modelo que pondere dados "
           "exatos e critérios qualitativos; estudos em planilhas determinísticas; requisitos de uso extraídos dos "
-          "notebooks de viabilidade econômica anteriores (entradas, mix, tributos, cooperados).",
+          "notebooks de estudo de viabilidade econômica utilizados pelo autor (entradas, mix, tributos, cooperados).",
           ("Seções 1.2, 2.8 a 2.10",), "concluída"),
     Etapa(3, "Revisão sistemática da literatura", FASE1,
           "Corpus selecionado pelo protocolo PRISMA e referencial teórico dos três eixos temáticos.",
@@ -67,11 +67,11 @@ ETAPAS_DSR: Tuple[Etapa, ...] = (
           "entrada em blocos.",
           ("config.EVTEASConfig", "modelo.Contexto", "pipeline.motor"), "primeira iteração concluída"),
     Etapa(7, "Desenvolvimento do artefato", FASE2,
-          "Pacote evteas_py 2.0 com dez módulos, notebook autocontido para o Google Colab e entrada de dados "
+          "Pacote evteas_py com onze módulos, notebook autocontido para o Google Colab e entrada de dados "
           "interativa ou por arquivo.",
           ("Apêndice A", "pipeline.executar_evteas", "interface.iniciar_entradas"), "primeira iteração concluída"),
     Etapa(8, "Avaliação do artefato", FASE3,
-          "Verificação: invariantes a cada execução, suíte de testes automatizados, regressão contra a Rev. 186 e "
+          "Verificação: invariantes a cada execução, suíte de testes automatizados, caso de controle de inviabilidade e "
           "revisão independente da entrada de dados. Validação com os dois especialistas a realizar.",
           ("vv.validar_invariantes", "Apêndice B", "dsr.matriz_rastreabilidade"),
           "verificação concluída; validação prevista"),
@@ -236,7 +236,7 @@ REQUISITOS: Tuple[Requisito, ...] = (
     Requisito("R14", "Verificar o próprio resultado a cada execução e manter a regressão",
               "Seção 3.3.2 (Boehm, 1984)", ("vv.validar_invariantes", "vv.teste_regressao_deterministica"),
               ("test_evteas.py::test_invariantes_aprovados", "test_evteas.py::test_regressao_embutida",
-               "test_evteas.py::test_preset_legado_rev186")),
+               "test_evteas.py::test_caso_controle_inviavel")),
     Requisito("R15", "Exportar resultados auditáveis (Excel, JSON, Markdown e figuras)",
               "Etapa 12", ("relatorios.exportar", "relatorios.gerar_graficos", "relatorios.resumo_executivo"),
               ("test_evteas.py::test_exportacao_e_graficos",)),
@@ -313,7 +313,7 @@ class Aprendizagem:
 
 
 APRENDIZAGENS: Tuple[Aprendizagem, ...] = (
-    Aprendizagem(1, "Na Rev. 186, a média do VPL simulado ficava acima do VPL determinístico, mesmo com riscos "
+    Aprendizagem(1, "Na implementação inicial, a média do VPL simulado ficava acima do VPL determinístico, mesmo com riscos "
                     "desfavoráveis.",
                  "Monte Carlo usava um modelo anual simplificado, diferente do modelo mensal determinístico.",
                  "Motor único vetorizado: o mesmo código produz o resultado pontual (n = 1) e a simulação (n = 10.000).",

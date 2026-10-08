@@ -1,4 +1,4 @@
-"""Configurações de referência: caso-base ilustrativo, alternativas e preset legado.
+"""Configurações de referência: caso-base ilustrativo, alternativas e caso de controle.
 
 O caso-base representa um Projeto de Geração de Trabalho e Renda (PGTR) de
 piscicultura de tilápia em viveiros escavados, conduzido por cooperativa de
@@ -79,15 +79,16 @@ def criar_alternativas() -> dict:
     return {"A": a, "B": b, "C": c}
 
 
-def criar_config_legado_rev186() -> EVTEASConfig:
-    """Reproduz as premissas do preset da Rev. 186 (teste de regressão)."""
-    cfg = EVTEASConfig(projeto="Preset legado da Rev. 186")
+def criar_config_caso_controle() -> EVTEASConfig:
+    """Caso de controle deliberadamente inviável (custos fixos muito acima da receita),
+    usado como teste de regressão: o artefato deve diagnosticar a inviabilidade."""
+    cfg = EVTEASConfig(projeto="Caso de controle de inviabilidade")
     cfg.tecnico = TecnicoConfig(sistema_produtivo="superintensivo", area_lamina_m2=1500, profundidade_media_m=1.0,
                                 numero_tanques=10, tanques_ativos=9, capacidade_suporte_kg_m3=30.0,
                                 produtividade_esperada_kg_m2_ciclo=8.0, peso_inicial_g=30, peso_final_g=850,
                                 ciclo_dias=240, ciclos_ano=1.4, mortalidade_pct=8.0, fcr=1.60)
     cfg.economico = EconomicoConfig(
-        tipo_organizacao="empresa", capex_itens={"CAPEX (preset)": 250000.0}, capital_giro=0.0,
+        tipo_organizacao="empresa", capex_itens={"CAPEX total": 250000.0}, capital_giro=0.0,
         vida_util_anos=0.0, valor_residual_pct=0.0, preco_venda_kg=9.50, custo_racao_kg=3.20,
         custo_alevino_milheiro=450.0, tarifa_energia_kwh=0.0, outros_custos_variaveis_kg=0.0,
         mao_obra_mes=42000.0, encargos_mao_obra_pct=0.0, assistencia_tecnica_mes=25000.0,

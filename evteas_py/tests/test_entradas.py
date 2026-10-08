@@ -173,7 +173,7 @@ def test_notebook_identico_ao_pacote():
     import json
     from pathlib import Path
     import gerar_notebook
-    nb = json.loads((Path(gerar_notebook.__file__).parent / "EVTEAS_Py_Rev187.ipynb").read_text(encoding="utf-8"))
+    nb = json.loads((Path(gerar_notebook.__file__).parent / "EVTEAS_Py.ipynb").read_text(encoding="utf-8"))
     codigo = ["".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code"]
     esperado = [c["source"] for c in gerar_notebook.celulas() if c["cell_type"] == "code"]
     defasadas = [m for m in gerar_notebook.MODULOS if gerar_notebook.codigo_do_modulo(m) not in codigo]

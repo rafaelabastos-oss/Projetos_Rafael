@@ -53,13 +53,13 @@ class UsuarioSimulado:
 
 
 def respostas_caso_base() -> List[tuple]:
-    """Respostas que reproduzem o caso-base ilustrativo (Rev. 187)."""
+    """Respostas que reproduzem o caso-base ilustrativo."""
     R = [
         # ---------------------------------------------------------------- menus gerais
         (r"Como deseja informar os dados", "1"),
         (r"O que deseja fazer\?", "1"),
         (r"^Origem dos dados informados no bloco", "8"),
-        (r"^Referência \(documento", "Caso-base ilustrativo da dissertação (Rev. 187)"),
+        (r"^Referência \(documento", "Caso-base ilustrativo da dissertação"),
         (r"Algum parâmetro deste bloco tem origem diferente", "n"),
         # ---------------------------------------------------------------- identificação
         (r"^Nome do projeto", "Caso-base — PGTR de piscicultura de tilápia em viveiros escavados"),

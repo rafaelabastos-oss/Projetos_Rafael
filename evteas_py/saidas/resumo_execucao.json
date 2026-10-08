@@ -1,5 +1,5 @@
 {
-  "tempo_execucao_s": 49.50734006499988,
+  "tempo_execucao_s": 49.98682189800002,
   "caso_base": {
     "tecnico": {
       "especie": "Tilápia-do-nilo (Oreochromis niloticus)",
@@ -1499,7 +1499,7 @@
       "Ranking": 3
     }
   ],
-  "legado": {
+  "controle": {
     "economico": {
       "meses_ate_despesca": 8,
       "ano_regime": 3,

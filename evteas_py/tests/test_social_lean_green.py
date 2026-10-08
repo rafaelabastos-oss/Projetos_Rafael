@@ -30,7 +30,7 @@ def test_rvl_segue_formula_do_quadro_5(cfg):
     c = copy.deepcopy(cfg)
     c.social.mao_obra_local_pct, c.social.compras_locais_pct = 0.0, 0.0
     assert motor(c, None, 1)["social"]["rvl_pct"][0] == pytest.approx(0.0)
-    # a receita não entra na RVL (a Rev. 186 dividia pela receita)
+    # a receita não entra na RVL (o denominador é o custo operacional)
     c = copy.deepcopy(cfg)
     c.economico.preco_venda_kg *= 1.2
     for p in c.economico.mix_produtos:

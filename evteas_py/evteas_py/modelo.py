@@ -183,7 +183,7 @@ def preco_medio(cfg: EVTEASConfig) -> float:
 
 
 BASES_TRIBUTARIAS = {
-    # base interna: apelidos aceitos (inclui os nomes das versões anteriores do notebook)
+    # base interna: apelidos aceitos (nomes usados nos notebooks de viabilidade econômica)
     "faturamento": ("faturamento", "faturamento_bruto"),
     "produtos": ("produtos",),
     "servicos": ("servicos", "serviços"),

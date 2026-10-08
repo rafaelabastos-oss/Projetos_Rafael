@@ -1,6 +1,6 @@
 # Relatório EVTEAS-Py — Caso-base — PGTR de piscicultura de tilápia em viveiros escavados
 
-Versão: EVTEAS-Py 2.0 (Rev. 187)
+Gerado por: EVTEAS-Py
 
 ## Resumo executivo
 

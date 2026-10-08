@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from evteas_py import (Distribuicao, classificar, comparar_alternativas, criar_alternativas, criar_config_caso_base,
-                       criar_config_legado_rev186, executar_evteas, exemplo_validacao_especialistas, exportar,
+                       criar_config_caso_controle, executar_evteas, exemplo_validacao_especialistas, exportar,
                        gerar_graficos, monte_carlo, motor, normalizar, payback, pesos_ahp, pesos_likert,
                        tir, topsis, vpl)
 from evteas_py import teste_regressao_deterministica as regressao_embutida
@@ -230,7 +230,7 @@ def test_monte_carlo_reprodutivel(cfg):
 
 def test_monte_carlo_degenerado_igual_deterministico(cfg):
     """Com distribuições fixas na moda, o Monte Carlo reproduz o caso determinístico
-    (o mesmo motor serve às duas camadas — corrige a divergência da Rev. 186)."""
+    (o mesmo motor serve às duas camadas, que por isso não divergem)."""
     c = copy.deepcopy(cfg)
     c.monte_carlo.distribuicoes = {k: Distribuicao("fixa", d.moda, d.moda, d.moda)
                                    for k, d in c.monte_carlo.distribuicoes.items()}
@@ -265,14 +265,14 @@ def test_cenarios_ordenados(resultado):
     assert c["Pessimista"] < c["Base"] < c["Otimista"]
 
 
-# --- V&V, regressão do preset legado e alternativas -------------------------------------
+# --- V&V, caso de controle e alternativas -------------------------------------
 
 def test_invariantes_aprovados(resultado):
     assert resultado["vv"]["valido"], resultado["vv"]["erros"]
 
 
-def test_preset_legado_rev186():
-    r = executar_evteas(criar_config_legado_rev186(), executar_mc=True, executar_sens=False, n_mc=2000)
+def test_caso_controle_inviavel():
+    r = executar_evteas(criar_config_caso_controle(), executar_mc=True, executar_sens=False, n_mc=2000)
     assert r["economico"]["vpl"] < -5e6
     assert r["economico"]["diagnostico_tir"] == "sem_solucao" and np.isnan(r["economico"]["tir_anual"])
     assert r["monte_carlo"]["estatisticas"]["prob_vpl_positivo"] == 0

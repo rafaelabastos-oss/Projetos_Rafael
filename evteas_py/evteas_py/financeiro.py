@@ -74,8 +74,8 @@ def tir(fluxos, lo: float = -0.90, hi: float = 1.0, pontos: int = 160,
     """TIR por varredura de malha + bisseção vetorizada, com diagnóstico explícito.
 
     Retorna (taxa por período, diagnóstico). A taxa é ``nan`` quando não há raiz
-    no intervalo: nunca é forçada ao limite numérico (corrige a leitura de
-    -0,95 relatada na Rev. 186). Diagnósticos: ``convencional`` (uma raiz e uma
+    no intervalo: nunca é forçada ao limite numérico (a ausência de raiz não
+    pode ser confundida com uma taxa de -0,90). Diagnósticos: ``convencional`` (uma raiz e uma
     troca de sinal no fluxo), ``multiplas`` (mais de uma raiz na malha),
     ``multiplas_possiveis`` (uma raiz, mas mais de uma troca de sinal —
     regra de Descartes) e ``sem_solucao`` (o VPL não muda de sinal).

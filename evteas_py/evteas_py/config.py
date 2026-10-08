@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-VERSAO = "EVTEAS-Py 2.0 (Rev. 187)"
+VERSAO = "EVTEAS-Py"
 
 # ---------------------------------------------------------------------------
 # Rastreabilidade das premissas (Seção 3.6)
@@ -205,7 +205,7 @@ class EconomicoConfig:
     capex_fator: float = 1.0                     # multiplicador para incerteza (AACE)
     # Fomento não reembolsável (fundos mitigatórios/compensatórios, editais)
     fomento_nao_reembolsavel_pct: float = 0.0    # % do CAPEX doado ao beneficiário
-    # Pessoal detalhado (entradas das versões anteriores; somam-se a mao_obra_mes)
+    # Pessoal detalhado (CLT por cargo e retirada dos cooperados; somam-se a mao_obra_mes)
     salarios_clt_por_cargo: Dict[str, float] = field(default_factory=dict)   # salário bruto mensal por cargo
     retirada_cooperados_mes: float = 0.0          # pró-labore/retirada mensal total dos cooperados
     nome_materia_prima: str = ""

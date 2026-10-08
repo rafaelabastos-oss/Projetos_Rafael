@@ -1,4 +1,4 @@
-"""Executa o estudo completo do caso-base e gera todas as saídas da Rev. 187.
+"""Executa o estudo completo do caso-base e gera todas as saídas utilizadas no Capítulo 4.
 
 Uso: python executar_estudo.py [pasta_saida]
 """
@@ -6,13 +6,13 @@ import json
 import sys
 import time
 
-from evteas_py import (comparar_alternativas, criar_alternativas, criar_config_caso_base, criar_config_legado_rev186,
+from evteas_py import (comparar_alternativas, criar_alternativas, criar_config_caso_base, criar_config_caso_controle,
                        diagrama_arquitetura, executar_evteas, exemplo_validacao_especialistas, exportar,
                        gerar_graficos, relatorio_dsr, resumo_executivo, teste_regressao_deterministica)
 from evteas_py.interface import carregar_config, salvar_config
 from evteas_py.relatorios import serializar
 
-ENTRADAS_CASO_BASE = "entradas/entradas_caso_base_rev187.json"
+ENTRADAS_CASO_BASE = "entradas/entradas_caso_base.json"
 
 
 def main(pasta="saidas"):
@@ -26,7 +26,7 @@ def main(pasta="saidas"):
     cfg = carregar_config(ENTRADAS_CASO_BASE)
     r = executar_evteas(cfg, executar_mc=True, executar_sens=True)
     comp = comparar_alternativas(criar_alternativas(), n_mc=10000)
-    legado = executar_evteas(criar_config_legado_rev186(), executar_mc=True, executar_sens=False)
+    controle = executar_evteas(criar_config_caso_controle(), executar_mc=True, executar_sens=False)
     likert = executar_evteas(exemplo_validacao_especialistas(cfg), executar_mc=False, executar_sens=False)
     arquivos = exportar(r, pasta)
     figs = gerar_graficos(r, f"{pasta}/figuras", comp)
@@ -49,9 +49,9 @@ def main(pasta="saidas"):
         "vv": serializar(r["vv"]),
         "ods": serializar(r["ods"]),
         "topsis": serializar(comp["ranking"]),
-        "legado": serializar({"economico": legado["economico"], "tecnico": legado["tecnico"],
-                              "ambiental": legado["ambiental"], "indice": {k: v for k, v in legado["indice"].items() if k != "pesos"},
-                              "mc": legado["monte_carlo"]["estatisticas"], "decisao": legado["decisao"]}),
+        "controle": serializar({"economico": controle["economico"], "tecnico": controle["tecnico"],
+                              "ambiental": controle["ambiental"], "indice": {k: v for k, v in controle["indice"].items() if k != "pesos"},
+                              "mc": controle["monte_carlo"]["estatisticas"], "decisao": controle["decisao"]}),
         "likert": serializar({"pesos": likert["indice"]["pesos"], "indice": likert["indice"]["indice_evteas"],
                               "decisao": likert["decisao"]}),
         "dsr": {"rastreabilidade": serializar(dsr_tabelas["DSR_Rastreabilidade"])},

@@ -1,4 +1,4 @@
-"""Gera EVTEAS_Py_Rev187.ipynb autocontido (para Google Colab) a partir do pacote."""
+"""Gera EVTEAS_Py.ipynb autocontido (para Google Colab) a partir do pacote."""
 import re
 from pathlib import Path
 
@@ -13,7 +13,7 @@ TITULOS = {
     "incerteza": "5. Incerteza: Monte Carlo, sensibilidade, valores críticos e cenários",
     "pipeline": "6. Pipeline principal reproduzível",
     "vv": "7. Verificação (V&V): invariantes e testes de regressão",
-    "casos": "8. Caso-base, alternativas e preset legado da Rev. 186",
+    "casos": "8. Caso-base, alternativas e caso de controle",
     "relatorios": "9. Resumo executivo, exportação e gráficos",
     "interface": "10. Entrada de dados: menu inicial, wizard completo, arquivos JSON e análise de preços",
     "dsr": "11. Registro do ciclo da Design Science Research: etapas, requisitos, comparação e aprendizagens",
@@ -36,7 +36,7 @@ def limpar(codigo: str) -> str:
 
 def celulas():
     c = [nbf.v4.new_markdown_cell(
-        "# EVTEAS-Py 2.0 (Rev. 187)\n\n"
+        "# EVTEAS-Py\n\n"
         "Framework computacional para Estudo de Viabilidade Técnica, Econômica, Ambiental e Social (EVTEAS) "
         "aplicado à piscicultura — dissertação de Rafael Alves Bastos (UFF/MESC).\n\n"
         "**Como usar**\n\n"
@@ -102,7 +102,7 @@ def celulas():
     return c
 
 
-def main(destino="EVTEAS_Py_Rev187.ipynb"):
+def main(destino="EVTEAS_Py.ipynb"):
     nb = nbf.v4.new_notebook()
     nb["cells"] = celulas()
     nb["metadata"]["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}

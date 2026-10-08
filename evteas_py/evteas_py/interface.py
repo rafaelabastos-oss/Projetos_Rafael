@@ -12,8 +12,8 @@ O estudo começa SEMPRE pela entrada de dados (``iniciar_entradas``). Há três 
 3. **Exemplo ilustrativo** — carrega o caso-base da dissertação, apenas para
    demonstração do artefato.
 
-O wizard preserva o percurso das versões anteriores (Viabilidade econômica
-Rev. 8/9 e EVTEAS master): tipo de organização, mix de produtos com
+O wizard incorpora os campos dos estudos de viabilidade econômica em notebook
+utilizados pelo autor: tipo de organização, mix de produtos com
 quantidades e preços, serviços de transporte, carência, custos, cooperados,
 funcionários CLT por cargo, tributos individuais, rampa, crescimento e TMA. Acrescenta os
 parâmetros técnico-ambientais-sociais, a governança, os pesos (preset,
@@ -52,7 +52,7 @@ def salvar_config(cfg: EVTEASConfig, caminho) -> str:
 
 
 def carregar_config(caminho, avisos: Optional[List[str]] = None, permitir_pendentes: bool = False) -> EVTEASConfig:
-    """Lê um arquivo de entradas (aceita arquivos de versões anteriores e o JSON de resultados).
+    """Lê um arquivo de entradas (aceita arquivos incompletos e o JSON de resultados).
 
     Campos ausentes não são completados com o caso ilustrativo: ficam pendentes e, salvo
     ``permitir_pendentes``, impedem a leitura. Os avisos vão para ``avisos`` (ou ``warnings``)."""
@@ -727,7 +727,7 @@ def bloco_tributos(P: Perguntador, cfg: EVTEASConfig):
                             (ant is not None) if (P.modo == "revisar" and not sem_decisao) else None)
         if usar:
             atual_aliq = None
-            if ant:   # formato anterior: 'aliquota' em fração
+            if ant:   # arquivo com 'aliquota' em fração
                 atual_aliq = ant.get("aliquota_pct", float(ant["aliquota"]) * 100 if "aliquota" in ant else None)
             aliq, _ = P.numero(f"  Alíquota de {nome}", atual_aliq, 0, 100, unidade="%")
             novos.append({"nome": nome, "base": base, "aliquota_pct": aliq})
@@ -1219,7 +1219,7 @@ def entradas_pendentes(cfg: EVTEASConfig) -> List[str]:
 
 
 # ---------------------------------------------------------------------------
-# Leitura de arquivos de entradas (inclusive de versões anteriores)
+# Leitura de arquivos de entradas (inclusive incompletos)
 # ---------------------------------------------------------------------------
 
 SECOES_CONFIG = ("tecnico", "economico", "ambiental", "social", "governanca", "pesos", "decisao", "monte_carlo")
@@ -1254,7 +1254,7 @@ def _normalizar_formatos_antigos(dados: Dict[str, Any], avisos: List[str]) -> Di
             imp["base"] = apelidos[imp.get("base", "faturamento")]
         imp.setdefault("nome", f"Tributo {i + 1}")
     if convertidos:
-        avisos.append(f"{convertidos} tributo(s) com alíquota em fração (formato anterior) convertido(s) para %.")
+        avisos.append(f"{convertidos} tributo(s) com alíquota em fração convertido(s) para %.")
     for i, prod in enumerate(e.get("mix_produtos") or []):
         if isinstance(prod, dict) and not prod.get("nome"):
             prod["nome"] = f"Produto {i + 1}"
@@ -1332,7 +1332,7 @@ def ler_entradas(dados) -> Tuple[EVTEASConfig, List[str], List[str]]:
             avisos.append(f"Distribuição de {c} reposicionada para o valor determinístico do arquivo ({_fmt(float(v))}).")
     _completar_condicionais(cfg)
     if neutros:
-        avisos.append("Campos ausentes no arquivo (versão anterior) preenchidos com valor neutro: " + ", ".join(neutros))
+        avisos.append("Campos ausentes no arquivo preenchidos com valor neutro: " + ", ".join(neutros))
     if desconhecidas:
         avisos.append("Campos desconhecidos ignorados: " + ", ".join(desconhecidas))
     return cfg, avisos, entradas_pendentes(cfg)
@@ -1559,7 +1559,7 @@ def iniciar_entradas(entrada: Callable[[str], str] = input, saida: Callable[...,
 
 
 # ---------------------------------------------------------------------------
-# Análise de preços a partir de planilha (herdada da versão anterior)
+# Análise de preços a partir de planilha
 # ---------------------------------------------------------------------------
 
 def analisar_precos(df: pd.DataFrame, col_preco: str, col_qtd: Optional[str] = None,
