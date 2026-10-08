@@ -145,14 +145,37 @@ def test_notebook_autocontido_sem_colisao_de_nomes():
     """O notebook concatena os módulos; nomes de nível superior não podem se repetir."""
     import ast
     import collections
+    import re
     from pathlib import Path
     raiz = Path(__file__).resolve().parents[1] / "evteas_py"
     nomes = collections.defaultdict(list)
-    for m in ["config", "financeiro", "modelo", "ponderacao", "incerteza", "pipeline", "vv", "casos", "relatorios", "interface"]:
+    def nomes_do_alvo(t):
+        if isinstance(t, ast.Name):
+            return [t.id]
+        if isinstance(t, (ast.Tuple, ast.List)):
+            return [x for e in t.elts for x in nomes_do_alvo(e)]
+        return []
+
+    modulos = re.search(r"MODULOS = (\[.*?\])", (raiz.parent / "gerar_notebook.py").read_text(encoding="utf-8")).group(1)
+    for m in ast.literal_eval(modulos):
         for n in ast.parse((raiz / f"{m}.py").read_text(encoding="utf-8")).body:
             alvos = [n.name] if isinstance(n, (ast.FunctionDef, ast.ClassDef)) else \
-                [t.id for t in getattr(n, "targets", []) if isinstance(t, ast.Name)] + \
-                ([n.target.id] if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) else [])
+                [x for t in getattr(n, "targets", []) for x in nomes_do_alvo(t)] + \
+                (nomes_do_alvo(n.target) if isinstance(n, ast.AnnAssign) else [])
             for a in alvos:
                 nomes[a].append(m)
     assert {k: v for k, v in nomes.items() if len(v) > 1} == {}
+
+
+def test_notebook_identico_ao_pacote():
+    """O notebook do Colab deve conter exatamente o código do pacote testado
+    (regenerar com: python gerar_notebook.py)."""
+    import json
+    from pathlib import Path
+    import gerar_notebook
+    nb = json.loads((Path(gerar_notebook.__file__).parent / "EVTEAS_Py_Rev187.ipynb").read_text(encoding="utf-8"))
+    codigo = ["".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code"]
+    esperado = [c["source"] for c in gerar_notebook.celulas() if c["cell_type"] == "code"]
+    defasadas = [m for m in gerar_notebook.MODULOS if gerar_notebook.codigo_do_modulo(m) not in codigo]
+    assert not defasadas, f"notebook desatualizado nos módulos: {defasadas}"
+    assert codigo == esperado

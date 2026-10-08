@@ -8,7 +8,7 @@ import time
 
 from evteas_py import (comparar_alternativas, criar_alternativas, criar_config_caso_base, criar_config_legado_rev186,
                        diagrama_arquitetura, executar_evteas, exemplo_validacao_especialistas, exportar,
-                       gerar_graficos, resumo_executivo, teste_regressao_deterministica)
+                       gerar_graficos, relatorio_dsr, resumo_executivo, teste_regressao_deterministica)
 from evteas_py.interface import carregar_config, salvar_config
 from evteas_py.relatorios import serializar
 
@@ -32,6 +32,10 @@ def main(pasta="saidas"):
     figs = gerar_graficos(r, f"{pasta}/figuras", comp)
     figs["00_arquitetura"] = diagrama_arquitetura(f"{pasta}/figuras/00_arquitetura.png")
     comp["ranking"].to_csv(f"{pasta}/topsis_alternativas.csv", index=False)
+    # Registro do ciclo DSR (etapas, comparação, rastreabilidade e aprendizagens)
+    dsr_tabelas = relatorio_dsr(Path(__file__).resolve().parent / "tests")
+    for nome, tabela in dsr_tabelas.items():
+        tabela.to_csv(f"{pasta}/{nome}.csv", index=False)
     resumo = {
         "tempo_execucao_s": time.perf_counter() - t0,
         "caso_base": serializar({k: r[k] for k in ("tecnico", "economico", "ambiental", "social", "governanca",
@@ -50,6 +54,7 @@ def main(pasta="saidas"):
                               "mc": legado["monte_carlo"]["estatisticas"], "decisao": legado["decisao"]}),
         "likert": serializar({"pesos": likert["indice"]["pesos"], "indice": likert["indice"]["indice_evteas"],
                               "decisao": likert["decisao"]}),
+        "dsr": {"rastreabilidade": serializar(dsr_tabelas["DSR_Rastreabilidade"])},
         "figuras": figs, "arquivos": arquivos,
     }
     with open(f"{pasta}/resumo_execucao.json", "w", encoding="utf-8") as f:

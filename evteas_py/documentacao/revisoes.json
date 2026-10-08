@@ -1,0 +1,15 @@
+{
+  "rodadas": [
+    {
+      "rodada": 1,
+      "apontados": 14,
+      "confirmados": 14,
+      "corrigidos": 14,
+      "concluida": true
+    },
+    {
+      "rodada": 2,
+      "concluida": false
+    }
+  ]
+}

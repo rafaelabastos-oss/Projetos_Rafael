@@ -40,11 +40,13 @@ FMT = {
     "h2": ('<w:pPr><w:pStyle w:val="Ttulo2"/><w:pageBreakBefore w:val="0"/></w:pPr>', TNR + '<w:b w:val="0"/><w:sz w:val="28"/>'),
     "p": ('<w:pPr><w:spacing w:line="360" w:lineRule="auto" w:before="0" w:after="0"/><w:ind w:firstLine="709"/><w:jc w:val="both"/></w:pPr>',
           TNR + '<w:sz w:val="24"/>'),
-    "cap": ('<w:pPr><w:pStyle w:val="Legenda"/><w:keepNext/><w:spacing w:before="160" w:after="60"/><w:ind w:firstLine="0"/></w:pPr>',
-            TNR + '<w:b/><w:sz w:val="18"/>'),
+    # legenda no formato das do Capítulo 3 (Quadro 6, Tabela 2): estilo Legenda, centralizada, com campo SEQ
+    "cap": ('<w:pPr><w:pStyle w:val="Legenda"/><w:keepNext/><w:spacing w:before="120" w:after="0" w:line="360" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>', ""),
     "code": ('<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="F2F2F2"/><w:spacing w:line="240" w:lineRule="auto" w:before="40" w:after="40"/><w:ind w:firstLine="0" w:left="283" w:right="113"/><w:jc w:val="left"/></w:pPr>',
              '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="16"/>'),
-    "fonte": ('<w:pPr><w:pStyle w:val="Legenda"/><w:ind w:firstLine="0"/></w:pPr>', TNR + '<w:sz w:val="18"/>'),
+    "fonte": ('<w:pPr><w:spacing w:after="120" w:line="360" w:lineRule="auto"/><w:ind w:firstLine="0"/><w:jc w:val="center"/></w:pPr>',
+              '<w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>'
+              '<w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="16"/><w:szCs w:val="16"/>'),
     "bullet": ('<w:pPr><w:spacing w:line="360" w:lineRule="auto"/><w:ind w:left="567" w:hanging="283"/></w:pPr>', TNR + '<w:sz w:val="24"/>'),
     "img": ('<w:pPr><w:keepNext/><w:spacing w:before="60" w:after="60"/><w:ind w:firstLine="0"/><w:jc w:val="center"/></w:pPr>', ""),
 }
@@ -105,6 +107,7 @@ def paragrafo_excluido(xml: str) -> str:
     pm = re.match(r"(<w:pPr>.*?</w:pPr>)(.*)$", corpo, flags=re.S)
     ppr, resto = (pm.group(1), pm.group(2)) if pm else ("", corpo)
     resto = re.sub(r"<w:t(\s[^>]*)?>", lambda mm: "<w:delText" + (mm.group(1) or "") + ">", resto).replace("</w:t>", "</w:delText>")
+    resto = resto.replace("<w:instrText", "<w:delInstrText").replace("</w:instrText>", "</w:delInstrText>")
     resto = re.sub(r"(<w:r\b[^>]*>.*?</w:r>)", lambda mm: f"<w:del {ins_attr()}>{mm.group(1)}</w:del>", resto, flags=re.S)
     return f"{abre}{marca_ppr(ppr, f'<w:del {ins_attr()}/>')}{resto}</w:p>"
 
@@ -180,6 +183,8 @@ def tabela_inserida(linhas, larguras=None) -> str:
            '<w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr><w:tblGrid>']
     xml += [f'<w:gridCol w:w="{w}"/>' for w in larguras]
     xml.append("</w:tblGrid>")
+    # colunas de texto corrido ficam alinhadas à esquerda; valores curtos, centralizados
+    texto_longo = [c == 0 or max((len(str(l[c])) for l in linhas[1:]), default=0) > 30 for c in range(ncol)]
     for r, linha in enumerate(linhas):
         cab = r == 0
         trpr = f'<w:trPr><w:cantSplit/>{"<w:tblHeader/>" if cab else ""}<w:ins {ins_attr()}/></w:trPr>'
@@ -187,7 +192,7 @@ def tabela_inserida(linhas, larguras=None) -> str:
         for c, cel in enumerate(linha):
             tcb = '<w:tcBorders><w:bottom w:val="single" w:sz="8" w:space="0" w:color="000000"/></w:tcBorders>' if cab else ""
             rpr = TNR + ("<w:b/>" if cab else "") + '<w:sz w:val="18"/>'
-            jc = "left" if c == 0 else "center"
+            jc = "left" if texto_longo[c] and not cab else "center" if c else "left"
             ppr = marca_ppr(f'<w:pPr><w:spacing w:before="20" w:after="20" w:line="240" w:lineRule="auto"/><w:ind w:firstLine="0"/><w:jc w:val="{jc}"/></w:pPr>',
                             f"<w:ins {ins_attr()}/>")
             xml.append(f'<w:tc><w:tcPr><w:tcW w:w="{larguras[c]}" w:type="dxa"/>{tcb}<w:vAlign w:val="center"/></w:tcPr>'
@@ -201,7 +206,7 @@ def tabela_inserida(linhas, larguras=None) -> str:
 # Alinhamento entre versões
 # ---------------------------------------------------------------------------
 
-LIMIAR = {"p": 0.45, "bullet": 0.45, "cap": 0.40, "fonte": 0.40, "h1": 0.5, "h2": 0.5}
+LIMIAR = {"p": 0.45, "bullet": 0.45, "h1": 0.5, "h2": 0.5}
 
 
 def similaridade(a: str, b: str) -> float:
@@ -224,6 +229,8 @@ def emitir(antigos, novos, midia: Midia) -> str:
             return midia.adicionar(b["arquivo"])
         if b["k"] == "tbl":
             return tabela_inserida(b["linhas"], b.get("larguras"))
+        if b["k"] == "cap":
+            return legenda_inserida(b)
         return paragrafo_inserido(b["k"], b["t"])
 
     for op, i1, i2, j1, j2 in sm.get_opcodes():
@@ -258,6 +265,146 @@ def emitir(antigos, novos, midia: Midia) -> str:
                 ia, jn = mi + 1, j + 1
     print("Parágrafos:", est)
     return "".join(out)
+
+
+# ---------------------------------------------------------------------------
+# Legendas com campo SEQ, marcadores de títulos e entradas dos índices
+# ---------------------------------------------------------------------------
+
+_bm = [990000]
+
+
+def _bookmark(nome, conteudo):
+    _bm[0] += 1
+    return f'<w:bookmarkStart w:id="{_bm[0]}" w:name="{nome}"/>{conteudo}<w:bookmarkEnd w:id="{_bm[0]}"/>'
+
+
+def _ascii(s: str) -> str:
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+
+
+def marcador_legenda(b) -> str:
+    return f"_TocRev187_{_ascii(b['rotulo'])}{b['num']}"
+
+
+def runs_legenda(b) -> str:
+    """'Quadro ' + campo SEQ + ' - Título', como nas legendas do Capítulo 3."""
+    return (f'<w:r><w:t xml:space="preserve">{escape(b["rotulo"])} </w:t></w:r>'
+            '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+            f'<w:r><w:instrText xml:space="preserve"> SEQ {b["rotulo"]} \\* ARABIC </w:instrText></w:r>'
+            '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+            f'<w:r><w:t>{b["num"]}</w:t></w:r>'
+            '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
+            f'<w:r><w:t xml:space="preserve"> - {escape(b["titulo"])}</w:t></w:r>')
+
+
+def legenda_inserida(b) -> str:
+    ppr = marca_ppr(FMT["cap"][0], f"<w:ins {ins_attr()}/>")
+    return f'<w:p>{ppr}{_bookmark(marcador_legenda(b), f"<w:ins {ins_attr()}>{runs_legenda(b)}</w:ins>")}</w:p>'
+
+
+def _excluido(p: str) -> bool:
+    ppr = re.match(r"<w:p\b[^>]*>(<w:pPr>.*?</w:pPr>)?", p, flags=re.S).group(1) or ""
+    return "<w:del " in ppr
+
+
+def marcar_titulos(seg: str):
+    """Acrescenta marcadores aos títulos dos Capítulos 4 e 5 (destino das entradas do
+    Sumário) e devolve [(nível, texto, marcador)] na ordem do documento."""
+    titulos = []
+
+    def marcar(m):
+        p = m.group(0)
+        if _excluido(p) or not texto_paragrafo(p).strip():
+            return p
+        nome = f"_TocRev187_T{len(titulos) + 1}"
+        titulos.append((1 if 'w:val="Ttulo1"' in p else 2, texto_paragrafo(p).strip(), nome))
+        fim_ppr = p.index("</w:pPr>") + len("</w:pPr>")
+        return p[:fim_ppr] + _bookmark(nome, p[fim_ppr:-len("</w:p>")]) + "</w:p>"
+
+    seg = re.sub(r'<w:p\b(?:(?!<w:p\b).)*?<w:pStyle w:val="Ttulo[12]"/>.*?</w:p>', marcar, seg, flags=re.S)
+    return seg, titulos
+
+
+def _rastrear_entrada(p: str, rastrear: bool) -> str:
+    """Remove o identificador de parágrafo copiado do modelo e marca a entrada como inserida."""
+    p = re.sub(r"^<w:p\b[^>]*>", "<w:p>", p)
+    if not rastrear:
+        return p
+    p = re.sub(r"(<w:hyperlink [^>]*>)(.*)(</w:hyperlink>)",
+               lambda m: f"{m.group(1)}<w:ins {ins_attr()}>{m.group(2)}</w:ins>{m.group(3)}", p, flags=re.S)
+    ppr = re.search(r"<w:pPr>.*?</w:pPr>", p, flags=re.S).group(0)
+    return p.replace(ppr, marca_ppr(ppr, f"<w:ins {ins_attr()}/>"), 1)
+
+
+def entrada_sumario(modelo: str, texto: str, marcador: str, rastrear: bool = True) -> str:
+    p = re.sub(r'w:anchor="[^"]+"', f'w:anchor="{marcador}"', modelo)
+    p = re.sub(r"PAGEREF \S+", f"PAGEREF {marcador}", p)
+    p = re.sub(r"(<w:hyperlink [^>]*>.*?<w:t(?:\s[^>]*)?>)[^<]*(</w:t>)",
+               lambda m: m.group(1) + escape(texto) + m.group(2), p, count=1, flags=re.S)
+    return _rastrear_entrada(p, rastrear)
+
+
+def reconstruir_sumario(doc: str, titulos) -> str:
+    """Substitui, no resultado em cache do Sumário, as entradas dos Capítulos 4 e 5
+    pelas dos títulos da Rev. 187 (mantém as que não mudaram; as demais entram como
+    exclusão e inserção rastreadas)."""
+    s0 = doc.index("<w:sdt>")
+    s1 = doc.index("</w:sdt>", s0)
+    sdt = doc[s0:s1]
+    ps = list(re.finditer(r"<w:p\b[^>]*>(?:(?!</w:p>).)*?PAGEREF.*?</w:p>", sdt, flags=re.S))
+    textos = [texto_paragrafo(m.group(0).split("<w:tab/>")[0]).strip() for m in ps]
+    i0 = next(i for i, t in enumerate(textos) if t.startswith("4 RESULTADOS"))
+    i1 = next(i for i, t in enumerate(textos) if i > i0 and t == "REFERÊNCIAS")
+    antigos = [m.group(0) for m in ps[i0:i1]]
+    modelo = {1: antigos[0], 2: next(a for a in antigos if 'w:val="Sumrio2"' in a)}
+    novos = [t for _, t, _ in titulos]
+    out = []
+    sm = difflib.SequenceMatcher(None, textos[i0:i1], novos, autojunk=False)
+    for op, a1, a2, b1, b2 in sm.get_opcodes():
+        if op == "equal":
+            for a, (nivel, texto, nome) in zip(antigos[a1:a2], titulos[b1:b2]):
+                a = re.sub(r'w:anchor="[^"]+"', f'w:anchor="{nome}"', a)
+                out.append(re.sub(r"PAGEREF \S+", f"PAGEREF {nome}", a))
+            continue
+        out += [paragrafo_excluido(a) for a in antigos[a1:a2]]
+        out += [entrada_sumario(modelo[nivel], texto, nome) for nivel, texto, nome in titulos[b1:b2]]
+    ini, fim = ps[i0].start(), ps[i1].start()
+    return doc[:s0] + sdt[:ini] + "".join(out) + sdt[fim:] + doc[s1:]
+
+
+RPR_ITEM = ('<w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>'
+            '<w:noProof/><w:sz w:val="24"/><w:szCs w:val="24"/>')
+
+
+def entrada_lista(texto: str, marcador: str, pagina="", rastrear: bool = True, prefixo: str = "") -> str:
+    """Entrada de lista de ilustrações no formato das listas da Rev. 181 (hiperlink + PAGEREF)."""
+    r = lambda conteudo: f"<w:r><w:rPr>{RPR_ITEM}</w:rPr>{conteudo}</w:r>"
+    corpo = (r(f'<w:t xml:space="preserve">{escape(texto)}</w:t>') + r("<w:tab/>") + r('<w:fldChar w:fldCharType="begin"/>')
+             + r(f'<w:instrText xml:space="preserve"> PAGEREF {marcador} \\h </w:instrText>')
+             + r('<w:fldChar w:fldCharType="separate"/>') + r(f"<w:t>{pagina}</w:t>") + r('<w:fldChar w:fldCharType="end"/>'))
+    if rastrear:
+        return (f'<w:p>{marca_ppr(PPR_LISTA_ITEM, f"<w:ins {ins_attr()}/>")}'
+                + (f"<w:ins {ins_attr()}>{prefixo}</w:ins>" if prefixo else "")
+                + f'<w:hyperlink w:anchor="{marcador}" w:history="1"><w:ins {ins_attr()}>{corpo}</w:ins></w:hyperlink></w:p>')
+    return f'<w:p>{PPR_LISTA_ITEM}{prefixo}<w:hyperlink w:anchor="{marcador}" w:history="1">{corpo}</w:hyperlink></w:p>'
+
+
+LISTAS = {"Quadro": "LISTA DE QUADROS", "Figura": "LISTA DE FIGURAS", "Tabela": "LISTA DE TABELAS"}
+
+
+def inserir_nas_listas(doc: str) -> str:
+    """Acrescenta às listas de quadros, figuras e tabelas as ilustrações dos Capítulos 4 e 5,
+    antes do fim do campo TOC de cada lista."""
+    caps = [b for b in C.blocos() if b["k"] == "cap" and b["rotulo"] in LISTAS]
+    for rotulo, titulo in LISTAS.items():
+        ini = doc.index(f">{titulo}<")
+        fim_campo = next(m for m in re.finditer(r"<w:p\b[^>]*>(?:(?!</w:p>).)*?</w:p>", doc[ini:], flags=re.S)
+                         if 'w:fldCharType="end"' in m.group(0) and "PAGEREF" not in m.group(0))
+        pos = ini + fim_campo.start()
+        novas = "".join(entrada_lista(b["t"], marcador_legenda(b)) for b in caps if b["rotulo"] == rotulo)
+        doc = doc[:pos] + novas + doc[pos:]
+    return doc
 
 
 # ---------------------------------------------------------------------------
@@ -311,11 +458,12 @@ def inserir_referencias(doc: str, inicio_refs: int) -> str:
 # ---------------------------------------------------------------------------
 
 RAIZ_CODIGO = Path(__file__).resolve().parents[1]
+_REF = C.referencias()
 APENDICES = [
     ("APÊNDICE A – CÓDIGO-FONTE COMPLETO DO EVTEAS-Py",
      ["Este apêndice reproduz o código-fonte completo da versão 2.0 do EVTEAS-Py, utilizada nas execuções "
-      "apresentadas no Capítulo 4. O pacote é organizado em dez módulos, cuja responsabilidade e vínculo com a "
-      "dissertação estão sintetizados no Quadro 10, e é acompanhado do script que executa o estudo completo. "
+      "apresentadas no Capítulo 4. O pacote é organizado em onze módulos, cuja responsabilidade e vínculo com a "
+      f"dissertação estão sintetizados no {_REF[('Quadro', 'modulos')]}, e é acompanhado do script que executa o estudo completo. "
       "O notebook autocontido EVTEAS_Py_Rev187, destinado à execução no Google Colab, reúne esse mesmo código em "
       "células, seguido das etapas de entrada de dados, análise, comparação de alternativas e exportação.",
       "As linhas estão numeradas para facilitar a referência. O código está versionado no repositório do projeto, "
@@ -332,14 +480,20 @@ APENDICES = [
       ("evteas_py/casos.py", "Caso-base, alternativas e preset legado"),
       ("evteas_py/relatorios.py", "Resumo executivo, exportação e gráficos"),
       ("evteas_py/interface.py", "Entrada de dados, arquivos de entradas e análise de preços"),
+      ("evteas_py/dsr.py", "Registro do ciclo da Design Science Research e rastreabilidade de requisitos"),
       ("executar_estudo.py", "Execução do estudo completo")]),
     ("APÊNDICE B – TESTES AUTOMATIZADOS DE VERIFICAÇÃO",
-     ["Este apêndice reproduz a suíte de testes automatizados descrita na Seção 4.10, executada com a biblioteca "
-      "pytest. O arquivo test_evteas.py verifica as rotinas de cálculo; o arquivo test_entradas.py verifica a entrada "
+     [f"Este apêndice reproduz a suíte de testes automatizados descrita na {_REF[('Seção', 'vv')]}, executada com a "
+      "biblioteca pytest. O arquivo test_evteas.py verifica as rotinas de cálculo; test_social_lean_green.py, as "
+      "dimensões social, de governança e Lean-Green; test_entradas.py e test_revisao_entradas.py verificam a entrada "
       "de dados com o usuário simulado definido em usuario_simulado.py, que responde ao wizard como uma pessoa "
-      "digitaria."],
+      "digitaria; e test_dsr.py confere o registro das etapas da DSR e a rastreabilidade entre requisitos, código e "
+      "testes."],
      [("tests/test_evteas.py", "Testes do núcleo de cálculo"),
+      ("tests/test_social_lean_green.py", "Testes das dimensões social, de governança e Lean-Green"),
       ("tests/test_entradas.py", "Testes da entrada de dados"),
+      ("tests/test_revisao_entradas.py", "Testes de regressão da revisão independente da entrada de dados"),
+      ("tests/test_dsr.py", "Testes do registro do ciclo DSR e da rastreabilidade de requisitos"),
       ("tests/usuario_simulado.py", "Usuário simulado para os testes do wizard"),
       ("tests/conftest.py", "Configuração da suíte de testes")]),
 ]
@@ -347,12 +501,6 @@ PPR_CODIGO = ('<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="F7F7F7"/><w:sp
               '<w:ind w:left="0" w:firstLine="0"/><w:jc w:val="left"/>{marca}</w:pPr>')
 RPR_CODIGO = '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/><w:sz w:val="14"/><w:szCs w:val="14"/>'
 PPR_AP_TITULO = '<w:pPr><w:pStyle w:val="Ttulo1"/><w:pageBreakBefore/><w:jc w:val="center"/>{marca}</w:pPr>'
-_bm = [990000]
-
-
-def _bookmark(nome, conteudo):
-    _bm[0] += 1
-    return f'<w:bookmarkStart w:id="{_bm[0]}" w:name="{nome}"/>{conteudo}<w:bookmarkEnd w:id="{_bm[0]}"/>'
 
 
 def apendices_xml():
@@ -397,15 +545,8 @@ def inserir_apendices(doc: str) -> str:
     modelo = doc[doc.rfind("<w:p ", s0, ref):fim_ref]
     entradas = []
     for nivel, texto, marcador in sumario:
-        p = re.sub(r'w:anchor="[^"]+"', f'w:anchor="{marcador}"', modelo)
-        p = re.sub(r"PAGEREF \S+", f"PAGEREF {marcador}", p)
-        p = p.replace("<w:t>REFERÊNCIAS</w:t>", f"<w:t>{escape(texto)}</w:t>")
-        if nivel == 2:
-            p = p.replace('w:val="Sumrio1"', 'w:val="Sumrio2"')
-        p = re.sub(r"(<w:hyperlink [^>]*>)(.*)(</w:hyperlink>)", lambda m: f"{m.group(1)}<w:ins {ins_attr()}>{m.group(2)}</w:ins>{m.group(3)}", p, flags=re.S)
-        p = marca_ppr(re.search(r"<w:pPr>.*?</w:pPr>", p, flags=re.S).group(0), f"<w:ins {ins_attr()}/>").join(
-            re.split(r"<w:pPr>.*?</w:pPr>", p, maxsplit=1, flags=re.S))
-        entradas.append(p)
+        m = modelo.replace('w:val="Sumrio1"', 'w:val="Sumrio2"') if nivel == 2 else modelo
+        entradas.append(entrada_sumario(m, texto, marcador))
     return doc[:fim_ref] + "".join(entradas) + doc[fim_ref:]
 
 
@@ -432,8 +573,11 @@ def main(origem: str, destino: str):
     midia = Midia(destino)
     novo_seg = emitir(antigos, C.blocos(), midia)
     midia.salvar()
+    novo_seg, titulos = marcar_titulos(novo_seg)
     doc = doc[:ini] + novo_seg + doc[fim:]
     doc = inserir_referencias(doc, doc.rfind("<w:t>REFERÊNCIAS</w:t>"))
+    doc = reconstruir_sumario(doc, titulos)
+    doc = inserir_nas_listas(doc)
     doc_path.write_text(doc, encoding="utf-8")
     restaurar_paginacao_original(destino)
     doc = doc_path.read_text(encoding="utf-8")
@@ -444,6 +588,10 @@ def main(origem: str, destino: str):
     s = st.read_text(encoding="utf-8")
     if "<w:trackRevisions" not in s:
         s = s.replace("<w:defaultTabStop", "<w:trackRevisions/><w:defaultTabStop", 1)
+    # updateFields (herdado da Rev. 186) fora da ordem do esquema: vai para antes de footnotePr
+    m = re.search(r"<w:updateFields [^>]*/>", s)
+    if m and s.index("<w:footnotePr") < m.start():
+        s = s.replace(m.group(0), "", 1).replace("<w:footnotePr", m.group(0) + "<w:footnotePr", 1)
     st.write_text(s, encoding="utf-8")
     print("ok")
 
@@ -480,21 +628,23 @@ PPR_LISTA_ITEM = '<w:pPr><w:pStyle w:val="ndicedeilustraes"/><w:tabs><w:tab w:va
 
 
 def lista_de_codigos(paginas=None, rastrear: bool = True) -> str:
-    """Lista de Códigos da Rev. 187, no mesmo formato das demais listas pré-textuais
-    (marcada como inserção na versão com controle de alterações)."""
+    """Lista de Códigos da Rev. 187 como campo TOC \\c "Código" (atualizável pelo Word),
+    no mesmo formato das demais listas pré-textuais."""
     paginas = paginas or {}
-    itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
+    caps = [b for b in C.blocos() if b["k"] == "cap" and b["rotulo"] == "Código"]
 
     def par(ppr, runs):
         if not rastrear:
             return f"<w:p>{ppr}{runs}</w:p>"
         return f'<w:p>{marca_ppr(ppr, f"<w:ins {ins_attr()}/>")}<w:ins {ins_attr()}>{runs}</w:ins></w:p>'
 
+    inicio = ('<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+              '<w:r><w:instrText xml:space="preserve"> TOC \\c "Código" \\h </w:instrText></w:r>'
+              '<w:r><w:fldChar w:fldCharType="separate"/></w:r>')
     xml = [par(PPR_LISTA_TITULO, f'<w:r><w:rPr>{RPR_LISTA_TITULO}</w:rPr><w:t>LISTA DE CÓDIGOS</w:t></w:r>')]
-    for it in itens:
-        pg = str(paginas.get(it, ""))
-        xml.append(par(PPR_LISTA_ITEM, f'<w:r><w:t xml:space="preserve">{escape(it)}</w:t></w:r>'
-                                       f'<w:r><w:tab/></w:r><w:r><w:t>{pg}</w:t></w:r>'))
+    for k, b in enumerate(caps):
+        xml.append(entrada_lista(b["t"], marcador_legenda(b), paginas.get(b["t"], ""), rastrear, inicio if k == 0 else ""))
+    xml.append(par(PPR_LISTA_ITEM, '<w:r><w:fldChar w:fldCharType="end"/></w:r>'))
     return "".join(xml)
 
 
@@ -513,7 +663,7 @@ def restaurar_pre_textuais(doc: str) -> str:
     i_abrev = next(k for k, m in enumerate(elems) if texto(m) == "LISTA DE ABREVIATURAS E SIGLAS")
     i_sdt = next(k for k, m in enumerate(elems) if m.group(0).startswith("<w:sdt>"))
     i_cod = next(k for k, m in enumerate(elems) if texto(m) == "LISTA DE CÓDIGOS" and k > i_sdt)
-    i_cod_fim = next(k for k, m in enumerate(elems) if k > i_cod and not texto(m).startswith("Código "))
+    i_cod_fim = next(k for k, m in enumerate(elems) if k > i_cod and not texto(m).startswith(("Código ", "Codigo ")))
     pos = lambda k: corpo_ini + elems[k].start()
     fim = lambda k: corpo_ini + elems[k].end()
     # da última posição para a primeira, para manter os índices válidos
@@ -528,22 +678,38 @@ def atualizar_paginas(pasta: Path, pdf: Path, rastrear: bool = True) -> None:
     partir da paginação renderizada (o Word os recalcula ao atualizar os campos)."""
     import subprocess
     paginas_pdf = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout.split("\f")
-    norm = lambda s: re.sub(r"\s+", " ", s).strip().casefold()
 
     def pagina_impressa(i):
         linhas = [l.strip() for l in paginas_pdf[i].split("\n") if l.strip()]
         return linhas[0] if linhas and linhas[0].isdigit() else None
 
+    compacto = lambda s: re.sub(r"\s+", "", s).casefold()   # o PDF às vezes junta "2.1" e o título
+
     def achar(titulo, legenda=False):
-        alvo = norm(titulo)
+        alvo = compacto(titulo)
+        if len(alvo) < 3:
+            return None
         for i, pg in enumerate(paginas_pdf):
             if pagina_impressa(i) is None:
                 continue
-            linhas = [norm(l) for l in pg.split("\n") if l.strip()]
-            for l in linhas:
-                if (l == alvo or (legenda and l.startswith(alvo[:60]))) or (not legenda and alvo.startswith(l) and len(l) > 25 and l == alvo[:len(l)]):
+            for l in (compacto(x) for x in pg.split("\n") if x.strip()):
+                if l == alvo or (legenda and l.startswith(alvo[:50])) or (alvo.startswith(l) and len(l) > 20):
                     return pagina_impressa(i)
         return None
+
+    def texto_entrada(par):
+        """Texto da entrada (sem o número de página): tudo antes da tabulação que precede o PAGEREF."""
+        antes = par[:par.index("PAGEREF")] if "PAGEREF" in par else par
+        antes = antes[:antes.rfind("<w:tab/>")] if "<w:tab/>" in antes else antes
+        return re.sub(r"\s+", " ", texto_paragrafo(antes.replace("<w:tab/>", "<w:t> </w:t>"))).strip()
+
+    def corrigir_lista(m):
+        par = m.group(0)
+        pg = achar(texto_entrada(par), legenda=True)
+        if pg is None:
+            return par
+        return re.sub(r'(PAGEREF[^<]*</w:instrText>.*?<w:fldChar w:fldCharType="separate"/>.*?<w:t[^>]*>)(\d*)(</w:t>)',
+                      lambda mm: mm.group(1) + pg + mm.group(3), par, count=1, flags=re.S)
 
     p = pasta / "word/document.xml"
     doc = p.read_text(encoding="utf-8")
@@ -551,8 +717,14 @@ def atualizar_paginas(pasta: Path, pdf: Path, rastrear: bool = True) -> None:
     ini = doc.index("<w:t>LISTA DE CÓDIGOS</w:t>")
     ini = doc.rfind("<w:p>", 0, ini)
     fim = doc.index("<w:sdt>", ini)
-    itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["t"].startswith("Código ")]
+    itens = [b["t"] for b in C.blocos() if b["k"] == "cap" and b["rotulo"] == "Código"]
     doc = doc[:ini] + lista_de_codigos({it: achar(it, legenda=True) or "" for it in itens}, rastrear) + doc[fim:]
+    # Listas de quadros, figuras e tabelas
+    for titulo in LISTAS.values():
+        a = doc.index(f">{titulo}<")
+        b = min(x for x in (doc.find(">LISTA DE", a + 5), doc.find("<w:sdt>", a)) if x > 0)
+        trecho = re.sub(r"<w:p\b[^>]*>(?:(?!</w:p>).)*?PAGEREF.*?</w:p>", corrigir_lista, doc[a:b], flags=re.S)
+        doc = doc[:a] + trecho + doc[b:]
     # Sumário (resultado em cache dos campos PAGEREF dentro do SDT)
     s0 = doc.index("<w:sdt>", ini)
     s1 = doc.index("</w:sdt>", s0)
@@ -562,8 +734,7 @@ def atualizar_paginas(pasta: Path, pdf: Path, rastrear: bool = True) -> None:
 
     def corrigir(m):
         par = m.group(0)
-        entrada = "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", par))
-        entrada = re.sub(r"\d+$", "", entrada).strip()
+        entrada = texto_entrada(par)
         if entrada in ("SUMÁRIO", "LISTA DE CÓDIGOS"):
             # remove a entrada, mas preserva o início do campo TOC, se estiver nela
             if "TOC \\" in par:

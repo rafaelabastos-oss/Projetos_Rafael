@@ -7,10 +7,10 @@ Social (EVTEAS) aplicado à piscicultura — dissertação de Rafael Alves Basto
 
 | Caminho | O que é |
 |---|---|
-| `evteas_py/` | Pacote: `config`, `financeiro`, `modelo`, `ponderacao`, `incerteza`, `pipeline`, `vv`, `casos`, `relatorios`, `interface` |
+| `evteas_py/` | Pacote: `config`, `financeiro`, `modelo`, `ponderacao`, `incerteza`, `pipeline`, `vv`, `casos`, `relatorios`, `interface`, `dsr` |
 | `EVTEAS_Py_Rev187.ipynb` | Notebook autocontido (Google Colab), gerado por `gerar_notebook.py` |
 | `executar_estudo.py` | Roda o estudo completo e grava `saidas/` |
-| `tests/` | 45 testes automatizados (pytest), cobertura de 93% |
+| `tests/` | Testes automatizados (pytest); números atualizados em `saidas/verificacao_testes.json` |
 | `saidas/` | Resultados da execução de referência (Excel, JSON, relatório, figuras) |
 | `documentacao/` | Scripts que geram o texto da Rev. 187 com controle de alterações |
 
@@ -38,7 +38,11 @@ print(resumo_executivo(r))
   consistência ou preset; TOPSIS para comparar alternativas.
 - **Seção 3.6** — registro da origem de cada premissa; distribuições uniforme/triangular/normal; Monte Carlo
   com média, mediana, desvio, variância, percentis, IC 95%, P(VPL<0), VaR/CVaR, convergência e Spearman.
-- **Seção 3.3.2** — 28 invariantes verificados a cada execução e suíte de testes independente.
+- **Seção 3.3.2** — invariantes verificados a cada execução e suíte de testes independente.
+- **Seção 3.3.1 (DSR, Dresch; Lacerda; Antunes Jr., 2015)** — módulo `dsr`: registro das 12 etapas com
+  produto, evidência e situação; comparação de propriedades com artefatos preexistentes (Wazlawick, 2009);
+  15 requisitos com a matriz requisito → função → teste conferida no código (`matriz_rastreabilidade()`,
+  verificada em `tests/test_dsr.py`); e aprendizagens da Etapa 9.
 
 ## Correções em relação à Rev. 186
 

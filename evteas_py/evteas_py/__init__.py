@@ -14,3 +14,4 @@ __version__ = "2.0.0"
 from .relatorios import diagrama_arquitetura, exportar, gerar_graficos, relatorio_markdown, resumo_executivo  # noqa: F401,E402
 from .interface import (analisar_precos, carregar_config, config_em_branco, definir_e_comparar_alternativas,  # noqa: F401,E402
                         entradas_pendentes, iniciar_entradas, resumo_entradas, salvar_config, wizard_evteas)
+from .dsr import aprendizagens, etapas_dsr, matriz_rastreabilidade, relatorio_dsr, tabela_comparativa  # noqa: F401,E402
