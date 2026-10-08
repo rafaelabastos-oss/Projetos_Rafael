@@ -131,7 +131,7 @@ def resolver_pesos(cfg: EVTEASConfig) -> Dict[str, Any]:
         raise ValueError(f"Método de ponderação desconhecido: {p.metodo}")
 
     kpi: Dict[str, float] = {}
-    if p.likert_kpis:
+    if p.likert_kpis and p.metodo == "likert":
         lk = pesos_likert(p.likert_kpis)
         info["likert_kpis"] = lk
         kpi_bruto = lk["pesos"]

@@ -65,6 +65,13 @@ def validar_invariantes(cfg: EVTEASConfig, resultado: Dict[str, Any], bruto: Dic
     chk("LSO em [0, 100]", 0 <= s["lso_0_100"] <= 100)
     chk("Risco social em [0, 1]", 0 <= s["risco_social"] <= 1)
 
+    from .config import obter_por_caminho
+    for caminho, d in cfg.monte_carlo.distribuicoes.items():
+        v = float(obter_por_caminho(cfg, caminho))
+        ok = d.minimo - 1e-9 <= v <= d.maximo + 1e-9 and (d.tipo == "uniforme" or abs(d.moda - v) <= 1e-9 * max(1.0, abs(v)))
+        chk(f"Distribuição de {caminho} contém o valor determinístico como mais provável", ok,
+            f"valor {v:g}; distribuição {d.tipo} ({d.minimo:g}, {d.moda:g}, {d.maximo:g})")
+
     pesos = i["pesos"]
     chk("Pesos dimensionais somam 1", abs(sum(pesos["dimensoes"].values()) - 1) < 1e-9)
     chk("Pesos dimensionais não negativos", min(pesos["dimensoes"].values()) >= 0)

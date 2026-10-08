@@ -32,7 +32,11 @@ class UsuarioSimulado:
                 return linha
         return None
 
+    LIMITE_PERGUNTAS = 3000
+
     def entrada(self, prompt: str) -> str:
+        if sum(1 for t in self.transcricao if not t.startswith(">>")) > self.LIMITE_PERGUNTAS:
+            raise AssertionError("Laço de perguntas sem fim (resposta recusada repetidamente?): " + repr(prompt))
         self.transcricao.append(prompt)
         alvo = prompt
         if prompt.startswith("Opção ("):
@@ -115,7 +119,8 @@ def respostas_caso_base() -> List[tuple]:
         (r"^Custo do alevino por unidade", "0,28"),
         (r"^Consumo de energia \(aeração", ""),
         (r"^Tarifa de energia", "0,75"),
-        (r"^Outros custos variáveis", "0,35"),
+        (r"^Outros custos variáveis \(despesca", "0,35"),
+        (r"^Outros custos variáveis mensais", "0"),
         (r"^Assistência técnica", "2000"),
         (r"^Outros custos fixos", "1500"),
         (r"^Manutenção de instalações", "1241,6666667"),
@@ -127,6 +132,7 @@ def respostas_caso_base() -> List[tuple]:
         (r"^\s+Principal matéria-prima", ""),
         (r"^Parcela das sobras", "100"),
         (r"^Número de funcionários CLT", "0"),
+        (r"^Outra mão de obra não detalhada", "0"),
         # ---------------------------------------------------------------- tributos
         (r"^Configurar PIS \(faturamento\)", "s"),
         (r"^\s+Alíquota de PIS \(faturamento\)", "0,65"),
@@ -212,7 +218,7 @@ def respostas_caso_base() -> List[tuple]:
     ]
     # distribuições (mínimo, mais provável, máximo) por variável, na ordem do wizard
     dist = [("Preço de venda \\(R\\$/kg\\)", "9", "10,5", "11,5"), ("Custo da ração \\(R\\$/kg\\)", "2,8", "3,1", "3,7"),
-            ("Custo do milheiro", "230", "280", "350"), ("Tarifa de energia \\(R\\$/kWh\\)", "0,65", "0,75", "0,95"),
+            ("Custo do alevino \\(R\\$/unidade\\)", "0,23", "0,28", "0,35"), ("Tarifa de energia \\(R\\$/kWh\\)", "0,65", "0,75", "0,95"),
             ("Fator multiplicador dos custos fixos", "0,95", "1", "1,15"), ("FCR — valor", "1,3", "1,5", "1,85"),
             ("Mortalidade \\(%\\) — valor", "5", "10", "20"), ("Desempenho de crescimento \\(%\\) — valor", "85", "100", "105")]
     return R, dist

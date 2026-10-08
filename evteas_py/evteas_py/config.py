@@ -167,6 +167,7 @@ class EconomicoConfig:
     capital_giro: float = 60000.0
     vida_util_anos: float = 15.0                 # depreciação linear
     valor_residual_pct: float = 30.0             # % do CAPEX recuperável no fim
+    valor_residual_rs: Optional[float] = None    # se informado em R$, prevalece sobre o percentual
     # Receitas
     preco_venda_kg: float = 10.50
     mix_produtos: List[Dict[str, Any]] = field(default_factory=list)  # [{nome, participacao_pct, preco_kg}]
@@ -176,12 +177,14 @@ class EconomicoConfig:
     custo_alevino_milheiro: float = 280.0
     tarifa_energia_kwh: float = 0.75
     outros_custos_variaveis_kg: float = 0.35     # despesca, gelo, transporte, embalagem
+    outros_custos_variaveis_mes: float = 0.0     # matéria-prima e insumos não listados (R$/mês a 100%)
     # OPEX fixo (mensal)
     mao_obra_mes: float = 12000.0                # salários / retiradas
     encargos_mao_obra_pct: float = 20.0
     assistencia_tecnica_mes: float = 2000.0
     administrativo_mes: float = 1500.0
     manutencao_capex_pct_aa: float = 2.0
+    manutencao_mes: Optional[float] = None       # se informada em R$/mês, prevalece sobre o percentual
     custos_fixos_fator: float = 1.0              # multiplicador para incerteza
     # Tributos
     taxa_impostos_faturamento_pct: float = 2.3   # ex.: contribuições sobre a receita
@@ -208,7 +211,8 @@ class EconomicoConfig:
     nome_materia_prima: str = ""
     # Vendas e calendário
     producao_vendas_kg_mes: float = 0.0           # 0 => produção calculada pelo módulo técnico
-    meses_ate_primeira_receita: int = 0           # 0 => calculado pela duração do ciclo
+    meses_ate_primeira_receita: int = 0           # usado quando carencia_automatica = False (ou > 0)
+    carencia_automatica: bool = True              # True => carência = duração do ciclo produtivo
     crescimento_vendas_aa_pct: float = 0.0
 
     @property

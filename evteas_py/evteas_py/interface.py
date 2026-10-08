@@ -166,8 +166,15 @@ class Perguntador:
         chaves = [c for c, _ in opcoes]
         idx_atual = chaves.index(atual) + 1 if atual in chaves else None
         idx_ref = chaves.index(referencia) + 1 if referencia in chaves else None
+        curto = lambda i: opcoes[i - 1][1] if len(opcoes[i - 1][1]) <= 45 else opcoes[i - 1][1][:44] + "…"
+        if self.modo == "revisar" and idx_atual is not None:
+            sufixo = f" [{idx_atual}: {curto(idx_atual)}]"
+        elif idx_ref is not None:
+            sufixo = f" [referência: {idx_ref}: {curto(idx_ref)} — Enter aceita]"
+        else:
+            sufixo = ""
         while True:
-            txt = self._ler(f"Opção (1–{len(opcoes)}){self._sufixo(idx_atual, idx_ref)}: ")
+            txt = self._ler(f"Opção (1–{len(opcoes)}){sufixo}: ")
             if not txt:
                 v, origem = self._padrao(idx_atual, idx_ref)
                 if v is None:
@@ -362,7 +369,8 @@ def bloco_investimento(P: Perguntador, cfg: EVTEASConfig):
         e.capex_itens = {"CAPEX total": total}
     P.digitados.append("economico.capex_itens")
     P.saida(f"  → CAPEX total: R$ {_fmt(e.capex_total)}")
-    classes = [(k, f"Classe {k} (faixa de exatidão {int(lo * 100)}% a +{int(hi * 100)}%)") for k, (lo, hi) in FAIXAS_AACE.items()]
+    classes = [(k, f"Classe {k} (faixa de exatidão {int(lo * 100)}% a +{int(hi * 100)}%)")
+               for k, (lo, hi) in sorted(FAIXAS_AACE.items())]
     cl, origem = P.opcao("Maturidade da estimativa de CAPEX (AACE International):", classes,
                          e.classe_estimativa_aace if P.modo == "revisar" else None, referencia=5)
     e.classe_estimativa_aace = int(cl)
@@ -370,12 +378,13 @@ def bloco_investimento(P: Perguntador, cfg: EVTEASConfig):
     P.campo(cfg, "economico.capital_giro", "Capital de giro inicial", minimo=0, unidade="R$")
     P.campo(cfg, "economico.vida_util_anos", "Vida útil média dos ativos para depreciação", minimo=0, maximo=100,
             unidade="anos")
+    atual_res = (e.valor_residual_rs if e.valor_residual_rs is not None else e.capex_total * e.valor_residual_pct / 100)
     residual, origem = P.numero("Valor residual dos ativos ao final do horizonte",
-                                e.capex_total * e.valor_residual_pct / 100 if P.modo == "revisar" else None,
-                                minimo=0, maximo=e.capex_total, unidade="R$")
+                                atual_res if P.modo == "revisar" else None, minimo=0, unidade="R$")
+    e.valor_residual_rs = residual          # guardado em R$: não muda se o CAPEX for alterado depois
     e.valor_residual_pct = 100 * residual / e.capex_total if e.capex_total else 0.0
     if origem == "usuario":
-        P.digitados.append("economico.valor_residual_pct")
+        P.digitados.append("economico.valor_residual_rs")
     P.campo_pct(cfg, "economico.fomento_nao_reembolsavel_pct", "Parcela do CAPEX coberta por fomento não reembolsável")
     _fontes_do_bloco(P, cfg, "investimento")
 
@@ -436,10 +445,15 @@ def bloco_receitas(P: Perguntador, cfg: EVTEASConfig):
     else:
         e.receita_servicos_mes = 0.0
     L_calc = int(math.ceil(cfg.tecnico.ciclo_dias / 30.4375))
+    P.saida(f"  (a primeira despesca ocorre após um ciclo de {cfg.tecnico.ciclo_dias} dias ≈ {L_calc} meses; "
+            "informe 0 se a receita começar no primeiro mês)")
     meses, origem = P.numero("Meses até a primeira receita (carência)",
-                             meses_ate_despesca(cfg) if P.modo == "revisar" else None, 1, 60, inteiro=True,
+                             meses_ate_despesca(cfg) if P.modo == "revisar" else None, 0, 60, inteiro=True,
                              referencia=L_calc)
-    e.meses_ate_primeira_receita = 0 if meses == L_calc else meses
+    if origem == "referencia":
+        e.carencia_automatica, e.meses_ate_primeira_receita = True, 0      # acompanha a duração do ciclo
+    elif origem == "usuario":
+        e.carencia_automatica, e.meses_ate_primeira_receita = False, meses
     P._registrar("economico.meses_ate_primeira_receita", origem, FONTE_AUTOR)
     _fontes_do_bloco(P, cfg, "receitas")
 
@@ -461,22 +475,26 @@ def bloco_custos(P: Perguntador, cfg: EVTEASConfig):
     P.campo(cfg, "economico.tarifa_energia_kwh", "Tarifa de energia elétrica", minimo=0, unidade="R$/kWh")
     P.campo(cfg, "economico.outros_custos_variaveis_kg", "Outros custos variáveis (despesca, gelo, frete, embalagem)",
             minimo=0, unidade="R$/kg vendido")
+    P.campo(cfg, "economico.outros_custos_variaveis_mes",
+            "Outros custos variáveis mensais a 100% da capacidade (matéria-prima e insumos não listados; 0 se não houver)",
+            minimo=0, unidade="R$/mês")
     P.campo(cfg, "economico.assistencia_tecnica_mes", "Assistência técnica", minimo=0, unidade="R$/mês")
     P.campo(cfg, "economico.administrativo_mes", "Outros custos fixos (aluguel, contabilidade, seguros, administração)",
             minimo=0, unidade="R$/mês")
-    man, origem = P.numero("Manutenção de instalações e equipamentos",
-                           e.capex_total * e.manutencao_capex_pct_aa / 100 / 12 if P.modo == "revisar" else None,
+    atual_man = e.manutencao_mes if e.manutencao_mes is not None else e.capex_total * e.manutencao_capex_pct_aa / 100 / 12
+    man, origem = P.numero("Manutenção de instalações e equipamentos", atual_man if P.modo == "revisar" else None,
                            minimo=0, unidade="R$/mês")
+    e.manutencao_mes = man                  # guardada em R$/mês: não muda se o CAPEX for alterado depois
     e.manutencao_capex_pct_aa = 100 * man * 12 / e.capex_total if e.capex_total else 0.0
     if origem == "usuario":
-        P.digitados.append("economico.manutencao_capex_pct_aa")
+        P.digitados.append("economico.manutencao_mes")
     from .modelo import Contexto, calcular_tecnico
     tec = calcular_tecnico(Contexto(cfg))
     prod = e.producao_vendas_kg_mes or float(tec["producao_kg_mes"][0])
     racao = prod * float(tec["racao_por_kg_produzido"][0]) * e.custo_racao_kg
     alev = float(tec["alevinos_ano"][0]) / 12 * e.custo_alevino_milheiro / 1000
     ener = prod * kwh * e.tarifa_energia_kwh
-    outros = prod * e.outros_custos_variaveis_kg
+    outros = prod * e.outros_custos_variaveis_kg + e.outros_custos_variaveis_mes
     P.saida(f"  → Custo variável estimado a 100%: R$ {_fmt(round(racao + alev + ener + outros, 2))}/mês "
             f"(ração R$ {_fmt(round(racao, 2))}; alevinos R$ {_fmt(round(alev, 2))}; energia R$ {_fmt(round(ener, 2))}; "
             f"outros R$ {_fmt(round(outros, 2))})")
@@ -486,7 +504,6 @@ def bloco_custos(P: Perguntador, cfg: EVTEASConfig):
 def bloco_pessoas(P: Perguntador, cfg: EVTEASConfig):
     e = cfg.economico
     P.bloco("7. PESSOAS — COOPERADOS E FUNCIONÁRIOS CLT")
-    migrar_formato_detalhado(cfg)
     if e.tipo_organizacao != "empresa":
         minimo = MINIMO_COOPERADOS[e.tipo_organizacao]
         P.campo(cfg, "economico.retirada_cooperados_mes", "Retirada/pró-labore mensal TOTAL dos cooperados",
@@ -531,6 +548,12 @@ def bloco_pessoas(P: Perguntador, cfg: EVTEASConfig):
     e.salarios_clt_por_cargo = cargos
     if n:
         P.digitados.append("economico.salarios_clt_por_cargo")
+    P.campo(cfg, "economico.mao_obra_mes",
+            "Outra mão de obra não detalhada acima (diaristas, terceiros; 0 se não houver)", minimo=0, unidade="R$/mês")
+    if e.mao_obra_mes > 0:
+        P.campo_pct(cfg, "economico.encargos_mao_obra_pct", "Encargos sobre essa mão de obra", maximo=200)
+    else:
+        e.encargos_mao_obra_pct = 0.0
     _fontes_do_bloco(P, cfg, "pessoas")
 
 
@@ -544,23 +567,9 @@ TRIBUTOS = [  # nome, base, sugestão de alíquota (%)
 
 
 def migrar_formato_detalhado(cfg: EVTEASConfig) -> None:
-    """Converte entradas consolidadas (mão de obra genérica e alíquotas totais) para o
-    formato detalhado do wizard, sem alterar o resultado do modelo."""
+    """Converte alíquotas consolidadas (taxa sobre faturamento/lucro) em itens da lista de
+    tributos do wizard, sem alterar o resultado do modelo (as bases são aditivas)."""
     e = cfg.economico
-    if e.mao_obra_mes and e.mao_obra_mes > 0:
-        if e.tipo_organizacao != "empresa":
-            e.retirada_cooperados_mes = (e.retirada_cooperados_mes or 0.0) + e.mao_obra_mes
-            base = "pro_labore"
-        else:
-            e.salarios_clt_por_cargo = dict(e.salarios_clt_por_cargo)
-            e.salarios_clt_por_cargo["Mão de obra (não detalhada)"] = e.mao_obra_mes
-            base = "folha_clt"
-        if e.encargos_mao_obra_pct:
-            e.impostos_configurados = list(e.impostos_configurados) + [
-                {"nome": "Encargos sobre a mão de obra (consolidado)", "base": base, "aliquota_pct": e.encargos_mao_obra_pct}]
-        e.mao_obra_mes = 0.0
-    e.mao_obra_mes = 0.0 if (e.mao_obra_mes is None or (isinstance(e.mao_obra_mes, float) and math.isnan(e.mao_obra_mes))) else e.mao_obra_mes
-    e.encargos_mao_obra_pct = 0.0
     for campo, base, nome in (("taxa_impostos_faturamento_pct", "faturamento", "Tributos sobre o faturamento (consolidado)"),
                               ("taxa_impostos_lucro_pct", "lucro", "Tributos sobre o lucro (consolidado)")):
         v = getattr(e, campo)
@@ -620,7 +629,10 @@ def bloco_projecao(P: Perguntador, cfg: EVTEASConfig):
         P.campo(cfg, "economico.meses_rampa", "Meses até atingir 100% da capacidade", minimo=1, maximo=120, inteiro=True)
     else:
         e.capacidade_inicial_pct, e.meses_rampa = 100.0, 0
-    P.campo(cfg, "economico.horizonte_anos", "Horizonte de análise", minimo=1, maximo=50, inteiro=True, unidade="anos")
+    from .modelo import meses_ate_despesca
+    h_min = meses_ate_despesca(cfg) // 12 + 1
+    P.campo(cfg, "economico.horizonte_anos", f"Horizonte de análise (mínimo {h_min}, para incluir a carência)",
+            minimo=h_min, maximo=50, inteiro=True, unidade="anos")
     P.campo(cfg, "economico.crescimento_vendas_aa_pct", "Crescimento anual de vendas", minimo=-50, maximo=100, unidade="% a.a.")
     P.campo(cfg, "economico.crescimento_custos_aa_pct", "Inflação anual de custos e despesas", minimo=-50, maximo=100, unidade="% a.a.")
     P.campo(cfg, "economico.crescimento_preco_aa_pct", "Reajuste anual de preços", minimo=-50, maximo=100, unidade="% a.a.")
@@ -771,6 +783,8 @@ def bloco_pesos(P: Perguntador, cfg: EVTEASConfig):
                ("likert", "Escala Likert de 1 a 5 atribuída por avaliadores (Quadro 7)"),
                ("ahp", "Comparação par a par (AHP — Saaty)")]
     p.metodo, _ = P.opcao("Método de ponderação:", metodos, p.metodo if P.modo == "revisar" else None)
+    if p.metodo != "likert":
+        p.likert_kpis = {}            # escores de KPIs só se aplicam ao método Likert
     if p.metodo == "preset":
         P.saida("Os pesos serão normalizados para somar 1.")
         for d, nome in DIMENSOES_ROTULOS:
@@ -836,15 +850,15 @@ def bloco_pesos(P: Perguntador, cfg: EVTEASConfig):
                referencia=True)
 
 
-VARIAVEIS_INCERTAS = [
-    ("economico.preco_venda_kg", "Preço de venda (R$/kg)"),
-    ("economico.custo_racao_kg", "Custo da ração (R$/kg)"),
-    ("economico.custo_alevino_milheiro", "Custo do milheiro de alevinos (R$)"),
-    ("economico.tarifa_energia_kwh", "Tarifa de energia (R$/kWh)"),
-    ("economico.custos_fixos_fator", "Fator multiplicador dos custos fixos (1 = valor informado)"),
-    ("tecnico.fcr", "FCR"),
-    ("tecnico.mortalidade_pct", "Mortalidade (%)"),
-    ("tecnico.desempenho_crescimento_pct", "Desempenho de crescimento (%)"),
+VARIAVEIS_INCERTAS = [  # caminho, rótulo, escala de exibição (valor exibido = valor interno × escala)
+    ("economico.preco_venda_kg", "Preço de venda (R$/kg)", 1.0),
+    ("economico.custo_racao_kg", "Custo da ração (R$/kg)", 1.0),
+    ("economico.custo_alevino_milheiro", "Custo do alevino (R$/unidade)", 1 / 1000),
+    ("economico.tarifa_energia_kwh", "Tarifa de energia (R$/kWh)", 1.0),
+    ("economico.custos_fixos_fator", "Fator multiplicador dos custos fixos (1 = valor informado)", 1.0),
+    ("tecnico.fcr", "FCR", 1.0),
+    ("tecnico.mortalidade_pct", "Mortalidade (%)", 1.0),
+    ("tecnico.desempenho_crescimento_pct", "Desempenho de crescimento (%)", 1.0),
 ]
 TIPOS_DIST = [("triangular", "Triangular (mínimo, mais provável, máximo)"),
               ("uniforme", "Uniforme (apenas mínimo e máximo conhecidos)"),
@@ -852,20 +866,50 @@ TIPOS_DIST = [("triangular", "Triangular (mínimo, mais provável, máximo)"),
               ("fixa", "Sem incerteza (valor fixo)")]
 
 
-def _perguntar_distribuicao(P: Perguntador, cfg: EVTEASConfig, caminho: str, rotulo: str, atual: Optional[Distribuicao]):
+def ajustar_distribuicao(d: Distribuicao, antigo: float, novo: float) -> Distribuicao:
+    """Reposiciona uma distribuição quando o valor determinístico muda (mantém a amplitude relativa)."""
+    if d.tipo == "fixa":
+        return Distribuicao("fixa", novo, novo, novo)
+    if antigo:
+        f = novo / antigo
+        lo, hi = sorted((d.minimo * f, d.maximo * f))
+    else:
+        lo, hi = d.minimo + (novo - antigo), d.maximo + (novo - antigo)
+    moda = novo if d.tipo != "uniforme" else (lo + hi) / 2
+    return Distribuicao(d.tipo, min(lo, novo), moda, max(hi, novo))
+
+
+def distribuicao_coerente(d: Distribuicao, valor: float, tol: float = 1e-9) -> bool:
+    """O valor determinístico deve estar no intervalo e ser o mais provável (triangular/normal/fixa)."""
+    ok = d.minimo - tol <= valor <= d.maximo + tol
+    if d.tipo in ("triangular", "normal", "fixa"):
+        ok = ok and abs(d.moda - valor) <= tol * max(1.0, abs(valor))
+    return ok
+
+
+def _perguntar_distribuicao(P: Perguntador, cfg: EVTEASConfig, caminho: str, rotulo: str,
+                            atual: Optional[Distribuicao], escala: float = 1.0):
     base = float(obter_por_caminho(cfg, caminho))
-    P.saida(f"\n{rotulo} — valor determinístico informado: {_fmt(base)}")
+    if P.modo == "revisar" and atual is not None and not distribuicao_coerente(atual, base):
+        referencia_antiga = atual.moda if atual.tipo != "uniforme" else (atual.minimo + atual.maximo) / 2
+        atual = ajustar_distribuicao(atual, referencia_antiga, base)
+        P.saida(f"  (a distribuição salva foi reposicionada proporcionalmente ao valor atual de {rotulo})")
+    vb = base * escala
+    P.saida(f"\n{rotulo} — valor determinístico informado: {_fmt(vb)}")
     tipo, _ = P.opcao("  Tipo de distribuição:", TIPOS_DIST, atual.tipo if (P.modo == "revisar" and atual) else None)
     if tipo == "fixa":
         return Distribuicao("fixa", base, base, base)
+    if tipo in ("triangular", "normal"):
+        P.saida(f"  Valor mais provável = valor determinístico informado ({_fmt(vb)})")
     while True:
-        mn, _ = P.numero("  Mínimo", atual.minimo if (P.modo == "revisar" and atual) else None)
-        moda = base
-        if tipo in ("triangular", "normal"):
-            moda, _ = P.numero("  Mais provável", atual.moda if (P.modo == "revisar" and atual) else None, referencia=base)
-        mx, _ = P.numero("  Máximo", atual.maximo if (P.modo == "revisar" and atual) else None)
+        mn, _ = P.numero("  Mínimo", atual.minimo * escala if (P.modo == "revisar" and atual) else None)
+        mx, _ = P.numero("  Máximo", atual.maximo * escala if (P.modo == "revisar" and atual) else None)
+        if not (mn <= vb <= mx):
+            P.saida(f"  ⚠ O intervalo deve conter o valor determinístico ({_fmt(vb)}). Informe novamente.")
+            continue
         try:
-            return Distribuicao(tipo, mn, moda if tipo != "uniforme" else (mn + mx) / 2, mx).validar()
+            moda = base if tipo != "uniforme" else (mn + mx) / 2 / escala
+            return Distribuicao(tipo, mn / escala, moda, mx / escala).validar()
         except ValueError as exc:
             P.saida(f"  ⚠ {exc}. Informe novamente.")
 
@@ -880,8 +924,8 @@ def bloco_incerteza(P: Perguntador, cfg: EVTEASConfig):
     P.campo(cfg, "monte_carlo.seed", "Semente aleatória (seed) para reprodutibilidade", minimo=0, inteiro=True,
             referencia=20260612, fonte_ref=FONTE_AUTOR)
     novas: Dict[str, Distribuicao] = {}
-    for caminho, rotulo in VARIAVEIS_INCERTAS:
-        novas[caminho] = _perguntar_distribuicao(P, cfg, caminho, rotulo, mc.distribuicoes.get(caminho))
+    for caminho, rotulo, escala in VARIAVEIS_INCERTAS:
+        novas[caminho] = _perguntar_distribuicao(P, cfg, caminho, rotulo, mc.distribuicoes.get(caminho), escala)
     lo, hi = FAIXAS_AACE[int(cfg.economico.classe_estimativa_aace)]
     P.saida(f"\nCAPEX: a estimativa Classe {cfg.economico.classe_estimativa_aace} da AACE implica faixa de "
             f"{int(lo * 100)}% a +{int(hi * 100)}%.")
@@ -1008,6 +1052,24 @@ def _completar_condicionais(cfg: EVTEASConfig) -> None:
         a.fator_emissao_rede_kgco2_kwh = 0.0817     # não utilizado com fonte solar ou biomassa
 
 
+DEPENDENCIAS = {  # ao corrigir um bloco, os dependentes também são revistos (Enter mantém os valores)
+    "Identificação": ["Pessoas", "Tributos"],     # o tipo de organização muda pessoas e encargos
+    "Técnico": ["Mix e receitas"],                 # produção e ciclo afetam volume de vendas e carência
+    "Pessoas": ["Tributos"],                       # novos cargos CLT ou retiradas exigem encargos
+    "Mix e receitas": ["Projeção e TMA"],          # a carência limita o horizonte mínimo
+}
+
+
+def expandir_blocos(blocos: Sequence[str]) -> List[str]:
+    pendentes, vistos = list(blocos), set()
+    while pendentes:
+        b = pendentes.pop()
+        if b not in vistos:
+            vistos.add(b)
+            pendentes += DEPENDENCIAS.get(b, [])
+    return [nome for nome, _ in BLOCOS if nome in vistos]
+
+
 def wizard_evteas(entrada: Callable[[str], str] = input, base: Optional[EVTEASConfig] = None,
                   saida: Callable[..., None] = print, blocos: Optional[Sequence[str]] = None) -> EVTEASConfig:
     """Wizard completo. Sem ``base``: modo NOVO (valores obrigatórios). Com ``base``: modo REVISAR."""
@@ -1020,9 +1082,21 @@ def wizard_evteas(entrada: Callable[[str], str] = input, base: Optional[EVTEASCo
         cfg = base
         P = Perguntador(entrada, saida, "revisar")
         saida("=" * 78 + "\nEVTEAS-Py — REVISÃO DAS ENTRADAS (Enter mantém o valor entre colchetes)\n" + "=" * 78)
+    if blocos is not None:
+        blocos = expandir_blocos(blocos)
+        if len(blocos) > 1:
+            saida("Blocos que dependem da correção também serão revistos: " + ", ".join(blocos))
+    antes = {c: float(obter_por_caminho(cfg, c)) for c in cfg.monte_carlo.distribuicoes} if base is not None else {}
     for nome, func in BLOCOS:
         if blocos is None or nome in blocos:
             func(P, cfg)
+    if blocos is not None and "Incerteza (Monte Carlo)" not in blocos:
+        for c, v0 in antes.items():
+            v1 = float(obter_por_caminho(cfg, c))
+            if v1 != v0 and c in cfg.monte_carlo.distribuicoes:
+                cfg.monte_carlo.distribuicoes[c] = ajustar_distribuicao(cfg.monte_carlo.distribuicoes[c], v0, v1)
+                saida(f"  → Distribuição de {c} reposicionada para o novo valor ({_fmt(v0)} → {_fmt(v1)}); "
+                      "revise-a no bloco 'Incerteza (Monte Carlo)' se necessário.")
     _completar_condicionais(cfg)
     if base is None:
         faltam = entradas_pendentes(cfg)

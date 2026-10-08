@@ -219,8 +219,9 @@ def custo_pessoal_mensal(cfg: EVTEASConfig, aliq: Dict[str, float]) -> float:
 
 
 def meses_ate_despesca(cfg: EVTEASConfig) -> int:
-    if cfg.economico.meses_ate_primeira_receita > 0:
-        return int(cfg.economico.meses_ate_primeira_receita)
+    e = cfg.economico
+    if e.meses_ate_primeira_receita > 0 or not e.carencia_automatica:
+        return int(max(e.meses_ate_primeira_receita, 0))
     return int(math.ceil(cfg.tecnico.ciclo_dias / 30.4375))
 
 
@@ -232,6 +233,8 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
     meses = np.arange(1, M + 1)
     ano = np.ceil(meses / 12).astype(int)
     L = meses_ate_despesca(cfg)
+    if L >= M:
+        raise ValueError(f"A carência até a primeira receita ({L} meses) deve ser menor que o horizonte ({M} meses)")
     aliq = aliquotas_configuradas(cfg)
 
     # Rampa de capacidade (aprendizado) aplicada à produção em engorda
@@ -259,17 +262,24 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
     receita = receita_produtos + receita_servicos
 
     custo_racao = em_engorda * tec["racao_por_kg_produzido"][:, None] * ctx.v("economico.custo_racao_kg")[:, None] * fator_custo
-    alevinos_mes = tec["alevinos_ano"][:, None] / 12 * rampa
+    # escala de volume: vendas informadas no mix e crescimento de vendas também movem a estocagem
+    escala_volume = safe_div(prod_mes, tec["producao_kg_mes"][:, None], 1.0) * fator_vendas
+    alevinos_mes = tec["alevinos_ano"][:, None] / 12 * rampa * escala_volume
     custo_alevinos = alevinos_mes * ctx.v("economico.custo_alevino_milheiro")[:, None] / 1000 * fator_custo
     kwh_kg = energia_kwh_kg(cfg)
     custo_energia = em_engorda * kwh_kg * ctx.v("economico.tarifa_energia_kwh")[:, None] * fator_custo
-    outros_var = vendida * e.outros_custos_variaveis_kg * fator_custo
+    outros_var = (vendida * e.outros_custos_variaveis_kg
+                  + e.outros_custos_variaveis_mes * rampa * escala_volume) * fator_custo
     custos_variaveis = custo_racao + custo_alevinos + custo_energia + outros_var
 
     capex = e.capex_total * ctx.v("economico.capex_fator")
     fixos_fator = ctx.v("economico.custos_fixos_fator")[:, None]
     pessoal = custo_pessoal_mensal(cfg, aliq)
-    manutencao = capex[:, None] * e.manutencao_capex_pct_aa / 100 / 12
+    if e.manutencao_mes is not None:
+        # valor informado em R$/mês para o CAPEX estimado; acompanha o CAPEX sorteado no Monte Carlo
+        manutencao = float(e.manutencao_mes) * ctx.v("economico.capex_fator")[:, None]
+    else:
+        manutencao = capex[:, None] * e.manutencao_capex_pct_aa / 100 / 12
     custos_fixos = (pessoal + e.assistencia_tecnica_mes + e.administrativo_mes + manutencao) * fixos_fator * fator_custo
 
     vida_meses = max(e.vida_util_anos, 0.0) * 12
@@ -286,7 +296,8 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
     fco = lucro_liquido + depreciacao
 
     investimento = capex + e.capital_giro
-    residual = capex * e.valor_residual_pct / 100
+    residual = (float(e.valor_residual_rs) * ctx.v("economico.capex_fator") if e.valor_residual_rs is not None
+                else capex * e.valor_residual_pct / 100)
     estoque_final = (custo_racao + custo_alevinos + custo_energia)[:, M - L:].sum(axis=1) if L > 0 else np.zeros(n)
     terminal = residual + e.capital_giro + estoque_final
 
@@ -359,6 +370,9 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
         "custo_energia_regime": anual(custo_energia),
         "outros_variaveis_regime": anual(outros_var),
         "pessoal_regime": anual(pessoal * fixos_fator * fator_custo * np.ones((n, M))),
+        "remuneracao_regime": {k: anual(v * fixos_fator * fator_custo * np.ones((n, M)))
+                               for k, v in remuneracao_mensal(cfg).items()},
+        "fator_volume_regime": safe_div(anual(em_engorda), tec["producao_kg_ano"], 1.0),
         "valor_adicionado_regime": valor_adicionado,
         "indice_margem_contribuicao": imc,
         "ponto_equilibrio_receita_ano": pe_receita,
@@ -414,8 +428,8 @@ def distribuicao_sobras(cfg: EVTEASConfig, eco: Dict[str, Any]) -> Dict[str, flo
     trab = sobras * e.perc_sobras_trabalhadores / 100
     forn = sobras - trab
     n_trab = max(e.cooperados_trabalhadores, 0)
-    r = remuneracao_mensal(cfg)
-    retirada_anual = (r["retirada"] + r["outros"]) * 12
+    r = eco["remuneracao_regime"]            # em preços do ano de regime
+    retirada_anual = float(r["retirada"][0] + r["outros"][0])
     renda_mensal = safe_div(retirada_anual + trab, n_trab * 12, 0.0) if n_trab else 0.0
     return {
         "termo_resultado": "Lucro líquido" if e.tipo_organizacao == "empresa" else "Sobras líquidas",
@@ -456,7 +470,9 @@ def score_conformidade(cfg: EVTEASConfig) -> Dict[str, Any]:
 
 def calcular_ambiental(ctx: Contexto, tec: Dict[str, Any], eco: Dict[str, Any]) -> Dict[str, Any]:
     cfg, a, t = ctx.cfg, ctx.cfg.ambiental, ctx.cfg.tecnico
-    prod = tec["producao_kg_ano"]
+    # volume efetivo no ano de regime (vendas do mix e crescimento de vendas incluídos)
+    fator = eco["fator_volume_regime"]
+    prod = tec["producao_kg_ano"] * fator
     prod_t = prod / 1000
     vol = tec["volume_util_m3"]
     disp = float(tec["disponibilidade"][0])
@@ -471,8 +487,8 @@ def calcular_ambiental(ctx: Contexto, tec: Dict[str, Any], eco: Dict[str, Any]) 
     ph_azul = safe_div(azul, prod_t, np.nan)
 
     # Balanço de nutrientes e pegada hídrica cinza (poluente crítico)
-    racao = tec["racao_ano_kg"]
-    ganho = tec["ganho_biomassa_ano_kg"]
+    racao = tec["racao_ano_kg"] * fator
+    ganho = tec["ganho_biomassa_ano_kg"] * fator
     n_in = racao * a.proteina_racao_pct / 100 / 6.25
     p_in = racao * a.fosforo_racao_pct / 100
     n_ret = ganho * a.nitrogenio_peixe_pct / 100
@@ -549,8 +565,8 @@ def eco_horizonte(cfg: EVTEASConfig) -> int:
 
 def calcular_social(ctx: Contexto, eco: Dict[str, Any]) -> Dict[str, Any]:
     cfg, s = ctx.cfg, ctx.cfg.social
-    rem = remuneracao_mensal(cfg)
-    massa_anual = rem["total"] * 12
+    rem = eco["remuneracao_regime"]          # remuneração anual em preços do ano de regime
+    massa_anual = rem["total"]
     massa_local = massa_anual * s.mao_obra_local_pct / 100
     compras = (eco["custos_variaveis_regime"] + eco["custos_fixos_regime"] - eco["pessoal_regime"])
     compras_locais = np.maximum(compras, 0) * s.compras_locais_pct / 100
@@ -564,10 +580,10 @@ def calcular_social(ctx: Contexto, eco: Dict[str, Any]) -> Dict[str, Any]:
     iil = safe_div(renda_local, eco["receita_regime"], 0.0)
     if cfg.economico.tipo_organizacao != "empresa":
         n_trab = max(cfg.economico.cooperados_trabalhadores, 1)
-        renda_mensal = ((rem["retirada"] + rem["outros"]) * 12 + sobras) / n_trab / 12
+        renda_mensal = (rem["retirada"] + rem["outros"] + sobras) / n_trab / 12
     else:
         n_trab = max(s.empregos_diretos, 1)
-        renda_mensal = np.full(ctx.n, (rem["clt"] + rem["outros"]) / n_trab)
+        renda_mensal = (rem["clt"] + rem["outros"]) / n_trab / 12
     renda_sm = renda_mensal / s.salario_minimo
 
     relacao = RELACAO_COMUNIDADE.get(s.relacao_comunidade)
@@ -653,14 +669,15 @@ def alinhamento_ods(cfg: EVTEASConfig, tec, eco, amb, soc, gov, i: int = 0):
 def calcular_lean_green(ctx: Contexto, tec, eco) -> Dict[str, Any]:
     cfg, t = ctx.cfg, ctx.cfg.tecnico
     custo_racao = ctx.v("economico.custo_racao_kg")
-    racao_exc = np.maximum(tec["fcr"] - t.fcr_referencia, 0) * tec["ganho_biomassa_ano_kg"]
+    fator = eco["fator_volume_regime"]
+    racao_exc = np.maximum(tec["fcr"] - t.fcr_referencia, 0) * tec["ganho_biomassa_ano_kg"] * fator
     mort = ctx.v("tecnico.mortalidade_pct")
-    peixes_perdidos = np.maximum(mort - t.mortalidade_referencia_pct, 0) / 100 * tec["alevinos_ano"]
+    peixes_perdidos = np.maximum(mort - t.mortalidade_referencia_pct, 0) / 100 * tec["alevinos_ano"] * fator
     # perdas ocorrem, em média, na metade do ciclo (metade do peso final e da ração)
     custo_peixe = (ctx.v("economico.custo_alevino_milheiro") / 1000
                    + 0.5 * t.peso_final_g / 1000 * tec["fcr"] * custo_racao)
     kwh = energia_kwh_kg(cfg)
-    energia_exc = max(kwh - cfg.ambiental.energia_referencia_kwh_kg, 0) * tec["producao_kg_ano"]
+    energia_exc = max(kwh - cfg.ambiental.energia_referencia_kwh_kg, 0) * tec["producao_kg_ano"] * fator
     custos = {
         "Ração excedente (superalimentação/FCR)": racao_exc * custo_racao,
         "Mortalidade evitável": peixes_perdidos * custo_peixe,
