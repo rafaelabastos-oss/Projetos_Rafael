@@ -50,7 +50,9 @@ def celulas():
         "rastreabilidade do artefato segundo as etapas da Design Science Research.\n\n"
         "Os resultados dependem integralmente das entradas informadas. Ao final da entrada, o arquivo "
         "`entradas_<projeto>.json` é salvo (e baixado no Colab) para que o estudo possa ser reaberto e revisado. "
-        "Digite `sair` em qualquer pergunta para interromper."),
+        "Digite `sair` em qualquer pergunta para interromper: as respostas já dadas são salvas num arquivo "
+        "`entradas_<projeto>_rascunho.json`, que pode ser reaberto pela opção 2 para continuar de onde parou. "
+        "Números podem ser digitados no padrão brasileiro (40.000 ou 1.500,50)."),
         nbf.v4.new_code_cell("# Dependências (no Colab, apenas numpy-financial costuma faltar)\n"
                              "%pip install -q numpy pandas matplotlib openpyxl numpy-financial"),
         nbf.v4.new_code_cell("from __future__ import annotations\nimport warnings\nwarnings.filterwarnings('ignore', category=RuntimeWarning)")]
@@ -60,9 +62,11 @@ def celulas():
     c += [
         nbf.v4.new_markdown_cell("## 12. Entrada de dados do projeto\n\n"
                                  "Execute a célula e responda às perguntas. Nenhum resultado é calculado antes desta etapa."),
-        nbf.v4.new_code_cell("cfg = iniciar_entradas()"),
+        nbf.v4.new_code_cell("cfg = None                 # nenhuma análise usa entradas de uma execução anterior\n"
+                             "cfg = iniciar_entradas()"),
         nbf.v4.new_markdown_cell("## 13. Análise com as entradas informadas"),
-        nbf.v4.new_code_cell("assert teste_regressao_deterministica()\n"
+        nbf.v4.new_code_cell("exigir_entradas(cfg)\n"
+                             "assert teste_regressao_deterministica()\n"
                              "resultado = executar_evteas(cfg, executar_mc=True, executar_sens=True,\n"
                              "                            n_mc=int(cfg.monte_carlo.iteracoes))\n"
                              "print('Classificação:', resultado['decisao']['classificacao'])\n"
@@ -79,7 +83,8 @@ def celulas():
         nbf.v4.new_code_cell("import pandas as pd\npd.DataFrame(resultado['vv']['verificacoes'])"),
         nbf.v4.new_markdown_cell("## 14. Comparação com alternativas de projeto (opcional, TOPSIS)\n\n"
                                  "Cada alternativa parte das entradas do projeto; escolha os blocos a alterar e informe os novos valores."),
-        nbf.v4.new_code_cell("comparacao = definir_e_comparar_alternativas(cfg)\n"
+        nbf.v4.new_code_cell("comparacao = definir_e_comparar_alternativas(exigir_entradas(cfg))\n"
+                             "for aviso in (comparacao or {}).get('avisos', []):\n    print('⚠', aviso)\n"
                              "comparacao['ranking'] if comparacao else 'Comparação não solicitada.'"),
         nbf.v4.new_markdown_cell("## 15. Exportação e gráficos"),
         nbf.v4.new_code_cell("pasta = 'evteas_output'\n"

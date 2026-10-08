@@ -9,7 +9,29 @@
     },
     {
       "rodada": 2,
-      "concluida": false
+      "concluida": true,
+      "apontados": 53,
+      "confirmados": 45,
+      "corrigidos": 45,
+      "frentes": {
+        "robustez": [
+          17,
+          16
+        ],
+        "usabilidade": [
+          15,
+          11
+        ],
+        "revisao_json": [
+          11,
+          8
+        ],
+        "reconferencia_correcoes": [
+          10,
+          10
+        ]
+      },
+      "complemento": "; entre eles, números digitados no padrão brasileiro (40.000) lidos como 40, arquivos de entradas incompletos completados em silêncio com o caso ilustrativo e incerteza atribuída a parâmetros que o motor não amostra. Cada correção recebeu teste de regressão, e as lições correspondentes foram incorporadas ao registro de aprendizagens (⟦Quadro:aprendizagens⟧)"
     }
   ]
 }

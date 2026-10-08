@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from .config import FAIXAS_AACE, Distribuicao, EVTEASConfig, definir_por_caminho, obter_por_caminho
+from .config import (FAIXAS_AACE, VARIAVEIS_ESTOCASTICAS, Distribuicao, EVTEASConfig, definir_por_caminho,
+                     obter_por_caminho)
 from .financeiro import percentis
 
 
@@ -18,6 +19,9 @@ def distribuicoes_efetivas(cfg: EVTEASConfig) -> Dict[str, Distribuicao]:
         d["economico.capex_fator"] = Distribuicao("triangular", 1 + lo, 1.0, 1 + hi)
     for caminho, dist in d.items():
         obter_por_caminho(cfg, caminho)  # valida o caminho
+        if caminho not in VARIAVEIS_ESTOCASTICAS:
+            raise ValueError(f"Distribuição em '{caminho}', parâmetro que o modelo não amostra no Monte Carlo. "
+                             f"Parâmetros aceitos: {', '.join(VARIAVEIS_ESTOCASTICAS)}")
         dist.validar()
     return d
 

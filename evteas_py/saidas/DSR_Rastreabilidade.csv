@@ -1,0 +1,16 @@
+Requisito,Descrição,Origem,Funções,Testes,Faltando,Situação
+R01,"Ser processado em Python, com núcleo reutilizável e notebook executável no Google Colab",Etapa 5,pipeline.executar_evteas,1,,implementado e verificado
+R02,"Começar pela entrada de dados, sem resultado antes das premissas e sem valor herdado em silêncio",Seção 2.8.3 (PMBOK),"interface.iniciar_entradas, interface.config_em_branco, interface.entradas_pendentes",5,,implementado e verificado
+R03,Registrar a origem de cada premissa e permitir revisar um estudo salvo,Seção 3.6,"config.Fonte, pipeline.tabela_premissas, interface.salvar_config, interface.carregar_config",5,,implementado e verificado
+R04,"Dimensionar a produção e calcular os KPIs técnicos (OEE, FCR, produtividade)",Quadro 5,"modelo.calcular_tecnico, modelo.curva_crescimento",4,,implementado e verificado
+R05,"Projetar DRE e fluxo de caixa e calcular VPL, TIR, payback e ROI",Seção 2.8.6,"modelo.calcular_economico, financeiro.vpl, financeiro.tir, financeiro.payback",6,,implementado e verificado
+R06,"Calcular água, pegadas hídricas, emissões, ecoeficiência e conformidade ambiental",Quadro 5,"modelo.calcular_ambiental, modelo.score_conformidade",4,,implementado e verificado
+R07,"Calcular RVL, LSO, risco e Radar Social, governança e alinhamento aos ODS",Quadro 5,"modelo.calcular_social, modelo.calcular_governanca, modelo.alinhamento_ods",4,,implementado e verificado
+R08,Quantificar em reais os desperdícios Lean-Green,Seção 2.9.1,modelo.calcular_lean_green,2,,implementado e verificado
+R09,"Traduzir julgamentos qualitativos em pesos (Likert, AHP ou preset)",Seção 3.4; Quadro 7,"ponderacao.pesos_likert, ponderacao.pesos_ahp, ponderacao.resolver_pesos",4,,implementado e verificado
+R10,Integrar as dimensões em índice normalizado com decisão não compensatória,Seção 2.8.6,"ponderacao.normalizar, ponderacao.calcular_indice, ponderacao.classificar",3,,implementado e verificado
+R11,Traduzir a incerteza das entradas em risco financeiro (Monte Carlo no mesmo motor),Etapa 5; Seção 3.6,"incerteza.monte_carlo, pipeline.motor",5,,implementado e verificado
+R12,"Identificar variáveis críticas (sensibilidade, valores críticos e cenários)",Seção 3.6,"incerteza.sensibilidade, incerteza.valores_criticos, incerteza.cenarios",2,,implementado e verificado
+R13,Comparar alternativas de projeto e explicitar trade-offs (TOPSIS),Objetivo específico 2,"ponderacao.topsis, pipeline.comparar_alternativas, interface.definir_e_comparar_alternativas",2,,implementado e verificado
+R14,Verificar o próprio resultado a cada execução e manter a regressão,"Seção 3.3.2 (Boehm, 1984)","vv.validar_invariantes, vv.teste_regressao_deterministica",3,,implementado e verificado
+R15,"Exportar resultados auditáveis (Excel, JSON, Markdown e figuras)",Etapa 12,"relatorios.exportar, relatorios.gerar_graficos, relatorios.resumo_executivo",1,,implementado e verificado

@@ -129,8 +129,20 @@ def comparar_alternativas(alternativas: Dict[str, EVTEASConfig], pesos_criterios
         linhas.append(linha)
     df = pd.DataFrame(linhas)
     nomes = list(criterios)
-    ranking = topsis(df, nomes, [pesos_criterios[c] for c in nomes], [criterios[c][1] for c in nomes])
-    return {"matriz": df, "ranking": ranking, "pesos": pesos_criterios, "resultados": resultados}
+    # critério indefinido (ex.: pegada por tonelada com produção zero) recebe o pior valor observado
+    avisos, matriz = [], df.copy()
+    for c in nomes:
+        faltam = matriz[c].isna()
+        if faltam.any():
+            validos = matriz.loc[~faltam, c]
+            pior = (validos.min() if criterios[c][1] else validos.max()) if len(validos) else 0.0
+            matriz.loc[faltam, c] = pior
+            avisos.append(f"{c} indefinido para {', '.join(matriz.loc[faltam, 'Alternativa'])}: adotado o pior valor "
+                          "observado no TOPSIS")
+    ranking = topsis(matriz, nomes, [pesos_criterios[c] for c in nomes], [criterios[c][1] for c in nomes])
+    for c in nomes:                       # a tabela mostra o valor calculado (indefinido continua indefinido)
+        ranking[c] = ranking["Alternativa"].map(df.set_index("Alternativa")[c])
+    return {"matriz": df, "ranking": ranking, "pesos": pesos_criterios, "resultados": resultados, "avisos": avisos}
 
 
 def copiar(cfg: EVTEASConfig) -> EVTEASConfig:

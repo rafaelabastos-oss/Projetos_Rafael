@@ -6,6 +6,7 @@ Versão: EVTEAS-Py 2.0 (Rev. 187)
 
 | Indicador | Valor |
 |---|---|
+| Projeto | Caso-base — PGTR de piscicultura de tilápia em viveiros escavados |
 | Classificação | VIÁVEL COM RESSALVAS |
 | Produção anual (kg) | 87.750 |
 | OEE aquícola | 84,4% |
@@ -53,4 +54,4 @@ Versão: EVTEAS-Py 2.0 (Rev. 187)
 
 ## Verificação
 
-28 verificações; 0 falha(s).
+44 verificações; 0 falha(s).

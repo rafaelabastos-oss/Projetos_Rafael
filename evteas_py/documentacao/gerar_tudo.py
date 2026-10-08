@@ -1,6 +1,6 @@
 """Regenera, em ordem, todas as saídas da Rev. 187.
 
-1. executa o estudo (saidas/), 2. mede testes e cobertura, 3. gera o notebook,
+1. executa o estudo (saidas/), 2. gera o notebook, 3. mede testes e cobertura,
 4. gera a Rev. 187 (com controle de alterações e limpa) em duas passagens:
    a primeira renderiza a versão limpa para obter a paginação; a segunda
    preenche os números do Sumário e da Lista de Códigos.
@@ -45,8 +45,8 @@ def main(rev186: str, trabalho: str, docs: str):
     rev186, trabalho, docs = Path(rev186), Path(trabalho), Path(docs)
     trabalho.mkdir(parents=True, exist_ok=True)
     rodar(sys.executable, "executar_estudo.py", "saidas")
+    rodar(sys.executable, "gerar_notebook.py")          # antes dos testes: um deles compara o notebook ao pacote
     rodar(sys.executable, DOC / "medir_testes.py")
-    rodar(sys.executable, "gerar_notebook.py")
 
     origem = trabalho / "u186"
     if not origem.exists():

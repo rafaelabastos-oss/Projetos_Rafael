@@ -14,6 +14,12 @@ from .config import EVTEASConfig
 from .financeiro import payback, tir, vpl
 
 
+DOMINIO_DISTRIBUICOES = {  # demais variáveis estocásticas: não negativas
+    "tecnico.mortalidade_pct": (0.0, 100.0), "tecnico.desempenho_crescimento_pct": (0.0, None),
+    "tecnico.fcr": (0.0, None), "economico.capex_fator": (0.0, None),
+}
+
+
 def validar_invariantes(cfg: EVTEASConfig, resultado: Dict[str, Any], bruto: Dict[str, Any] = None) -> Dict[str, Any]:
     checks: List[Dict[str, Any]] = []
 
@@ -71,6 +77,10 @@ def validar_invariantes(cfg: EVTEASConfig, resultado: Dict[str, Any], bruto: Dic
         ok = d.minimo - 1e-9 <= v <= d.maximo + 1e-9 and (d.tipo == "uniforme" or abs(d.moda - v) <= 1e-9 * max(1.0, abs(v)))
         chk(f"Distribuição de {caminho} contém o valor determinístico como mais provável", ok,
             f"valor {v:g}; distribuição {d.tipo} ({d.minimo:g}, {d.moda:g}, {d.maximo:g})")
+        lo, hi = DOMINIO_DISTRIBUICOES.get(caminho, (0.0, None))
+        chk(f"Distribuição de {caminho} dentro do domínio da variável",
+            d.minimo >= lo - 1e-12 and (hi is None or d.maximo <= hi + 1e-12),
+            f"({d.minimo:g}, {d.maximo:g}) em [{lo:g}, {'∞' if hi is None else f'{hi:g}'}]")
 
     pesos = i["pesos"]
     chk("Pesos dimensionais somam 1", abs(sum(pesos["dimensoes"].values()) - 1) < 1e-9)

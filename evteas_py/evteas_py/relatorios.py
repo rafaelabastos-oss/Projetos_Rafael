@@ -29,7 +29,10 @@ def numero(v, casas: int = 2) -> str:
 
 def resumo_executivo(r: Dict[str, Any]) -> pd.DataFrame:
     t, e, a, s, i = r["tecnico"], r["economico"], r["ambiental"], r["social"], r["indice"]
-    linhas = [
+    cfg = r.get("config")
+    projeto = getattr(cfg, "projeto", None) if not isinstance(cfg, dict) else cfg.get("projeto")
+    linhas = [("Projeto", projeto or "(sem nome)")] if cfg is not None else []
+    linhas += [
         ("Classificação", r["decisao"]["classificacao"]),
         ("Produção anual (kg)", numero(t["producao_kg_ano"], 0)),
         ("OEE aquícola", percentual(t["oee"])),

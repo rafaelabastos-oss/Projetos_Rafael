@@ -185,7 +185,7 @@ def respostas_caso_base() -> List[tuple]:
         (r"^Empregos indiretos", "10"),
         (r"^Mão de obra residente", "100"),
         (r"^Compras de insumos", "25"),
-        (r"^Salário mínimo vigente", ""),
+        (r"^Salário mínimo vigente", "1518"),
         (r"^Capacitação", "40"),
         (r"^Aderência às Normas", "85"),
         (r"Relação com a comunidade e pescadores", "2"),
@@ -240,6 +240,8 @@ class UsuarioCasoBase(UsuarioSimulado):
                 self.variavel = (mn, mo, mx)
 
     def entrada(self, prompt: str) -> str:
+        if sum(1 for t in self.transcricao if not t.startswith(">>")) > self.LIMITE_PERGUNTAS:
+            raise AssertionError("Laço de perguntas sem fim (resposta recusada repetidamente?): " + repr(prompt))
         if self.variavel and re.match(r"\s+(Mínimo|Mais provável|Máximo)", prompt):
             p = prompt.strip()
             k = 0 if p.startswith("Mínimo") else (1 if p.startswith("Mais provável") else 2)

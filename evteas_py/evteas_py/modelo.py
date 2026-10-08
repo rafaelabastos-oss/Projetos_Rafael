@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (CHECKLIST_AMBIENTAL, FATORES_EMISSAO_ENERGIA, RELACAO_COMUNIDADE,
-                     SISTEMAS_PRODUTIVOS, EVTEASConfig, obter_por_caminho)
+                     SISTEMAS_PRODUTIVOS, VARIAVEIS_ESTOCASTICAS, EVTEASConfig, obter_por_caminho)
 from .financeiro import clamp, payback, pct, safe_div, taxa_anual_para_mensal, taxa_mensal_para_anual, tir, vpl
 
 
@@ -25,11 +25,17 @@ class Contexto:
         self.cfg = cfg
         self.overrides = overrides or {}
         self.n = int(n)
+        desconhecidos = sorted(set(self.overrides) - set(VARIAVEIS_ESTOCASTICAS))
+        if desconhecidos:
+            raise ValueError("O modelo não amostra estes parâmetros (sem efeito no Monte Carlo): "
+                             + ", ".join(desconhecidos))
         for k, v in self.overrides.items():
             if np.ndim(v) and len(v) != self.n:
                 raise ValueError(f"Override '{k}' com tamanho {len(v)} != n={self.n}")
 
     def v(self, caminho: str) -> np.ndarray:
+        if caminho not in VARIAVEIS_ESTOCASTICAS:
+            raise KeyError(f"{caminho} não está em VARIAVEIS_ESTOCASTICAS (config.py)")
         if caminho in self.overrides:
             return np.broadcast_to(np.asarray(self.overrides[caminho], dtype=float), (self.n,)).astype(float)
         valor = obter_por_caminho(self.cfg, caminho)
@@ -268,8 +274,9 @@ def calcular_economico(ctx: Contexto, tec: Dict[str, Any]) -> Dict[str, Any]:
     custo_alevinos = alevinos_mes * ctx.v("economico.custo_alevino_milheiro")[:, None] / 1000 * fator_custo
     kwh_kg = energia_kwh_kg(cfg)
     custo_energia = em_engorda * kwh_kg * ctx.v("economico.tarifa_energia_kwh")[:, None] * fator_custo
+    # valor mensal informado "a 100% da capacidade": acompanha a rampa e o crescimento de vendas
     outros_var = (vendida * e.outros_custos_variaveis_kg
-                  + e.outros_custos_variaveis_mes * rampa * escala_volume) * fator_custo
+                  + e.outros_custos_variaveis_mes * rampa * fator_vendas) * fator_custo
     custos_variaveis = custo_racao + custo_alevinos + custo_energia + outros_var
 
     capex = e.capex_total * ctx.v("economico.capex_fator")
@@ -578,13 +585,15 @@ def calcular_social(ctx: Contexto, eco: Dict[str, Any]) -> Dict[str, Any]:
         sobras = np.zeros(ctx.n)
     renda_local = massa_local + sobras * s.mao_obra_local_pct / 100
     iil = safe_div(renda_local, eco["receita_regime"], 0.0)
-    if cfg.economico.tipo_organizacao != "empresa":
-        n_trab = max(cfg.economico.cooperados_trabalhadores, 1)
+    if cfg.economico.tipo_organizacao != "empresa" and cfg.economico.cooperados_trabalhadores > 0:
+        n_trab = cfg.economico.cooperados_trabalhadores
         renda_mensal = (rem["retirada"] + rem["outros"] + sobras) / n_trab / 12
-    else:
+    else:   # empresa, ou cooperativa sem cooperados na operação: renda paga a quem trabalha
         n_trab = max(s.empregos_diretos, 1)
-        renda_mensal = (rem["clt"] + rem["outros"]) / n_trab / 12
-    renda_sm = renda_mensal / s.salario_minimo
+        renda_mensal = (rem["clt"] + rem["outros"] + rem["retirada"]) / n_trab / 12
+    # renda em preços do ano de regime: o salário mínimo é levado ao mesmo nível de preços
+    sm_regime = s.salario_minimo * (1 + cfg.economico.crescimento_custos_aa_pct / 100) ** (eco["ano_regime"] - 1)
+    renda_sm = renda_mensal / sm_regime
 
     relacao = RELACAO_COMUNIDADE.get(s.relacao_comunidade)
     if relacao is None:

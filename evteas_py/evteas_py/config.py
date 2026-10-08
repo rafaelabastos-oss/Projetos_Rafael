@@ -387,6 +387,14 @@ def _distribuicoes_padrao() -> Dict[str, Distribuicao]:
     }
 
 
+# Parâmetros que o motor lê pelo Contexto (vetorizados): só eles podem ter distribuição no Monte Carlo.
+VARIAVEIS_ESTOCASTICAS = (
+    "economico.preco_venda_kg", "economico.custo_racao_kg", "economico.custo_alevino_milheiro",
+    "economico.tarifa_energia_kwh", "economico.custos_fixos_fator", "economico.capex_fator",
+    "tecnico.fcr", "tecnico.mortalidade_pct", "tecnico.desempenho_crescimento_pct",
+)
+
+
 @dataclass
 class MonteCarloConfig:
     iteracoes: int = 10000

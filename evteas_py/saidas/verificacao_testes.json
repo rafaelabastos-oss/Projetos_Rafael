@@ -1,6 +1,6 @@
 {
-  "testes": 59,
-  "aprovados": 59,
+  "testes": 118,
+  "aprovados": 118,
   "falhas": 0,
-  "cobertura_pct": 89.9
+  "cobertura_pct": 90.0
 }

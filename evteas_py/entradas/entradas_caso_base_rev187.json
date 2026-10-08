@@ -1,0 +1,296 @@
+{
+  "projeto": "Caso-base — PGTR de piscicultura de tilápia em viveiros escavados",
+  "autor": "Rafael Alves Bastos",
+  "versao": "EVTEAS-Py 2.0 (Rev. 187)",
+  "tecnico": {
+    "sistema_produtivo": "semi-intensivo",
+    "area_lamina_m2": 40000.0,
+    "profundidade_media_m": 1.4,
+    "numero_tanques": 32,
+    "tanques_ativos": 30,
+    "capacidade_suporte_kg_m3": null,
+    "produtividade_esperada_kg_m2_ciclo": 1.3,
+    "especie": "Tilápia-do-nilo (Oreochromis niloticus)",
+    "peso_inicial_g": 30.0,
+    "peso_final_g": 800.0,
+    "ciclo_dias": 180,
+    "ciclos_ano": 1.8,
+    "alevinos_por_ciclo": 0.0,
+    "desempenho_crescimento_pct": 100.0,
+    "fcr": 1.5,
+    "mortalidade_pct": 10.0,
+    "fcr_referencia": 1.4,
+    "mortalidade_referencia_pct": 5.0
+  },
+  "economico": {
+    "tipo_organizacao": "coop_agro",
+    "capex_itens": {
+      "Escavação e construção de viveiros": 400000.0,
+      "Sistema de abastecimento e drenagem": 70000.0,
+      "Aeradores e quadro elétrico": 90000.0,
+      "Bombas e tubulações": 35000.0,
+      "Galpão, depósito de ração e equipamentos": 80000.0,
+      "Lagoa de sedimentação / tratamento de efluentes": 45000.0,
+      "Licenciamento, outorga e projetos": 25000.0
+    },
+    "classe_estimativa_aace": 5,
+    "capital_giro": 60000.0,
+    "vida_util_anos": 15.0,
+    "valor_residual_pct": 30.0,
+    "valor_residual_rs": null,
+    "preco_venda_kg": 10.5,
+    "mix_produtos": [],
+    "receita_servicos_mes": 0.0,
+    "custo_racao_kg": 3.1,
+    "custo_alevino_milheiro": 280.0,
+    "tarifa_energia_kwh": 0.75,
+    "outros_custos_variaveis_kg": 0.35,
+    "outros_custos_variaveis_mes": 0.0,
+    "mao_obra_mes": 12000.0,
+    "encargos_mao_obra_pct": 20.0,
+    "assistencia_tecnica_mes": 2000.0,
+    "administrativo_mes": 1500.0,
+    "manutencao_capex_pct_aa": 2.0,
+    "manutencao_mes": null,
+    "custos_fixos_fator": 1.0,
+    "taxa_impostos_faturamento_pct": 2.3,
+    "taxa_impostos_lucro_pct": 0.0,
+    "impostos_configurados": [],
+    "tma_aa_pct": 10.0,
+    "horizonte_anos": 10,
+    "crescimento_preco_aa_pct": 0.0,
+    "crescimento_custos_aa_pct": 0.0,
+    "capacidade_inicial_pct": 70.0,
+    "meses_rampa": 12,
+    "cooperados_trabalhadores": 6,
+    "cooperados_fornecedores": 14,
+    "perc_sobras_trabalhadores": 100.0,
+    "capex_fator": 1.0,
+    "fomento_nao_reembolsavel_pct": 70.0,
+    "salarios_clt_por_cargo": {},
+    "retirada_cooperados_mes": 0.0,
+    "nome_materia_prima": "",
+    "producao_vendas_kg_mes": 0.0,
+    "meses_ate_primeira_receita": 0,
+    "carencia_automatica": true,
+    "crescimento_vendas_aa_pct": 0.0
+  },
+  "ambiental": {
+    "renovacao_pct_dia": null,
+    "esvaziamento_por_ciclo": true,
+    "evaporacao_mm_dia": 4.0,
+    "infiltracao_mm_dia": 2.0,
+    "fracao_retorno_perdida": 0.0,
+    "proteina_racao_pct": 32.0,
+    "fosforo_racao_pct": 1.0,
+    "nitrogenio_peixe_pct": 2.6,
+    "fosforo_peixe_pct": 0.7,
+    "remocao_n_tratamento_pct": 40.0,
+    "remocao_p_tratamento_pct": 60.0,
+    "n_max_mg_l": 2.18,
+    "p_max_mg_l": 0.1,
+    "n_natural_mg_l": 0.5,
+    "p_natural_mg_l": 0.02,
+    "energia_kwh_kg": null,
+    "fonte_energia": "rede",
+    "fracao_renovavel_mista": 0.0,
+    "fator_emissao_rede_kgco2_kwh": 0.0817,
+    "fator_emissao_racao_kgco2_kg": 1.1,
+    "diesel_l_ano": 600.0,
+    "fator_emissao_diesel_kgco2_l": 2.6,
+    "residuos_kg_por_kg": 0.04,
+    "residuos_reaproveitados_pct": 50.0,
+    "distancia_app_m": 50.0,
+    "faixa_app_minima_m": 30.0,
+    "checklist": {
+      "licenca_ambiental": true,
+      "outorga_agua": true,
+      "respeita_app": true,
+      "tratamento_efluentes": true,
+      "monitoramento_agua": true,
+      "car": true,
+      "gestao_residuos": false,
+      "prevencao_escape": true,
+      "energia_renovavel": false
+    },
+    "energia_referencia_kwh_kg": 0.4
+  },
+  "social": {
+    "empregos_diretos": 6,
+    "empregos_indiretos": 10,
+    "mao_obra_local_pct": 100.0,
+    "compras_locais_pct": 25.0,
+    "salario_minimo": 1518.0,
+    "capacitacao_horas_pessoa_ano": 40.0,
+    "conformidade_nr_pct": 85.0,
+    "relacao_comunidade": "parcial",
+    "canais_formais_comunicacao": true,
+    "reunioes_comunidade_ano": 6,
+    "conflitos_registrados_ano": 1,
+    "mulheres_pct": 40.0,
+    "jovens_pct": 20.0,
+    "publico_vulneravel": true
+  },
+  "governanca": {
+    "itens": {
+      "estatuto_regimento": true,
+      "assembleias_regulares": true,
+      "conselho_fiscal": true,
+      "prestacao_contas_publica": false,
+      "plano_negocios_aprovado": true,
+      "registro_auditavel_premissas": true,
+      "canal_denuncia_ouvidoria": false
+    }
+  },
+  "pesos": {
+    "metodo": "preset",
+    "tecnico": 0.25,
+    "economico": 0.35,
+    "ambiental": 0.2,
+    "social": 0.2,
+    "kpi": {},
+    "likert_dimensoes": {},
+    "likert_kpis": {},
+    "ahp_matriz": null
+  },
+  "decisao": {
+    "limiar_indice_viavel": 0.6,
+    "limiar_indice_ressalvas": 0.5,
+    "prob_vpl_positivo_minima": 0.7,
+    "lso_minimo": 40.0,
+    "aplicar_vetos": true
+  },
+  "monte_carlo": {
+    "iteracoes": 10000,
+    "seed": 20260612,
+    "distribuicoes": {
+      "economico.preco_venda_kg": {
+        "tipo": "triangular",
+        "minimo": 9.0,
+        "moda": 10.5,
+        "maximo": 11.5
+      },
+      "economico.custo_racao_kg": {
+        "tipo": "triangular",
+        "minimo": 2.8,
+        "moda": 3.1,
+        "maximo": 3.7
+      },
+      "economico.custo_alevino_milheiro": {
+        "tipo": "triangular",
+        "minimo": 230.0,
+        "moda": 280.0,
+        "maximo": 350.0
+      },
+      "economico.tarifa_energia_kwh": {
+        "tipo": "triangular",
+        "minimo": 0.65,
+        "moda": 0.75,
+        "maximo": 0.95
+      },
+      "economico.custos_fixos_fator": {
+        "tipo": "triangular",
+        "minimo": 0.95,
+        "moda": 1.0,
+        "maximo": 1.15
+      },
+      "tecnico.fcr": {
+        "tipo": "triangular",
+        "minimo": 1.3,
+        "moda": 1.5,
+        "maximo": 1.85
+      },
+      "tecnico.mortalidade_pct": {
+        "tipo": "triangular",
+        "minimo": 5.0,
+        "moda": 10.0,
+        "maximo": 20.0
+      },
+      "tecnico.desempenho_crescimento_pct": {
+        "tipo": "triangular",
+        "minimo": 85.0,
+        "moda": 100.0,
+        "maximo": 105.0
+      }
+    },
+    "incluir_capex_aace": true
+  },
+  "fontes": {
+    "economico.fomento_nao_reembolsavel_pct": {
+      "categoria": "autor",
+      "referencia": "Hipótese de aporte por projeto de compensação do licenciamento federal (IBAMA, 2010, 2012)"
+    },
+    "tecnico.fcr": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "tecnico.mortalidade_pct": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "tecnico.peso_final_g": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "tecnico.ciclo_dias": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "tecnico.produtividade_esperada_kg_m2_ciclo": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "tecnico.area_lamina_m2": {
+      "categoria": "autor",
+      "referencia": "Dimensionamento conceitual (sem definição de terreno)"
+    },
+    "economico.preco_venda_kg": {
+      "categoria": "cotacao",
+      "referencia": "Estimativa ilustrativa; substituir por cotação regional atualizada"
+    },
+    "economico.custo_racao_kg": {
+      "categoria": "cotacao",
+      "referencia": "Estimativa ilustrativa; substituir por cotação regional atualizada"
+    },
+    "economico.custo_alevino_milheiro": {
+      "categoria": "cotacao",
+      "referencia": "Estimativa ilustrativa; substituir por cotação regional atualizada"
+    },
+    "economico.tarifa_energia_kwh": {
+      "categoria": "cotacao",
+      "referencia": "Estimativa ilustrativa; substituir por cotação regional atualizada"
+    },
+    "economico.classe_estimativa_aace": {
+      "categoria": "normativo",
+      "referencia": "AACE International (2020), estimativa Classe 5"
+    },
+    "economico.tma_aa_pct": {
+      "categoria": "autor",
+      "referencia": "Custo de oportunidade de recursos de fomento"
+    },
+    "ambiental.n_max_mg_l": {
+      "categoria": "normativo",
+      "referencia": "Resolução CONAMA nº 357/2005, classe 2, ambiente lótico"
+    },
+    "ambiental.p_max_mg_l": {
+      "categoria": "normativo",
+      "referencia": "Resolução CONAMA nº 357/2005, classe 2, ambiente lótico"
+    },
+    "ambiental.faixa_app_minima_m": {
+      "categoria": "normativo",
+      "referencia": "Lei nº 12.651/2012, art. 4º, I, a"
+    },
+    "ambiental.proteina_racao_pct": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017) — faixa zootécnica de referência para tilápia"
+    },
+    "ambiental.evaporacao_mm_dia": {
+      "categoria": "bibliografico",
+      "referencia": "Kubitza (2017); calibrar com dados climáticos locais"
+    },
+    "social.salario_minimo": {
+      "categoria": "normativo",
+      "referencia": "Salário mínimo nacional vigente"
+    }
+  }
+}

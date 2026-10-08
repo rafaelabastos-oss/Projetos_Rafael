@@ -74,17 +74,19 @@ def test_valores_em_reais_nao_mudam_com_o_capex():
 
 
 def test_trocar_tipo_de_organizacao_revisa_pessoas_e_tributos():
-    assert expandir_blocos(["Identificação"]) == ["Identificação", "Pessoas", "Tributos"]
-    assert expandir_blocos(["Técnico"]) == ["Técnico", "Mix e receitas", "Projeção e TMA"]
+    assert expandir_blocos(["Identificação"]) == ["Identificação", "Pessoas", "Tributos", "Social e governança"]
+    assert expandir_blocos(["Técnico"]) == ["Técnico", "Mix e receitas", "Custos operacionais", "Tributos",
+                                            "Projeção e TMA", "Ambiental"]
     cfg = criar_config_caso_base()
     regras = [(r"Tipo de pessoa jurídica", "1"), (r"^Número de funcionários CLT", "1"),
               (r"Cargo do funcionário CLT nº 1", "Técnico"), (r"Salário bruto mensal de 'Técnico", "3000"),
               (r"^Outra mão de obra não detalhada", "0"), (r"^Configurar INSS patronal", "s"),
-              (r"Alíquota de INSS patronal", "20")]
+              (r"Alíquota de INSS patronal", "20"), (r"^Configurar FGTS", "s"), (r"Alíquota de FGTS", "8"),
+              (r"^Configurar PIS sobre a folha", "n")]       # encargos novos não têm padrão: precisam de resposta
     novo, _ = _corrigir(cfg, "Identificação", regras)
     e = novo.economico
     assert e.tipo_organizacao == "empresa" and e.retirada_cooperados_mes == 0 and e.cooperados_trabalhadores == 0
-    assert any(i["base"] == "folha_clt" for i in e.impostos_configurados)
+    assert sum(i["aliquota_pct"] for i in e.impostos_configurados if i["base"] == "folha_clt") == pytest.approx(28)
 
 
 def test_likert_de_kpis_ignorado_fora_do_metodo_likert():
