@@ -143,7 +143,7 @@ def exportar(r: Dict[str, Any], pasta="evteas_output") -> List[str]:
 
 
 def relatorio_markdown(r: Dict[str, Any]) -> str:
-    linhas = [f"# Relatório EVTEAS-Py — {r['config']['projeto']}", "", f"Gerado por: {r['versao']}", "",
+    linhas = [f"# Relatório EVTEAS-Py — {r['config']['projeto']}", "", f"Gerado por: {r['artefato']}", "",
               "## Resumo executivo", "", "| Indicador | Valor |", "|---|---|"]
     linhas += [f"| {a} | {b} |" for a, b in resumo_executivo(r).itertuples(index=False)]
     d = r["decisao"]

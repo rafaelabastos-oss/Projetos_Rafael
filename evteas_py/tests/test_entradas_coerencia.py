@@ -1,4 +1,4 @@
-"""Testes de regressão dos problemas apontados na revisão independente da entrada de dados."""
+"""Testes de coerência da entrada de dados: distribuições, unidades, blocos dependentes e valores em reais."""
 import copy
 
 import numpy as np

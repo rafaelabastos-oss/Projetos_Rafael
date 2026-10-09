@@ -516,7 +516,7 @@ def bloco_receitas(P: Perguntador, cfg: EVTEASConfig):
         prod = e.producao_vendas_kg_mes or float(calcular_tecnico(Contexto(cfg))["producao_kg_mes"][0])
         e.mix_produtos = [{"nome": "Produto principal", "quantidade_kg_mes": round(prod, 4),
                            "preco_kg": e.preco_venda_kg, "participacao_pct": 100.0}]
-    for p in e.mix_produtos:          # arquivos antigos: só participação → quantidade equivalente
+    for p in e.mix_produtos:          # produto informado apenas pela participação (%) → quantidade equivalente
         if "quantidade_kg_mes" not in p:
             from .modelo import Contexto, calcular_tecnico
             prod = e.producao_vendas_kg_mes or float(calcular_tecnico(Contexto(cfg))["producao_kg_mes"][0])
@@ -694,7 +694,7 @@ TRIBUTOS = [  # nome, base, sugestão de alíquota (%)
 ]
 
 
-def migrar_formato_detalhado(cfg: EVTEASConfig) -> None:
+def detalhar_tributos_consolidados(cfg: EVTEASConfig) -> None:
     """Converte alíquotas consolidadas (taxa sobre faturamento/lucro) em itens da lista de
     tributos do wizard, sem alterar o resultado do modelo (as bases são aditivas)."""
     e = cfg.economico
@@ -709,7 +709,7 @@ def migrar_formato_detalhado(cfg: EVTEASConfig) -> None:
 def bloco_tributos(P: Perguntador, cfg: EVTEASConfig):
     e = cfg.economico
     P.bloco("8. CONFIGURAÇÃO TRIBUTÁRIA (responda s para configurar cada tributo)")
-    migrar_formato_detalhado(cfg)
+    detalhar_tributos_consolidados(cfg)
     atuais = {i.get("nome"): i for i in e.impostos_configurados}
     tem_clt = bool(e.salarios_clt_por_cargo)
     tem_ret = e.retirada_cooperados_mes > 0
@@ -1109,7 +1109,7 @@ def bloco_incerteza(P: Perguntador, cfg: EVTEASConfig):
                                                                  "Fator multiplicador do CAPEX (1 = valor informado)",
                                                                  mc.distribuicoes.get("economico.capex_fator"))
     # Só as variáveis que o motor amostra (VARIAVEIS_ESTOCASTICAS) têm efeito no Monte Carlo; distribuições
-    # em outros parâmetros (arquivos antigos) são descartadas com aviso.
+    # atribuídas a outros parâmetros no arquivo carregado são descartadas com aviso.
     ignoradas = [c for c in mc.distribuicoes if c not in novas and c not in VARIAVEIS_ESTOCASTICAS]
     if ignoradas:
         P.saida("  ⚠ Distribuições descartadas (o modelo não amostra esses parâmetros): "
@@ -1223,11 +1223,12 @@ def entradas_pendentes(cfg: EVTEASConfig) -> List[str]:
 # ---------------------------------------------------------------------------
 
 SECOES_CONFIG = ("tecnico", "economico", "ambiental", "social", "governanca", "pesos", "decisao", "monte_carlo")
-NEUTROS_AUSENTES = {"carencia_automatica", "incluir_capex_aace"}   # opções com padrão neutro em arquivos antigos
+NEUTROS_AUSENTES = {"carencia_automatica", "incluir_capex_aace"}   # opções que recebem padrão neutro quando ausentes do arquivo
 
 
 def _neutro(nome: str, padrao) -> bool:
-    """Campos acrescentados em versões recentes cujo valor padrão não altera o estudo (0, vazio, None, fator 1)."""
+    """Indica se o campo, quando ausente do arquivo de entradas, pode receber o valor padrão sem alterar o
+    estudo (0, vazio, None, fator 1), em vez de ficar pendente."""
     if nome in NEUTROS_AUSENTES or nome.endswith("_fator"):
         return True
     if isinstance(padrao, bool):
@@ -1236,8 +1237,9 @@ def _neutro(nome: str, padrao) -> bool:
         (isinstance(padrao, (list, dict)) and not padrao)
 
 
-def _normalizar_formatos_antigos(dados: Dict[str, Any], avisos: List[str]) -> Dict[str, Any]:
-    """Tributos com 'aliquota' em fração e bases com nomes antigos; produtos do mix sem nome."""
+def _normalizar_formatos_alternativos(dados: Dict[str, Any], avisos: List[str]) -> Dict[str, Any]:
+    """Aceita tributos com 'aliquota' em fração e bases com nomes alternativos (apelidos de BASES_TRIBUTARIAS);
+    nomeia os produtos do mix informados sem nome."""
     from .modelo import BASES_TRIBUTARIAS
     apelidos = {a: k for k, v in BASES_TRIBUTARIAS.items() for a in v}
     e = dados.get("economico")
@@ -1288,10 +1290,10 @@ def ler_entradas(dados) -> Tuple[EVTEASConfig, List[str], List[str]]:
         dados = dados["config"]
     if not isinstance(dados, dict) or not all(isinstance(dados.get(k), dict) for k in ("tecnico", "economico")):
         raise ValueError("não é um arquivo de entradas do EVTEAS-Py (faltam as seções 'tecnico' e 'economico')")
-    dados = _normalizar_formatos_antigos(copy.deepcopy(dados), avisos)
+    dados = _normalizar_formatos_alternativos(copy.deepcopy(dados), avisos)
     cfg, padrao = config_em_branco(), EVTEASConfig()
     conhecidas = {f.name for f in campos(EVTEASConfig)}
-    desconhecidas = [k for k in dados if k not in conhecidas]
+    desconhecidas = [k for k in dados if k not in conhecidas and k != "versao"]   # rótulo do artefato, aceito sem aviso
     neutros, faltam_texto = [], []
     cfg.projeto, cfg.autor = str(dados.get("projeto") or ""), str(dados.get("autor") or "")
     for secao in SECOES_CONFIG:

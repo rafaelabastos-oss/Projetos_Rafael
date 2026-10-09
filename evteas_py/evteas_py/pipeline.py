@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 
-from .config import EVTEASConfig, VERSAO
+from .config import ARTEFATO, EVTEASConfig
 from .modelo import (Contexto, alinhamento_ods, calcular_ambiental, calcular_economico, calcular_governanca,
                      calcular_lean_green, calcular_social, calcular_tecnico, curva_crescimento, distribuicao_sobras,
                      dre_anual, dre_mensal)
@@ -73,7 +73,7 @@ def executar_evteas(cfg: EVTEASConfig, executar_mc: bool = True, executar_sens: 
     df_m = dre_mensal(r["economico"])
     det = {k: _escalar(v) for k, v in r.items()}
     resultado: Dict[str, Any] = {
-        "versao": VERSAO,
+        "artefato": ARTEFATO,
         "config": asdict(cfg),
         **det,
         "curva_crescimento": curva_crescimento(cfg),

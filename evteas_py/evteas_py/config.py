@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-VERSAO = "EVTEAS-Py"
+ARTEFATO = "EVTEAS-Py"
 
 # ---------------------------------------------------------------------------
 # Rastreabilidade das premissas (Seção 3.6)
@@ -407,7 +407,7 @@ class MonteCarloConfig:
 class EVTEASConfig:
     projeto: str = "Projeto de Piscicultura — EVTEAS-Py"
     autor: str = "Rafael Alves Bastos"
-    versao: str = VERSAO
+    artefato: str = ARTEFATO
     tecnico: TecnicoConfig = field(default_factory=TecnicoConfig)
     economico: EconomicoConfig = field(default_factory=EconomicoConfig)
     ambiental: AmbientalConfig = field(default_factory=AmbientalConfig)

@@ -1,4 +1,4 @@
-"""Testes de regressão da segunda rodada de revisão independente da entrada de dados."""
+"""Testes de robustez da entrada de dados: números no padrão brasileiro, arquivos incompletos, interrupções e casos-limite."""
 import copy
 import json
 

@@ -295,7 +295,8 @@ def test_config_json_ida_e_volta(cfg, tmp_path):
 
 
 def test_wizard_revisar_enter_mantem_resultado(cfg):
-    """Revisar todas as entradas pressionando Enter não altera o resultado (com migração do formato)."""
+    """Revisar todas as entradas pressionando Enter não altera o resultado (inclusive com a conversão das alíquotas
+    consolidadas em tributos detalhados)."""
     respostas = iter([""] * 2000)
     c = wizard_evteas(entrada=lambda _: next(respostas), base=copy.deepcopy(cfg), saida=lambda *a, **k: None)
     assert motor(c, None, 1)["economico"]["vpl"][0] == pytest.approx(motor(cfg, None, 1)["economico"]["vpl"][0], rel=1e-9)

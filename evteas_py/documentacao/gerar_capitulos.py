@@ -1,6 +1,6 @@
-"""Gera a Rev. 187 da qualificação com controle de alterações (Capítulos 4 e 5 e Referências).
+"""Gera o texto da qualificação com controle de alterações (Capítulos 4 e 5, Referências e Apêndices).
 
-Uso: python gerar_rev187.py <pasta_rev186_descompactada> <saida_com_alteracoes> [<saida_limpa>]
+Uso: python gerar_capitulos.py <pasta_do_documento_de_origem> <saida_com_alteracoes> [<saida_limpa>] [<pdf_da_saida_limpa>]
 
 Os parágrafos inalterados são preservados byte a byte; parágrafos revisados
 recebem diff por palavra (<w:del>/<w:ins>); parágrafos, figuras e tabelas novos
@@ -18,7 +18,7 @@ from xml.sax.saxutils import escape
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import conteudo_rev187 as C  # noqa: E402
+import conteudo_capitulos as C  # noqa: E402
 
 AUTOR = "Claude"
 DATA = "2026-10-07T12:00:00Z"
@@ -144,9 +144,9 @@ class Midia:
     def adicionar(self, arquivo: str) -> str:
         from PIL import Image
         self.k += 1
-        nome = f"rev187_fig{self.k:02d}.png"
+        nome = f"evteas_fig{self.k:02d}.png"
         shutil.copy(arquivo, self.pasta / "word/media" / nome)
-        rid = f"rIdRev187Img{self.k}"
+        rid = f"rIdEVTEASImg{self.k}"
         self.rels = self.rels.replace("</Relationships>",
                                       f'<Relationship Id="{rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/{nome}"/></Relationships>')
         w, h = Image.open(arquivo).size
@@ -215,7 +215,7 @@ def similaridade(a: str, b: str) -> float:
 
 
 def emitir(antigos, novos, midia: Midia) -> str:
-    """antigos: [(xml, kind, texto)]; novos: blocos de conteudo_rev187."""
+    """antigos: [(xml, kind, texto)]; novos: blocos de conteudo_capitulos."""
     chave = lambda k, t: f"{k}|{t}"
     ka = [chave(k, t) for _, k, t in antigos]
     kn = [chave(b["k"], b.get("t", "")) if b["k"] not in ("img", "tbl") else f"{b['k']}|novo" for b in novos]
@@ -284,7 +284,7 @@ def _ascii(s: str) -> str:
 
 
 def marcador_legenda(b) -> str:
-    return f"_TocRev187_{_ascii(b['rotulo'])}{b['num']}"
+    return f"_TocEVTEAS_{_ascii(b['rotulo'])}{b['num']}"
 
 
 def runs_legenda(b) -> str:
@@ -317,7 +317,7 @@ def marcar_titulos(seg: str):
         p = m.group(0)
         if _excluido(p) or not texto_paragrafo(p).strip():
             return p
-        nome = f"_TocRev187_T{len(titulos) + 1}"
+        nome = f"_TocEVTEAS_T{len(titulos) + 1}"
         titulos.append((1 if 'w:val="Ttulo1"' in p else 2, texto_paragrafo(p).strip(), nome))
         fim_ppr = p.index("</w:pPr>") + len("</w:pPr>")
         return p[:fim_ppr] + _bookmark(nome, p[fim_ppr:-len("</w:p>")]) + "</w:p>"
@@ -347,7 +347,7 @@ def entrada_sumario(modelo: str, texto: str, marcador: str, rastrear: bool = Tru
 
 def reconstruir_sumario(doc: str, titulos) -> str:
     """Substitui, no resultado em cache do Sumário, as entradas dos Capítulos 4 e 5
-    pelas dos títulos da Rev. 187 (mantém as que não mudaram; as demais entram como
+    pelas dos novos títulos (mantém as que não mudaram; as demais entram como
     exclusão e inserção rastreadas)."""
     s0 = doc.index("<w:sdt>")
     s1 = doc.index("</w:sdt>", s0)
@@ -378,7 +378,7 @@ RPR_ITEM = ('<w:rFonts w:ascii="Times New Roman" w:eastAsia="Times New Roman" w:
 
 
 def entrada_lista(texto: str, marcador: str, pagina="", rastrear: bool = True, prefixo: str = "") -> str:
-    """Entrada de lista de ilustrações no formato das listas da Rev. 181 (hiperlink + PAGEREF)."""
+    """Entrada de lista de ilustrações no formato das listas do documento original (hiperlink + PAGEREF)."""
     r = lambda conteudo: f"<w:r><w:rPr>{RPR_ITEM}</w:rPr>{conteudo}</w:r>"
     corpo = (r(f'<w:t xml:space="preserve">{escape(texto)}</w:t>') + r("<w:tab/>") + r('<w:fldChar w:fldCharType="begin"/>')
              + r(f'<w:instrText xml:space="preserve"> PAGEREF {marcador} \\h </w:instrText>')
@@ -485,14 +485,15 @@ APENDICES = [
     ("APÊNDICE B – TESTES AUTOMATIZADOS DE VERIFICAÇÃO",
      [f"Este apêndice reproduz a suíte de testes automatizados descrita na {_REF[('Seção', 'vv')]}, executada com a "
       "biblioteca pytest. O arquivo test_evteas.py verifica as rotinas de cálculo; test_social_lean_green.py, as "
-      "dimensões social, de governança e Lean-Green; test_entradas.py e test_revisao_entradas.py verificam a entrada "
+      "dimensões social, de governança e Lean-Green; test_entradas.py, test_entradas_coerencia.py e test_entradas_robustez.py verificam a entrada "
       "de dados com o usuário simulado definido em usuario_simulado.py, que responde ao wizard como uma pessoa "
       "digitaria; e test_dsr.py confere o registro das etapas da DSR e a rastreabilidade entre requisitos, código e "
       "testes."],
      [("tests/test_evteas.py", "Testes do núcleo de cálculo"),
       ("tests/test_social_lean_green.py", "Testes das dimensões social, de governança e Lean-Green"),
       ("tests/test_entradas.py", "Testes da entrada de dados"),
-      ("tests/test_revisao_entradas.py", "Testes de regressão da revisão independente da entrada de dados"),
+      ("tests/test_entradas_coerencia.py", "Testes de coerência da entrada de dados"),
+      ("tests/test_entradas_robustez.py", "Testes de robustez da entrada de dados"),
       ("tests/test_dsr.py", "Testes do registro do ciclo DSR e da rastreabilidade de requisitos"),
       ("tests/usuario_simulado.py", "Usuário simulado para os testes do wizard"),
       ("tests/conftest.py", "Configuração da suíte de testes")]),
@@ -508,14 +509,14 @@ def apendices_xml():
     xml, sumario = [], []
     for k, (titulo, intro, arquivos) in enumerate(APENDICES):
         letra = "AB"[k]
-        marcador = f"_TocRev187Ap{letra}"
+        marcador = f"_TocEVTEASAp{letra}"
         corpo = f'<w:ins {ins_attr()}>{run(FMT["h1"][1], titulo)}</w:ins>'
         xml.append(f'<w:p>{PPR_AP_TITULO.format(marca=f"<w:rPr><w:ins {ins_attr()}/></w:rPr>")}{_bookmark(marcador, corpo)}</w:p>')
         sumario.append((1, titulo, marcador))
         xml += [paragrafo_inserido("p", t) for t in intro]
         for j, (caminho, descricao) in enumerate(arquivos, 1):
             sub = f"{letra}.{j} {caminho} — {descricao}"
-            m2 = f"_TocRev187Ap{letra}{j}"
+            m2 = f"_TocEVTEASAp{letra}{j}"
             ppr = marca_ppr(FMT["h2"][0], f"<w:ins {ins_attr()}/>")
             conteudo = f'<w:ins {ins_attr()}>{run(FMT["h2"][1], sub)}</w:ins>'
             xml.append(f"<w:p>{ppr}{_bookmark(m2, conteudo)}</w:p>")
@@ -552,11 +553,33 @@ def inserir_apendices(doc: str) -> str:
 
 # ---------------------------------------------------------------------------
 
+METADADOS = {  # propriedades do arquivo (Arquivo > Informações), sem referência a revisões do texto
+    "dc:title": "Desenvolvimento de framework computacional em Python para a elaboração integrada de estudos de "
+                "viabilidade técnica, econômica, ambiental e social (EVTEAS) para piscicultura",
+    "dc:subject": "Dissertação de mestrado — Engenharia de Produção e Sistemas Computacionais (UFF)",
+    "dc:description": "Texto de qualificação, com os resultados do EVTEAS-Py e os apêndices com o código-fonte e os testes.",
+}
+
+
+def ajustar_metadados(pasta: Path) -> None:
+    p = pasta / "docProps/core.xml"
+    if not p.exists():
+        return
+    s = p.read_text(encoding="utf-8")
+    for tag, valor in METADADOS.items():
+        if f"<{tag}>" in s:
+            s = re.sub(rf"<{tag}>.*?</{tag}>", f"<{tag}>{escape(valor)}</{tag}>", s, flags=re.S)
+        else:
+            s = s.replace("</cp:coreProperties>", f"<{tag}>{escape(valor)}</{tag}></cp:coreProperties>")
+    p.write_text(s, encoding="utf-8")
+
+
 def main(origem: str, destino: str):
     origem, destino = Path(origem), Path(destino)
     if destino.exists():
         shutil.rmtree(destino)
     shutil.copytree(origem, destino)
+    ajustar_metadados(destino)
     doc_path = destino / "word/document.xml"
     doc = doc_path.read_text(encoding="utf-8")
 
@@ -588,7 +611,7 @@ def main(origem: str, destino: str):
     s = st.read_text(encoding="utf-8")
     if "<w:trackRevisions" not in s:
         s = s.replace("<w:defaultTabStop", "<w:trackRevisions/><w:defaultTabStop", 1)
-    # updateFields (herdado da Rev. 186) fora da ordem do esquema: vai para antes de footnotePr
+    # updateFields (herdado do documento de origem) fora da ordem do esquema: vai para antes de footnotePr
     m = re.search(r"<w:updateFields [^>]*/>", s)
     if m and s.index("<w:footnotePr") < m.start():
         s = s.replace(m.group(0), "", 1).replace("<w:footnotePr", m.group(0) + "<w:footnotePr", 1)
@@ -597,9 +620,9 @@ def main(origem: str, destino: str):
 
 
 def restaurar_paginacao_original(pasta: Path) -> None:
-    """Paginação da versão original (Rev. 181): número no canto superior direito,
+    """Paginação original do documento: número no canto superior direito,
     somente a partir da Introdução. Remove o rodapé centralizado "Página N"
-    acrescentado na Rev. 186, que aparecia em todas as páginas."""
+    acrescentado no documento de origem, que aparecia em todas as páginas."""
     doc_path = pasta / "word/document.xml"
     doc = doc_path.read_text(encoding="utf-8")
     rels_path = pasta / "word/_rels/document.xml.rels"
@@ -628,7 +651,7 @@ PPR_LISTA_ITEM = '<w:pPr><w:pStyle w:val="ndicedeilustraes"/><w:tabs><w:tab w:va
 
 
 def lista_de_codigos(paginas=None, rastrear: bool = True) -> str:
-    """Lista de Códigos da Rev. 187 como campo TOC \\c "Código" (atualizável pelo Word),
+    """Lista de Códigos como campo TOC \\c "Código" (atualizável pelo Word),
     no mesmo formato das demais listas pré-textuais."""
     paginas = paginas or {}
     caps = [b for b in C.blocos() if b["k"] == "cap" and b["rotulo"] == "Código"]
@@ -649,8 +672,8 @@ def lista_de_codigos(paginas=None, rastrear: bool = True) -> str:
 
 
 def restaurar_pre_textuais(doc: str) -> str:
-    """Estrutura pré-textual da Rev. 181: remove os dois sumários duplicados e as
-    notas de instrução inseridos na Rev. 186 e posiciona a Lista de Códigos entre
+    """Estrutura pré-textual original: remove os dois sumários duplicados e as
+    notas de instrução do documento de origem e posiciona a Lista de Códigos entre
     as listas, antes do Sumário (fora da seção numerada)."""
     corpo_ini = doc.index("<w:body>") + len("<w:body>")
     intro = doc.index("aquicultura consolidou")

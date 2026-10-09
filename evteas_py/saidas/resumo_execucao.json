@@ -1,5 +1,5 @@
 {
-  "tempo_execucao_s": 49.98682189800002,
+  "tempo_execucao_s": 60.90837416600016,
   "caso_base": {
     "tecnico": {
       "especie": "Tilápia-do-nilo (Oreochromis niloticus)",
@@ -2247,7 +2247,7 @@
       },
       {
         "Requisito": "R14",
-        "Descrição": "Verificar o próprio resultado a cada execução e manter a regressão",
+        "Descrição": "Verificar o próprio resultado a cada execução e manter testes de regressão",
         "Origem": "Seção 3.3.2 (Boehm, 1984)",
         "Funções": "vv.validar_invariantes, vv.teste_regressao_deterministica",
         "Testes": 3,

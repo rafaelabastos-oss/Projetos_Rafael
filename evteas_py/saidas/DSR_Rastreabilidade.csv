@@ -12,5 +12,5 @@ R10,Integrar as dimensões em índice normalizado com decisão não compensatór
 R11,Traduzir a incerteza das entradas em risco financeiro (Monte Carlo no mesmo motor),Etapa 5; Seção 3.6,"incerteza.monte_carlo, pipeline.motor",5,,implementado e verificado
 R12,"Identificar variáveis críticas (sensibilidade, valores críticos e cenários)",Seção 3.6,"incerteza.sensibilidade, incerteza.valores_criticos, incerteza.cenarios",2,,implementado e verificado
 R13,Comparar alternativas de projeto e explicitar trade-offs (TOPSIS),Objetivo específico 2,"ponderacao.topsis, pipeline.comparar_alternativas, interface.definir_e_comparar_alternativas",2,,implementado e verificado
-R14,Verificar o próprio resultado a cada execução e manter a regressão,"Seção 3.3.2 (Boehm, 1984)","vv.validar_invariantes, vv.teste_regressao_deterministica",3,,implementado e verificado
+R14,Verificar o próprio resultado a cada execução e manter testes de regressão,"Seção 3.3.2 (Boehm, 1984)","vv.validar_invariantes, vv.teste_regressao_deterministica",3,,implementado e verificado
 R15,"Exportar resultados auditáveis (Excel, JSON, Markdown e figuras)",Etapa 12,"relatorios.exportar, relatorios.gerar_graficos, relatorios.resumo_executivo",1,,implementado e verificado
