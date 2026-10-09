@@ -7,11 +7,13 @@ from .ponderacao import REFERENCIAS_NORMALIZACAO, classificar, normalizar, pesos
 from .incerteza import cenarios, monte_carlo, sensibilidade, valores_criticos  # noqa: F401
 from .pipeline import comparar_alternativas, executar_evteas, motor, tabela_premissas  # noqa: F401
 from .vv import teste_regressao_deterministica, validar_invariantes  # noqa: F401
-from .casos import (criar_alternativas, criar_config_caso_base, criar_config_caso_controle,  # noqa: F401
-                    exemplo_validacao_especialistas)
+from .casos import criar_alternativas, criar_config_caso_base, exemplo_validacao_especialistas  # noqa: F401
 
-from .relatorios import diagrama_arquitetura, exportar, gerar_graficos, relatorio_markdown, resumo_executivo  # noqa: F401,E402
+from .relatorios import (diagrama_arquitetura, exportar, gerar_graficos, relatorio_markdown, resumo_executivo,  # noqa: F401,E402
+                         tabela_sensibilidade, tabela_topsis)
 from .interface import (analisar_precos, carregar_config, config_em_branco, definir_e_comparar_alternativas,  # noqa: F401,E402
                         entradas_pendentes, exigir_entradas, iniciar_entradas, ler_entradas, resumo_entradas,
                         salvar_config, wizard_evteas)
 from .dsr import aprendizagens, etapas_dsr, matriz_rastreabilidade, relatorio_dsr, tabela_comparativa  # noqa: F401,E402
+from .campos_texto import (FIGURA_DO_PRINT, exportar_valores_para_o_texto, roteiro_de_prints, titulo_print,  # noqa: F401,E402
+                           valores_para_o_texto)

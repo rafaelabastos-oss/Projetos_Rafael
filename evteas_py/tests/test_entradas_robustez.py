@@ -5,9 +5,10 @@ import json
 import numpy as np
 import pytest
 
-from evteas_py import (comparar_alternativas, criar_config_caso_base, criar_config_caso_controle, executar_evteas,
+from evteas_py import (comparar_alternativas, criar_config_caso_base, executar_evteas,
                        iniciar_entradas, motor, salvar_config, wizard_evteas)
-from evteas_py.config import Distribuicao
+from evteas_py.config import (AmbientalConfig, Distribuicao, EconomicoConfig, EVTEASConfig, MonteCarloConfig,
+                              SocialConfig, TecnicoConfig)
 from evteas_py.incerteza import distribuicoes_efetivas
 from evteas_py.interface import (EntradaCancelada, Perguntador, _fmt, _perguntar_distribuicao, carregar_config,
                                  converter_numero, ler_entradas, nome_arquivo)
@@ -198,8 +199,32 @@ def test_trocar_sistema_atualiza_referencias():
     assert novo.tecnico.capacidade_suporte_kg_m3 == pytest.approx(ref["capacidade_suporte_kg_m3"])
 
 
-def test_caso_controle_e_rampa_revisados_com_enter_preservam_resultado():
-    for cfg in (criar_config_caso_controle(), criar_config_caso_base()):
+def _config_atipica() -> EVTEASConfig:
+    """Empresa superintensiva com vários parâmetros nulos (tarifa, capital de giro, encargos, vida útil)."""
+    cfg = EVTEASConfig(projeto="Configuração atípica")
+    cfg.tecnico = TecnicoConfig(sistema_produtivo="superintensivo", area_lamina_m2=1500, profundidade_media_m=1.0,
+                                numero_tanques=10, tanques_ativos=9, capacidade_suporte_kg_m3=30.0,
+                                produtividade_esperada_kg_m2_ciclo=8.0, peso_inicial_g=30, peso_final_g=850,
+                                ciclo_dias=240, ciclos_ano=1.4, mortalidade_pct=8.0, fcr=1.60)
+    cfg.economico = EconomicoConfig(
+        tipo_organizacao="empresa", capex_itens={"CAPEX total": 250000.0}, capital_giro=0.0,
+        vida_util_anos=0.0, valor_residual_pct=0.0, preco_venda_kg=9.50, custo_racao_kg=3.20,
+        custo_alevino_milheiro=450.0, tarifa_energia_kwh=0.0, outros_custos_variaveis_kg=0.0,
+        mao_obra_mes=42000.0, encargos_mao_obra_pct=0.0, assistencia_tecnica_mes=25000.0,
+        administrativo_mes=20000.0, manutencao_capex_pct_aa=0.0, taxa_impostos_faturamento_pct=15.0,
+        taxa_impostos_lucro_pct=0.0, tma_aa_pct=12.0, horizonte_anos=10, capacidade_inicial_pct=50.0,
+        meses_rampa=12, cooperados_trabalhadores=0)
+    cfg.ambiental = AmbientalConfig(energia_kwh_kg=1.2)
+    cfg.social = SocialConfig(empregos_diretos=10, empregos_indiretos=15, mao_obra_local_pct=80,
+                              compras_locais_pct=60, conformidade_nr_pct=95, conflitos_registrados_ano=1)
+    cfg.monte_carlo = MonteCarloConfig(distribuicoes={
+        "economico.preco_venda_kg": Distribuicao("triangular", 8.0, 9.5, 11.0),
+        "economico.capex_fator": Distribuicao("triangular", 0.90, 1.00, 1.20)}, incluir_capex_aace=False)
+    return cfg
+
+
+def test_configuracao_atipica_e_rampa_revisadas_com_enter_preservam_resultado():
+    for cfg in (_config_atipica(), criar_config_caso_base()):
         if cfg.economico.capacidade_inicial_pct >= 100:
             cfg.economico.meses_rampa = 12
         u = UsuarioSimulado([(r".*", "")], padrao_falha=False)

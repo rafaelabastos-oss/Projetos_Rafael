@@ -49,6 +49,12 @@ FMT = {
               '<w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="16"/><w:szCs w:val="16"/>'),
     "bullet": ('<w:pPr><w:spacing w:line="360" w:lineRule="auto"/><w:ind w:left="567" w:hanging="283"/></w:pPr>', TNR + '<w:sz w:val="24"/>'),
     "img": ('<w:pPr><w:keepNext/><w:spacing w:before="60" w:after="60"/><w:ind w:firstLine="0"/><w:jc w:val="center"/></w:pPr>', ""),
+    # espaço reservado para o print de uma tela do wizard ou de uma saída do notebook
+    "print": ('<w:pPr><w:keepNext/><w:pBdr><w:top w:val="dashed" w:sz="8" w:space="18" w:color="7F7F7F"/>'
+              '<w:left w:val="dashed" w:sz="8" w:space="4" w:color="7F7F7F"/><w:bottom w:val="dashed" w:sz="8" w:space="18" w:color="7F7F7F"/>'
+              '<w:right w:val="dashed" w:sz="8" w:space="4" w:color="7F7F7F"/></w:pBdr>'
+              '<w:spacing w:before="360" w:after="360" w:line="360" w:lineRule="auto"/><w:ind w:left="567" w:right="567" w:firstLine="0"/>'
+              '<w:jc w:val="center"/></w:pPr>', TNR + '<w:i/><w:sz w:val="22"/>'),
 }
 
 
@@ -80,11 +86,40 @@ def tipo_antigo(p: str) -> str:
 # Construção de XML
 # ---------------------------------------------------------------------------
 
-def run(rpr: str, texto: str, apagado=False) -> str:
+# Lacunas a preencher pelo autor ([E05 – ...], [R23], [INSERIR PRINT ...], [INTERPRETAR: ...]) recebem realce amarelo.
+DESTAQUE = re.compile(r"\[(?:[ERKN]\d{2,3}(?: – [^\]]*)?|(?:INSERIR PRINT|INTERPRETAR|PREENCHER|NOTA AO AUTOR)(?:[^\[\]]|\[[^\]]*\])*)\]")
+REALCE = '<w:highlight w:val="yellow"/>'
+
+
+def _rpr_realce(rpr: str) -> str:
+    # na ordem do esquema, w:highlight vem depois de w:sz/w:szCs, que encerram todas as formatações usadas aqui
+    return rpr + REALCE
+
+
+def _run_simples(rpr: str, texto: str, apagado=False) -> str:
     tag = "w:delText" if apagado else "w:t"
     linhas = texto.split("\n")
     corpo = "<w:br/>".join(f'<{tag} xml:space="preserve">{escape(l)}</{tag}>' if l else "" for l in linhas)
     return f"<w:r><w:rPr>{rpr}</w:rPr>{corpo}</w:r>"
+
+
+def trechos_realcados(texto: str):
+    """Divide o texto em [(trecho, realçado?)] segundo as lacunas."""
+    partes, pos = [], 0
+    for m in DESTAQUE.finditer(texto):
+        if m.start() > pos:
+            partes.append((texto[pos:m.start()], False))
+        partes.append((m.group(0), True))
+        pos = m.end()
+    if pos < len(texto):
+        partes.append((texto[pos:], False))
+    return partes
+
+
+def run(rpr: str, texto: str, apagado=False) -> str:
+    if apagado:
+        return _run_simples(rpr, texto, True)
+    return "".join(_run_simples(_rpr_realce(rpr) if real else rpr, t) for t, real in trechos_realcados(texto) if t)
 
 
 def marca_ppr(ppr: str, marca: str) -> str:
@@ -101,11 +136,29 @@ def paragrafo_inserido(kind: str, texto: str) -> str:
     return f'<w:p>{marca_ppr(ppr, f"<w:ins {ins_attr()}/>")}<w:ins {ins_attr()}>{run(rpr, texto)}</w:ins></w:p>'
 
 
+ORDEM_PPR = ["pStyle", "keepNext", "keepLines", "pageBreakBefore", "framePr", "widowControl", "numPr",
+             "suppressLineNumbers", "pBdr", "shd", "tabs", "suppressAutoHyphens", "kinsoku", "wordWrap",
+             "overflowPunct", "topLinePunct", "autoSpaceDE", "autoSpaceDN", "bidi", "adjustRightInd", "snapToGrid",
+             "spacing", "ind", "contextualSpacing", "mirrorIndents", "suppressOverlap", "jc", "textDirection",
+             "textAlignment", "textboxTightWrap", "outlineLvl", "divId", "cnfStyle", "rPr", "sectPr", "pPrChange"]
+
+
+def ordenar_ppr(ppr: str) -> str:
+    """Põe os filhos de <w:pPr> na ordem do esquema (o documento de origem tem w:shd depois de w:jc)."""
+    corpo = ppr[len("<w:pPr>"):-len("</w:pPr>")]
+    filhos = re.findall(r"<w:(\w+)\b(?:[^>]*/>|[^>]*>.*?</w:\1>)", corpo, flags=re.S)
+    elementos = [m.group(0) for m in re.finditer(r"<w:(\w+)\b(?:[^>]*/>|[^>]*>.*?</w:\1>)", corpo, flags=re.S)]
+    if "".join(elementos) != corpo or any(f not in ORDEM_PPR for f in filhos):
+        return ppr                                   # estrutura inesperada: mantém como está
+    pares = sorted(zip(filhos, elementos), key=lambda fe: ORDEM_PPR.index(fe[0]))
+    return "<w:pPr>" + "".join(e for _, e in pares) + "</w:pPr>"
+
+
 def paragrafo_excluido(xml: str) -> str:
     m = re.match(r"(<w:p\b[^>]*>)(.*)</w:p>$", xml, flags=re.S)
     abre, corpo = m.group(1), m.group(2)
     pm = re.match(r"(<w:pPr>.*?</w:pPr>)(.*)$", corpo, flags=re.S)
-    ppr, resto = (pm.group(1), pm.group(2)) if pm else ("", corpo)
+    ppr, resto = (ordenar_ppr(pm.group(1)), pm.group(2)) if pm else ("", corpo)
     resto = re.sub(r"<w:t(\s[^>]*)?>", lambda mm: "<w:delText" + (mm.group(1) or "") + ">", resto).replace("</w:t>", "</w:delText>")
     resto = resto.replace("<w:instrText", "<w:delInstrText").replace("</w:instrText>", "</w:delInstrText>")
     resto = re.sub(r"(<w:r\b[^>]*>.*?</w:r>)", lambda mm: f"<w:del {ins_attr()}>{mm.group(1)}</w:del>", resto, flags=re.S)
@@ -122,15 +175,32 @@ def paragrafo_modificado(xml_antigo: str, kind: str, antigo: str, novo: str) -> 
     ppr = pm.group(1) if pm else FMT[kind][0]
     rpr = FMT[kind][1]
     a, b = TOKEN.findall(antigo), TOKEN.findall(novo)
+    # realce por token do texto novo: um token pertence a uma lacuna se começa dentro dela
+    lacunas = [m.span() for m in DESTAQUE.finditer(novo)]
+    inicio, realce = 0, []
+    for tok in b:
+        realce.append(any(i <= inicio < f for i, f in lacunas))
+        inicio += len(tok)
+
+    def runs_novos(j1, j2):
+        out, k = [], j1
+        while k < j2:
+            fim = k
+            while fim < j2 and realce[fim] == realce[k]:
+                fim += 1
+            out.append(_run_simples(_rpr_realce(rpr) if realce[k] else rpr, "".join(b[k:fim])))
+            k = fim
+        return "".join(out)
+
     sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
     partes = []
     for op, i1, i2, j1, j2 in sm.get_opcodes():
         if op == "equal":
-            partes.append(run(rpr, "".join(a[i1:i2])))
+            partes.append(runs_novos(j1, j2))
         if op in ("delete", "replace"):
             partes.append(f'<w:del {ins_attr()}>{run(rpr, "".join(a[i1:i2]), apagado=True)}</w:del>')
         if op in ("insert", "replace"):
-            partes.append(f'<w:ins {ins_attr()}>{run(rpr, "".join(b[j1:j2]))}</w:ins>')
+            partes.append(f'<w:ins {ins_attr()}>{runs_novos(j1, j2)}</w:ins>')
     return f"{abre}{ppr}{''.join(partes)}</w:p>"
 
 
@@ -461,14 +531,13 @@ RAIZ_CODIGO = Path(__file__).resolve().parents[1]
 _REF = C.referencias()
 APENDICES = [
     ("APÊNDICE A – CÓDIGO-FONTE COMPLETO DO EVTEAS-Py",
-     ["Este apêndice reproduz o código-fonte completo do EVTEAS-Py, utilizado nas execuções "
-      "apresentadas no Capítulo 4. O pacote é organizado em onze módulos, cuja responsabilidade e vínculo com a "
-      f"dissertação estão sintetizados no {_REF[('Quadro', 'modulos')]}, e é acompanhado do script que executa o estudo completo. "
+     ["Este apêndice reproduz o código-fonte completo do EVTEAS-Py, utilizado na execução do estudo de caso "
+      f"apresentada no Capítulo 4. O pacote é organizado em {C.extenso(len(C.quadro_modulos()) - 1) if len(C.quadro_modulos()) <= 11 else {12: 'doze', 13: 'treze'}[len(C.quadro_modulos()) - 1]} módulos, cuja responsabilidade e vínculo com a "
+      f"dissertação estão sintetizados no {_REF[('Quadro', 'modulos')]}. "
       "O notebook autocontido EVTEAS_Py, destinado à execução no Google Colab, reúne esse mesmo código em "
-      "células, seguido das etapas de entrada de dados, análise, comparação de alternativas e exportação.",
+      "células, seguido das etapas de entrada de dados, análise, comparação de alternativas, valores para o texto e exportação.",
       "As linhas estão numeradas para facilitar a referência. O código está registrado no repositório do projeto, "
-      "no diretório evteas_py, onde também se encontram o arquivo de entradas do caso-base, as saídas da execução de "
-      "referência e os scripts que geram os Capítulos 4 e 5."],
+      "no diretório evteas_py, onde também se encontram os scripts que geram os Capítulos 4 e 5."],
      [("evteas_py/__init__.py", "Interface pública do pacote"),
       ("evteas_py/config.py", "Configuração, premissas e rastreabilidade das fontes"),
       ("evteas_py/financeiro.py", "Engenharia econômica vetorizada"),
@@ -477,24 +546,25 @@ APENDICES = [
       ("evteas_py/incerteza.py", "Monte Carlo, sensibilidade, valores críticos e cenários"),
       ("evteas_py/pipeline.py", "Pipeline principal e comparação de alternativas"),
       ("evteas_py/vv.py", "Verificação por invariantes e testes de regressão"),
-      ("evteas_py/casos.py", "Caso-base, alternativas e caso de controle"),
+      ("evteas_py/casos.py", "Caso ilustrativo e alternativas de referência"),
       ("evteas_py/relatorios.py", "Resumo executivo, exportação e gráficos"),
       ("evteas_py/interface.py", "Entrada de dados, arquivos de entradas e análise de preços"),
       ("evteas_py/dsr.py", "Registro do ciclo da Design Science Research e rastreabilidade de requisitos"),
-      ("executar_estudo.py", "Execução do estudo completo")]),
+      ("evteas_py/campos_texto.py", "Valores para o texto e roteiro de prints do Capítulo 4")]),
     ("APÊNDICE B – TESTES AUTOMATIZADOS DE VERIFICAÇÃO",
      [f"Este apêndice reproduz a suíte de testes automatizados descrita na {_REF[('Seção', 'vv')]}, executada com a "
       "biblioteca pytest. O arquivo test_evteas.py verifica as rotinas de cálculo; test_social_lean_green.py, as "
       "dimensões social, de governança e Lean-Green; test_entradas.py, test_entradas_coerencia.py e test_entradas_robustez.py verificam a entrada "
       "de dados com o usuário simulado definido em usuario_simulado.py, que responde ao wizard como uma pessoa "
-      "digitaria; e test_dsr.py confere o registro das etapas da DSR e a rastreabilidade entre requisitos, código e "
-      "testes."],
+      "digitaria; test_dsr.py confere o registro das etapas da DSR e a rastreabilidade entre requisitos, código e "
+      "testes; e test_campos_texto.py confere que cada lacuna do Capítulo 4 corresponde a um valor da execução."],
      [("tests/test_evteas.py", "Testes do núcleo de cálculo"),
       ("tests/test_social_lean_green.py", "Testes das dimensões social, de governança e Lean-Green"),
       ("tests/test_entradas.py", "Testes da entrada de dados"),
       ("tests/test_entradas_coerencia.py", "Testes de coerência da entrada de dados"),
       ("tests/test_entradas_robustez.py", "Testes de robustez da entrada de dados"),
       ("tests/test_dsr.py", "Testes do registro do ciclo DSR e da rastreabilidade de requisitos"),
+      ("tests/test_campos_texto.py", "Testes dos valores para o texto"),
       ("tests/usuario_simulado.py", "Usuário simulado para os testes do wizard"),
       ("tests/conftest.py", "Configuração da suíte de testes")]),
 ]

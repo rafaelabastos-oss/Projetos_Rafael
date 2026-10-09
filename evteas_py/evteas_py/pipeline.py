@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import time
 from dataclasses import asdict
 from typing import Any, Dict, Optional
 
@@ -68,6 +69,7 @@ def executar_evteas(cfg: EVTEASConfig, executar_mc: bool = True, executar_sens: 
     from .incerteza import cenarios, monte_carlo, sensibilidade, valores_criticos
     from .vv import validar_invariantes
 
+    inicio = time.perf_counter()
     pesos = resolver_pesos(cfg)
     r = motor(cfg, None, 1, pesos)
     df_m = dre_mensal(r["economico"])
@@ -95,6 +97,7 @@ def executar_evteas(cfg: EVTEASConfig, executar_mc: bool = True, executar_sens: 
     resultado["decisao"] = classificar(cfg, det["economico"]["vpl"], det["indice"]["indice_evteas"],
                                        det["social"]["lso_0_100"], det["ambiental"]["vetos_ambientais"], prob)
     resultado["vv"] = validar_invariantes(cfg, resultado, r)
+    resultado["tempo_execucao_s"] = time.perf_counter() - inicio
     return resultado
 
 

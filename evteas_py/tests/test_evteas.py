@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from evteas_py import (Distribuicao, classificar, comparar_alternativas, criar_alternativas, criar_config_caso_base,
-                       criar_config_caso_controle, executar_evteas, exemplo_validacao_especialistas, exportar,
+                       executar_evteas, exemplo_validacao_especialistas, exportar,
                        gerar_graficos, monte_carlo, motor, normalizar, payback, pesos_ahp, pesos_likert,
                        tir, topsis, vpl)
 from evteas_py import teste_regressao_deterministica as regressao_embutida
@@ -265,18 +265,27 @@ def test_cenarios_ordenados(resultado):
     assert c["Pessimista"] < c["Base"] < c["Otimista"]
 
 
-# --- V&V, caso de controle e alternativas -------------------------------------
+# --- V&V e alternativas -------------------------------------
 
 def test_invariantes_aprovados(resultado):
     assert resultado["vv"]["valido"], resultado["vv"]["erros"]
 
 
-def test_caso_controle_inviavel():
-    r = executar_evteas(criar_config_caso_controle(), executar_mc=True, executar_sens=False, n_mc=2000)
-    assert r["economico"]["vpl"] < -5e6
-    assert r["economico"]["diagnostico_tir"] == "sem_solucao" and np.isnan(r["economico"]["tir_anual"])
-    assert r["monte_carlo"]["estatisticas"]["prob_vpl_positivo"] == 0
-    assert r["decisao"]["classificacao"] == "NÃO VIÁVEL"
+def test_projeto_deficitario_e_diagnosticado(cfg):
+    """Preço abaixo do custo operacional: VPL negativo, TIR inexistente ou abaixo da TMA e projeto não viável."""
+    c = copy.deepcopy(cfg)
+    c.economico.preco_venda_kg = 3.0
+    c.economico.mix_produtos = []
+    c.monte_carlo.distribuicoes.pop("economico.preco_venda_kg", None)
+    r = executar_evteas(c, executar_mc=False, executar_sens=False)
+    e = r["economico"]
+    assert e["vpl"] < 0
+    if e["diagnostico_tir"] == "sem_solucao":
+        assert np.isnan(e["tir_anual"])
+    else:
+        assert e["tir_anual"] < c.economico.tma_aa_pct / 100
+    assert r["decisao"]["classificacao"] == "NÃO VIÁVEL" and r["decisao"]["vetos"]
+    assert r["vv"]["valido"], r["vv"]["erros"]
 
 
 def test_comparar_alternativas():

@@ -65,6 +65,32 @@ def resumo_executivo(r: Dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(linhas, columns=["Indicador", "Valor"])
 
 
+def tabela_sensibilidade(r: Dict[str, Any]) -> pd.DataFrame:
+    """Sensibilidade a ±10%, valor crítico e correlação de Spearman de cada variável, formatadas para o texto."""
+    from .campos_texto import VARIAVEIS_DIST, _critico, _rotulo_var, _sens10, num, reais
+    sens = _sens10(r)
+    imp = r["monte_carlo"]["importancia"].set_index("Variável")["Spearman com VPL"] if "monte_carlo" in r else {}
+    linhas = []
+    for _, x in sens.iterrows():
+        v = x["Variável"]
+        linhas.append({"Variável": _rotulo_var(v), "Δ VPL (−10%)": reais(x["Δ VPL (−)"]), "Δ VPL (+10%)": reais(x["Δ VPL (+)"]),
+                       "Valor crítico (VPL = 0) e folga": _critico(r, v),
+                       "Spearman com o VPL (Monte Carlo)": num(imp[v], 3) if v in imp else "—"})
+    return pd.DataFrame(linhas)
+
+
+def tabela_topsis(comparacao: Dict[str, Any]) -> pd.DataFrame:
+    """Ranking TOPSIS das alternativas, formatado para o texto."""
+    from .campos_texto import num, pct_br, reais
+    t = comparacao["ranking"]
+    return pd.DataFrame([{
+        "Posição": f"{int(x['Ranking'])}º", "Alternativa": x["Alternativa"], "VPL": reais(x["VPL (R$)"]),
+        "P(VPL>0)": pct_br(x["P(VPL>0)"]), "OEE": num(x["OEE"], 3), "PH cinza (m³/t)": num(x["PH cinza (m³/t)"], 0),
+        "kgCO2e/kg": num(x["Intensidade carbono (kgCO2e/kg)"], 2), "LSO": num(x["LSO"], 1), "RVL (%)": num(x["RVL (%)"], 1),
+        "Índice EVTEAS": num(x["Índice EVTEAS"], 3), "TOPSIS": num(x["TOPSIS"], 3), "Classificação": x["Classificação"]}
+        for _, x in t.iterrows()])
+
+
 def serializar(obj):
     if isinstance(obj, pd.DataFrame):
         return obj.to_dict(orient="records")

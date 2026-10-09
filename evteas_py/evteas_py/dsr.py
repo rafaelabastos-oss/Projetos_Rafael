@@ -67,12 +67,12 @@ ETAPAS_DSR: Tuple[Etapa, ...] = (
           "entrada em blocos.",
           ("config.EVTEASConfig", "modelo.Contexto", "pipeline.motor"), "primeira iteração concluída"),
     Etapa(7, "Desenvolvimento do artefato", FASE2,
-          "Pacote evteas_py com onze módulos, notebook autocontido para o Google Colab e entrada de dados "
+          "Pacote evteas_py com doze módulos, notebook autocontido para o Google Colab e entrada de dados "
           "interativa ou por arquivo.",
           ("Apêndice A", "pipeline.executar_evteas", "interface.iniciar_entradas"), "primeira iteração concluída"),
     Etapa(8, "Avaliação do artefato", FASE3,
-          "Verificação: invariantes a cada execução, suíte de testes automatizados, caso de controle de inviabilidade e "
-          "revisão independente da entrada de dados. Validação com os dois especialistas a realizar.",
+          "Verificação: invariantes a cada execução, suíte de testes automatizados e revisão independente da "
+          "entrada de dados. Validação com os dois especialistas a realizar.",
           ("vv.validar_invariantes", "Apêndice B", "dsr.matriz_rastreabilidade"),
           "verificação concluída; validação prevista"),
     Etapa(9, "Explicitação das aprendizagens", FASE3,
@@ -236,10 +236,15 @@ REQUISITOS: Tuple[Requisito, ...] = (
     Requisito("R14", "Verificar o próprio resultado a cada execução e manter testes de regressão",
               "Seção 3.3.2 (Boehm, 1984)", ("vv.validar_invariantes", "vv.teste_regressao_deterministica"),
               ("test_evteas.py::test_invariantes_aprovados", "test_evteas.py::test_regressao_embutida",
-               "test_evteas.py::test_caso_controle_inviavel")),
+               "test_evteas.py::test_projeto_deficitario_e_diagnosticado")),
     Requisito("R15", "Exportar resultados auditáveis (Excel, JSON, Markdown e figuras)",
               "Etapa 12", ("relatorios.exportar", "relatorios.gerar_graficos", "relatorios.resumo_executivo"),
               ("test_evteas.py::test_exportacao_e_graficos",)),
+    Requisito("R16", "Entregar, a cada execução do usuário, os valores que preenchem o relato dos resultados",
+              "Etapa 12", ("campos_texto.valores_para_o_texto", "campos_texto.exportar_valores_para_o_texto"),
+              ("test_campos_texto.py::test_todos_os_campos_tem_valor_no_caso_base",
+               "test_campos_texto.py::test_valores_acompanham_as_entradas_do_usuario",
+               "test_campos_texto.py::test_lacunas_do_texto_existem_no_registro")),
 )
 
 

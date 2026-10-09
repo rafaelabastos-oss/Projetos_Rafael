@@ -1,6 +1,9 @@
-"""Regenera, em ordem, todas as saídas: estudo, notebook, testes e texto da qualificação.
+"""Regenera, em ordem, todas as saídas: figura de arquitetura, notebook, testes e texto da qualificação.
 
-1. executa o estudo (saidas/), 2. gera o notebook, 3. mede testes e cobertura,
+O texto não depende de nenhuma execução do estudo: os resultados entram como lacunas que o
+autor preenche com a sua própria execução no notebook (ver evteas_py/campos_texto.py).
+
+1. desenha a figura de arquitetura, 2. gera o notebook, 3. mede testes e cobertura,
 4. gera o texto (com controle de alterações e limpo) em duas passagens:
    a primeira renderiza a versão limpa para obter a paginação; a segunda
    preenche os números do Sumário e da Lista de Códigos.
@@ -44,7 +47,8 @@ def renderizar(docx: Path, pasta: Path) -> Path:
 def main(origem_docx: str, trabalho: str, docs: str):
     origem_docx, trabalho, docs = Path(origem_docx), Path(trabalho), Path(docs)
     trabalho.mkdir(parents=True, exist_ok=True)
-    rodar(sys.executable, "executar_estudo.py", "saidas")
+    rodar(sys.executable, "-c", "from evteas_py import diagrama_arquitetura; "
+          "diagrama_arquitetura('saidas/figuras/00_arquitetura.png')")
     rodar(sys.executable, "gerar_notebook.py")          # antes dos testes: um deles compara o notebook ao pacote
     rodar(sys.executable, DOC / "medir_testes.py")
 
