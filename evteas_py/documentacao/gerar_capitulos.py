@@ -151,7 +151,9 @@ def ordenar_ppr(ppr: str) -> str:
     if "".join(elementos) != corpo or any(f not in ORDEM_PPR for f in filhos):
         return ppr                                   # estrutura inesperada: mantém como está
     pares = sorted(zip(filhos, elementos), key=lambda fe: ORDEM_PPR.index(fe[0]))
-    return "<w:pPr>" + "".join(e for _, e in pares) + "</w:pPr>"
+    corpo = "".join(e for _, e in pares)
+    corpo = re.sub(r"<w:shd(?![^>]*w:val=)", '<w:shd w:val="clear"', corpo)   # w:val é obrigatório no esquema
+    return "<w:pPr>" + corpo + "</w:pPr>"
 
 
 def paragrafo_excluido(xml: str) -> str:
