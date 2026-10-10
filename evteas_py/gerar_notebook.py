@@ -93,7 +93,7 @@ def celulas():
         nbf.v4.new_markdown_cell("## 15. Comparação com alternativas de projeto (TOPSIS)\n\n"
                                  "Cada alternativa parte das entradas do projeto; escolha os blocos a alterar e informe os novos valores. "
                                  "É opcional para o uso do artefato, mas a Seção 4 da dissertação a utiliza: execute-a antes da Seção 16. "
-                                 "O Monte Carlo de cada alternativa usa as mesmas iterações e a mesma seed da análise principal."),
+                                 "O Monte Carlo de cada alternativa usa o mesmo número de iterações da análise principal."),
         nbf.v4.new_code_cell("comparacao = None\n"
                              "comparacao = definir_e_comparar_alternativas(exigir_entradas(cfg), n_mc=int(cfg.monte_carlo.iteracoes))\n"
                              "for aviso in (comparacao or {}).get('avisos', []):\n    print('⚠', aviso)\n"

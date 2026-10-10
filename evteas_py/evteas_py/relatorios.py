@@ -75,7 +75,9 @@ def tabela_sensibilidade(r: Dict[str, Any]) -> pd.DataFrame:
     linhas = []
     for _, x in sens.iterrows():
         v = x["Variável"]
-        linhas.append({"Variável": _rotulo_var(v), "Δ VPL (−10%)": reais(x["Δ VPL (−)"]), "Δ VPL (+10%)": reais(x["Δ VPL (+)"]),
+        nulo = "Valor base" in x and float(x["Valor base"]) == 0
+        linhas.append({"Variável": _rotulo_var(v) + (" (valor nulo: variação absoluta de ±0,1)" if nulo else ""),
+                       "Δ VPL (−10%)": reais(x["Δ VPL (−)"]), "Δ VPL (+10%)": reais(x["Δ VPL (+)"]),
                        "Valor crítico (VPL = 0) e folga": _critico(r, v),
                        "Spearman com o VPL (Monte Carlo)": num(imp[v], 3) if v in imp else "—"})
     return pd.DataFrame(linhas)

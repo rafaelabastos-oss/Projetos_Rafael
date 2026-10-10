@@ -124,7 +124,8 @@ def test_resultado_de_outras_entradas_e_recusado(execucao):
     cfg, r, _ = execucao
     c = copy.deepcopy(cfg)
     c.tecnico.fcr = 1.9
-    with pytest.raises(ValueError, match="outras entradas"):
+    from evteas_py.interface import EntradaCancelada
+    with pytest.raises(EntradaCancelada, match="outras entradas"):
         valores_para_o_texto(c, r)
 
 

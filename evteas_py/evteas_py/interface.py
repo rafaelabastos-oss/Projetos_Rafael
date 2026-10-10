@@ -1453,7 +1453,7 @@ def definir_e_comparar_alternativas(cfg: EVTEASConfig, entrada: Callable[[str], 
         if sum(pesos.values()) <= 0:
             saida("  ⚠ Soma dos pesos nula; usando pesos padrão.")
             pesos = None
-    return comparar_alternativas(alternativas, pesos, n_mc=n_mc or min(cfg.monte_carlo.iteracoes, 5000))
+    return comparar_alternativas(alternativas, pesos, n_mc=n_mc or int(cfg.monte_carlo.iteracoes))
 
 
 def _baixar_no_colab(caminho: str):

@@ -125,9 +125,9 @@ def lista_itens(itens) -> str:
     return itens[0] if len(itens) == 1 else "; ".join(itens[:-1]) + "; e " + itens[-1]
 
 
-def plural(n, singular, plural_):
+def plural(n, singular, plural_, nenhum="nenhum"):
     n = int(round(_f(n)))
-    return f"{'nenhum' if n == 0 else n} {singular if n in (0, 1) else plural_}"
+    return f"{nenhum if n == 0 else n} {singular if n in (0, 1) else plural_}"
 
 
 def meses_ou_horizonte(v) -> str:
@@ -202,7 +202,7 @@ def _prosa_var(caminho):
 
 def _alternativas(cfg, comp):
     """Nomes das alternativas comparadas, sem o próprio projeto (que entra na matriz como referência)."""
-    return [a for a in comp["matriz"]["Alternativa"] if a != cfg.projeto]
+    return [a for a in comp["matriz"]["Alternativa"] if a not in (cfg.projeto, "Projeto informado")]
 
 
 def _topsis(comp, f):
@@ -291,7 +291,7 @@ CAMPOS: List[Campo] = [
     _e("E45", "alíquotas sobre a folha, a retirada dos cooperados e os serviços", _encargos,
        "economico.impostos_configurados", "economico.encargos_mao_obra_pct"),
     _e("E31", "limites de N e P do corpo receptor", lambda c: f"{num(c.ambiental.n_max_mg_l, 2)} mg/L de N e "
-                                                             f"{num(c.ambiental.p_max_mg_l, 2)} mg/L de P", "ambiental.n_max_mg_l"),
+                                                             f"{num(c.ambiental.p_max_mg_l, 2)} mg/L de P", "ambiental.n_max_mg_l", "ambiental.p_max_mg_l"),
     _e("E32", "remoção de N e P no tratamento", lambda c: f"{num(c.ambiental.remocao_n_tratamento_pct, 0)}% do N e "
                                                        f"{num(c.ambiental.remocao_p_tratamento_pct, 0)}% do P",
        "ambiental.remocao_n_tratamento_pct", "ambiental.remocao_p_tratamento_pct"),
@@ -302,7 +302,7 @@ CAMPOS: List[Campo] = [
     _e("E35", "mão de obra local (%)", lambda c: num(c.social.mao_obra_local_pct, 0) + "%", "social.mao_obra_local_pct"),
     _e("E36", "compras locais (%)", lambda c: num(c.social.compras_locais_pct, 0) + "%", "social.compras_locais_pct"),
     _e("E37", "relação com a comunidade", lambda c: NOMES_RELACAO.get(c.social.relacao_comunidade, c.social.relacao_comunidade)),
-    _e("E38", "reuniões e conflitos por ano", lambda c: f"{plural(c.social.reunioes_comunidade_ano, 'reunião', 'reuniões')} e "
+    _e("E38", "reuniões e conflitos por ano", lambda c: f"{plural(c.social.reunioes_comunidade_ano, 'reunião', 'reuniões', nenhum='nenhuma')} e "
                                                      f"{plural(c.social.conflitos_registrados_ano, 'conflito registrado', 'conflitos registrados')}",
        "social.reunioes_comunidade_ano", "social.conflitos_registrados_ano"),
     _e("E39", "método e pesos das dimensões", lambda c: _pesos_texto(c)),
@@ -360,7 +360,9 @@ CAMPOS += [
     _r("S16", SEC_TEC, "desperdícios evitáveis (R$/ano)", lambda r: reais(r["lean_green"]["total_r_ano"])),
     _r("S17", SEC_TEC, "desperdícios / custo operacional", lambda r: pct_br(r["lean_green"]["pct_opex"])),
     # ---------------------------------------------------------------- econômica
-    _r("S20", SEC_ECO, "meses até a primeira receita", lambda r: num(r[Ec]["meses_ate_despesca"], 0)),
+    _r("S20", SEC_ECO, "prazo até a primeira receita",
+       lambda r: (lambda m: "a receita ocorre desde o primeiro mês" if m == 0 else
+                  f"{plural(m, 'mês', 'meses')} até a primeira receita")(int(_f(r[Ec]["meses_ate_despesca"])))),
     _r("S21", SEC_ECO, "investimento total", lambda r: reais(r[Ec]["investimento_total"])),
     _r("S22", SEC_ECO, "investimento do beneficiário", lambda r: reais(_f(r[Ec]["investimento_total"]) - _f(r[Ec]["fomento_nao_reembolsavel"]))),
     _r("S23", SEC_ECO, "VPL do projeto", lambda r: reais(r[Ec]["vpl"])),
@@ -428,7 +430,8 @@ CAMPOS += [
     _r("S72", SEC_IND, "índice EVTEAS", lambda r: num(r["indice"]["indice_evteas"], 3)),
     _r("S73", SEC_IND, "KPIs de pior desempenho relativo", _piores_kpis),
     _r("S74", SEC_IND, "classificação", lambda r: r["decisao"]["classificacao"]),
-    _r("S75", SEC_IND, "vetos e ressalvas", lambda r: lista(list(r["decisao"]["vetos"]) + list(r["decisao"]["ressalvas"]))),
+    _r("S75", SEC_IND, "vetos e ressalvas",
+       lambda r: "; ".join(list(r["decisao"]["vetos"]) + list(r["decisao"]["ressalvas"])) or "nenhum"),
     # ---------------------------------------------------------------- Monte Carlo
     _r("S80", SEC_MC, "média do VPL simulado (IC 95% da média)",
        lambda r: f"{reais(_mc(r)['media_vpl'])} (IC 95% da média: {reais(_mc(r)['ic95_media_vpl'][0])} a "
@@ -484,7 +487,7 @@ def _precisao(r):
     ep = _f(r["monte_carlo"]["convergencia"].iloc[-1]["Erro-padrão"])
     media = abs(_f(_mc(r)["media_vpl"]))
     rel = f", equivalente a {pct_br(1.96 * ep / media)} da média em módulo" if media > 0 else ""
-    return f"{reais(ep)}; a semiamplitude do IC 95% da média é de {reais(1.96 * ep)}{rel}"
+    return f"{reais(ep)}; a semiamplitude do IC 95% da média foi de {reais(1.96 * ep)}{rel}"
 
 
 def _critico(r, var):
@@ -646,12 +649,14 @@ def valores_para_o_texto(cfg: EVTEASConfig, resultado: Dict[str, Any],
     Use após ``executar_evteas(cfg, executar_mc=True, executar_sens=True)``; ``comparacao``
     é o resultado de ``definir_e_comparar_alternativas`` (opcional). O resultado precisa ter
     sido calculado com estas mesmas entradas, para que entradas e resultados não se misturem."""
-    if "config" in resultado and _assinatura(resultado["config"]) != _assinatura(cfg):
-        raise ValueError("O resultado foi calculado com outras entradas. Execute novamente a análise "
-                         "(seção “Análise com as entradas informadas”) antes de gerar os valores para o texto.")
+    from .interface import EntradaCancelada
+    if not isinstance(resultado, dict) or ("config" in resultado and _assinatura(resultado["config"]) != _assinatura(cfg)):
+        raise EntradaCancelada("O resultado foi calculado com outras entradas. Execute novamente a análise "
+                               "(seção “Análise com as entradas informadas”) antes de gerar os valores para o texto.")
     aviso_comparacao = None
-    if comparacao and cfg.projeto in comparacao.get("resultados", {}):
-        if _assinatura(comparacao["resultados"][cfg.projeto]["config"]) != _assinatura(cfg):
+    base = (comparacao or {}).get("resultados", {}).get(cfg.projeto or "Projeto informado")
+    if base is not None:
+        if _assinatura(base["config"]) != _assinatura(cfg):
             comparacao, aviso_comparacao = None, ("comparação feita com outras entradas: refaça a seção "
                                                   "“Comparação com alternativas de projeto”")
     linhas = []
