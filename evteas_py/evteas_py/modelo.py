@@ -1,7 +1,7 @@
 """Núcleo de cálculo vetorizado das quatro dimensões do EVTEAS.
 
 Cada função recebe um ``Contexto``, que devolve qualquer parâmetro numérico
-como vetor de tamanho n. Com n = 1 o modelo é determinístico; com n = 10.000
+como vetor de tamanho n. Com n = 1 o modelo é determinístico; com n igual ao número de iterações
 ele é a própria simulação de Monte Carlo. Não existe um "modelo simplificado"
 para a camada estocástica: o mesmo código produz os dois resultados.
 """

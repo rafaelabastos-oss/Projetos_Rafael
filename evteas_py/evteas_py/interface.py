@@ -5,12 +5,13 @@ O estudo começa SEMPRE pela entrada de dados (``iniciar_entradas``). Há três 
 1. **Novo projeto** — todas as premissas do projeto precisam ser digitadas; o
    wizard não usa valores prontos. Apenas coeficientes técnicos com referência
    normativa ou bibliográfica (ex.: limites da Resolução CONAMA nº 357/2005,
-   teor de nitrogênio no peixe) aparecem como "referência — Enter aceita", e a
-   origem fica registrada no estudo.
+   teor de nitrogênio no peixe) e alguns parâmetros de configuração do próprio
+   artefato (número de iterações, seed, limiares de decisão) aparecem como
+   "referência — Enter aceita", e a origem fica registrada no estudo.
 2. **Carregar e revisar** — lê um arquivo JSON salvo numa entrada anterior;
    cada pergunta mostra o valor salvo, e Enter o mantém.
-3. **Exemplo ilustrativo** — carrega o caso-base da dissertação, apenas para
-   demonstração do artefato.
+3. **Exemplo ilustrativo** — carrega o caso ilustrativo incorporado ao pacote,
+   apenas para demonstração do artefato.
 
 O wizard incorpora os campos dos estudos de viabilidade econômica em notebook
 utilizados pelo autor: tipo de organização, mix de produtos com
@@ -158,6 +159,7 @@ class Perguntador:
         self.digitados: List[str] = []                    # caminhos informados pelo usuário no bloco atual
         self.referencias: Dict[str, Fonte] = {}           # caminhos aceitos por referência
         self.rotulos: Dict[str, str] = dict(ROTULOS_CAMINHOS)   # caminho -> rótulo exibido ao usuário
+        self.anunciar_prints = False                      # entrada principal: anuncia as telas a capturar
 
     # -- leitura bruta -------------------------------------------------------
     def _ler(self, prompt: str) -> str:
@@ -294,6 +296,11 @@ class Perguntador:
         return v
 
     def bloco(self, titulo: str):
+        if self.anunciar_prints:
+            from .campos_texto import PRINT_DO_BLOCO, titulo_print
+            numero = titulo.split(".")[0]
+            if numero.isdigit() and int(numero) in PRINT_DO_BLOCO:
+                self.saida("\n" + titulo_print(PRINT_DO_BLOCO[int(numero)]))
         self.saida("\n" + LINHA + f"\n{titulo}\n" + LINHA)
         self.digitados = []
 
@@ -1117,6 +1124,11 @@ def bloco_incerteza(P: Perguntador, cfg: EVTEASConfig):
     mc.distribuicoes = {c: d for c, d in novas.items() if c in VARIAVEIS_ESTOCASTICAS}
 
 
+# numeração dos blocos do wizard (títulos 1 a 16) correspondente a cada item dos menus de correção e de alternativas
+FAIXA_BLOCOS = {"Identificação": "bloco 1", "Técnico": "blocos 2 e 3", "Investimento": "bloco 4",
+                "Mix e receitas": "bloco 5", "Custos operacionais": "bloco 6", "Pessoas": "bloco 7", "Tributos": "bloco 8",
+                "Projeção e TMA": "bloco 9", "Ambiental": "blocos 10 a 12", "Social e governança": "blocos 13 e 14",
+                "Pesos e decisão": "bloco 15", "Incerteza (Monte Carlo)": "bloco 16"}
 BLOCOS = [
     ("Identificação", bloco_identificacao), ("Técnico", bloco_tecnico), ("Investimento", bloco_investimento),
     ("Mix e receitas", bloco_receitas), ("Custos operacionais", bloco_custos), ("Pessoas", bloco_pessoas),
@@ -1368,7 +1380,8 @@ def expandir_blocos(blocos: Sequence[str]) -> List[str]:
 
 
 def wizard_evteas(entrada: Callable[[str], str] = input, base: Optional[EVTEASConfig] = None,
-                  saida: Callable[..., None] = print, blocos: Optional[Sequence[str]] = None) -> EVTEASConfig:
+                  saida: Callable[..., None] = print, blocos: Optional[Sequence[str]] = None,
+                  anunciar_prints: bool = False) -> EVTEASConfig:
     """Wizard completo. Sem ``base``: modo NOVO (valores obrigatórios). Com ``base``: modo REVISAR."""
     if base is None:
         cfg = config_em_branco()
@@ -1379,6 +1392,7 @@ def wizard_evteas(entrada: Callable[[str], str] = input, base: Optional[EVTEASCo
         cfg = base
         P = Perguntador(entrada, saida, "revisar")
         saida("=" * 78 + "\nEVTEAS-Py — REVISÃO DAS ENTRADAS (Enter mantém o valor entre colchetes)\n" + "=" * 78)
+    P.anunciar_prints = anunciar_prints
     if blocos is not None:
         blocos = expandir_blocos(blocos)
         if len(blocos) > 1:
@@ -1416,7 +1430,8 @@ def definir_e_comparar_alternativas(cfg: EVTEASConfig, entrada: Callable[[str], 
         return None
     alternativas = {cfg.projeto or "Projeto informado": copy.deepcopy(cfg)}
     n, _ = P.numero("Quantas alternativas adicionais", None, 1, 5, inteiro=True)
-    opcoes = [(nome, nome) for nome, _ in BLOCOS if nome != "Identificação"] + [("fim", "Concluir esta alternativa")]
+    opcoes = ([(nome, f"{nome} ({FAIXA_BLOCOS[nome]})") for nome, _ in BLOCOS if nome != "Identificação"]
+              + [("fim", "Concluir esta alternativa")])
     for i in range(n):
         nome = P.texto(f"\nNome da alternativa {i + 1}")
         while nome in alternativas:
@@ -1447,6 +1462,11 @@ def _baixar_no_colab(caminho: str):
         files.download(caminho)
     except Exception:
         pass
+
+
+def baixar_no_colab(caminho: str):
+    """Baixa um arquivo para o computador do usuário quando o notebook roda no Google Colab."""
+    _baixar_no_colab(caminho)
 
 
 def _no_colab() -> bool:
@@ -1499,16 +1519,18 @@ def exigir_entradas(cfg: Optional[EVTEASConfig]) -> EVTEASConfig:
 def iniciar_entradas(entrada: Callable[[str], str] = input, saida: Callable[..., None] = print,
                      salvar: bool = True, pasta_saida: str = ".") -> EVTEASConfig:
     """Ponto de partida do estudo: nenhum resultado é calculado antes das entradas."""
+    from .campos_texto import titulo_print
     saida("=" * 78 + "\nEVTEAS-Py — INÍCIO DO ESTUDO\n" + "=" * 78)
+    saida(titulo_print("P01"))
     P = Perguntador(entrada, saida, "novo")
     modo, _ = P.opcao("Como deseja informar os dados do projeto?", [
         ("novo", "Novo projeto — digitar todas as entradas"),
         ("arquivo", "Carregar arquivo de entradas (JSON) e revisar"),
-        ("exemplo", "Exemplo ilustrativo da dissertação (apenas demonstração)"),
+        ("exemplo", "Exemplo ilustrativo incorporado ao pacote (apenas demonstração)"),
     ])
     try:
         if modo == "novo":
-            cfg = wizard_evteas(entrada, None, saida)
+            cfg = wizard_evteas(entrada, None, saida, anunciar_prints=True)
         elif modo == "arquivo":
             cfg, pendentes = _carregar_arquivo(entrada, saida)
             if pendentes:
@@ -1518,7 +1540,7 @@ def iniciar_entradas(entrada: Callable[[str], str] = input, saida: Callable[...,
             else:
                 revisar, _ = P.sim_nao("Revisar as entradas carregadas bloco a bloco?", None)
             if revisar:
-                cfg = wizard_evteas(entrada, cfg, saida)
+                cfg = wizard_evteas(entrada, cfg, saida, anunciar_prints=True)
         else:
             cfg = criar_config_caso_base()
             cfg.projeto = f"EXEMPLO ILUSTRATIVO — {cfg.projeto}"
@@ -1533,7 +1555,7 @@ def iniciar_entradas(entrada: Callable[[str], str] = input, saida: Callable[...,
                                    "use a opção 2 para continuar de onde parou.") from None
         raise
     while True:
-        saida("\nResumo das entradas:")
+        saida("\n" + titulo_print("P02") + "\nResumo das entradas:")
         saida(resumo_entradas(cfg).to_string(index=False))
         try:
             acao, _ = P.opcao("\nO que deseja fazer?", [("executar", "Confirmar e executar a análise"),
@@ -1542,10 +1564,10 @@ def iniciar_entradas(entrada: Callable[[str], str] = input, saida: Callable[...,
         except EntradaCancelada:
             acao = "sair"                    # 'sair' no menu final salva antes de encerrar
         if acao == "editar":
-            nomes = [(n, n) for n, _ in BLOCOS]
+            nomes = [(n, f"{n} ({FAIXA_BLOCOS[n]})") for n, _ in BLOCOS]
             try:
                 bloco, _ = P.opcao("Bloco a corrigir:", nomes)
-                cfg = wizard_evteas(entrada, copy.deepcopy(cfg), saida, blocos=[bloco])
+                cfg = wizard_evteas(entrada, copy.deepcopy(cfg), saida, blocos=[bloco], anunciar_prints=True)
             except EntradaCancelada:
                 saida("Correção cancelada: as entradas anteriores foram mantidas.")
             continue

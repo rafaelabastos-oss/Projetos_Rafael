@@ -16,7 +16,7 @@ Social (EVTEAS) aplicado à piscicultura — dissertação de Rafael Alves Basto
 ## Relato dos resultados (Capítulo 4)
 
 O texto dos Capítulos 4 e 5 é um **modelo de preenchimento**: não traz números de uma simulação
-prévia. Cada valor aparece como lacuna com código — `[E14 – FCR]` para uma entrada, `[R23 – VPL do
+prévia. Cada valor aparece como lacuna com código — `[E14 – FCR]` para uma entrada, `[S23 – VPL do
 projeto]` para um resultado, `[K01]`/`[N01]` para o KPI bruto/normalizado — e cada figura de entrada
 ou saída é um espaço `[INSERIR PRINT P01 – ...]`. Ao executar o notebook com os seus dados, a seção
 **16. Valores para o texto** mostra o valor de cada código e grava `valores_para_o_texto.xlsx`

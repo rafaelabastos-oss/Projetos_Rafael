@@ -86,8 +86,8 @@ def tipo_antigo(p: str) -> str:
 # Construção de XML
 # ---------------------------------------------------------------------------
 
-# Lacunas a preencher pelo autor ([E05 – ...], [R23], [INSERIR PRINT ...], [INTERPRETAR: ...]) recebem realce amarelo.
-DESTAQUE = re.compile(r"\[(?:[ERKN]\d{2,3}(?: – [^\]]*)?|(?:INSERIR PRINT|INTERPRETAR|PREENCHER|NOTA AO AUTOR)(?:[^\[\]]|\[[^\]]*\])*)\]")
+# Lacunas a preencher pelo autor ([E05 – ...], [S23], [INSERIR PRINT ...], [INTERPRETAR: ...]) recebem realce amarelo.
+DESTAQUE = re.compile(r"\[(?:[ESKN]\d{2,3}(?: – [^\]]*)?|(?:INSERIR PRINT|INTERPRETAR|PREENCHER|NOTA AO AUTOR)(?:[^\[\]]|\[[^\]]*\])*)\]")
 REALCE = '<w:highlight w:val="yellow"/>'
 
 

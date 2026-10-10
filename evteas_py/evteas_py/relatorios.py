@@ -28,46 +28,48 @@ def numero(v, casas: int = 2) -> str:
 
 
 def resumo_executivo(r: Dict[str, Any]) -> pd.DataFrame:
+    """Indicadores principais, no mesmo formato dos valores para o texto (campos_texto)."""
+    from .campos_texto import meses_ou_horizonte, num, pct_br, reais, tir_txt
     t, e, a, s, i = r["tecnico"], r["economico"], r["ambiental"], r["social"], r["indice"]
     cfg = r.get("config")
     projeto = getattr(cfg, "projeto", None) if not isinstance(cfg, dict) else cfg.get("projeto")
     linhas = [("Projeto", projeto or "(sem nome)")] if cfg is not None else []
     linhas += [
         ("Classificação", r["decisao"]["classificacao"]),
-        ("Produção anual (kg)", numero(t["producao_kg_ano"], 0)),
-        ("OEE aquícola", percentual(t["oee"])),
-        ("FCR (kg ração/kg ganho)", numero(t["fcr"])),
-        ("Investimento total", moeda(e["investimento_total"])),
-        ("VPL (projeto)", moeda(e["vpl"])),
-        ("TIR a.a. (projeto)", percentual(e["tir_anual"]) + f" [{e['diagnostico_tir']}]"),
-        ("Payback descontado (meses)", numero(e["payback_descontado_meses"], 1)),
-        ("VPL (beneficiário, com fomento)", moeda(e["vpl_beneficiario"])),
-        ("ROI anual em regime", percentual(e["roi_anual_regime"])),
-        ("Margem de segurança", percentual(e["margem_seguranca"])),
-        ("Custo total (R$/kg)", moeda(e["custo_total_kg"])),
-        ("Pegada hídrica azul (m³/t)", numero(a["ph_azul_m3_t"], 0)),
-        ("Pegada hídrica cinza (m³/t)", numero(a["ph_cinza_m3_t"], 0) + f" [{a['poluente_critico']}]"),
-        ("Intensidade de carbono (kgCO2e/kg)", numero(a["intensidade_carbono_kgco2e_kg"])),
-        ("Ecoeficiência (R$ VA/kgCO2e)", numero(a["ecoeficiencia_r_por_kgco2e"]) if a["ecoeficiencia_status"] == "definida"
+        ("Produção anual (kg)", num(t["producao_kg_ano"], 0)),
+        ("OEE aquícola (0–1)", num(t["oee"], 3)),
+        ("FCR (kg ração/kg ganho)", num(t["fcr"], 2)),
+        ("Investimento total", reais(e["investimento_total"])),
+        ("VPL (projeto)", reais(e["vpl"])),
+        ("TIR (projeto)", tir_txt(e["tir_anual"], e["diagnostico_tir"])),
+        ("Payback descontado", meses_ou_horizonte(e["payback_descontado_meses"])),
+        ("VPL (beneficiário, com fomento)", reais(e["vpl_beneficiario"])),
+        ("ROI anual em regime", pct_br(e["roi_anual_regime"])),
+        ("Margem de segurança", pct_br(e["margem_seguranca"])),
+        ("Custo total (R$/kg)", reais(e["custo_total_kg"], 2)),
+        ("Pegada hídrica azul (m³/t)", num(a["ph_azul_m3_t"], 0)),
+        ("Pegada hídrica cinza (m³/t)", num(a["ph_cinza_m3_t"], 0) + f" [{a['poluente_critico']}]"),
+        ("Intensidade de carbono (kgCO2e/kg)", num(a["intensidade_carbono_kgco2e_kg"], 2)),
+        ("Ecoeficiência (R$ VA/kgCO2e)", num(a["ecoeficiencia_r_por_kgco2e"], 2) if a["ecoeficiencia_status"] == "definida"
          else a["ecoeficiencia_status"]),
-        ("Conformidade ambiental (0–10)", numero(a["conformidade_0_10"], 1)),
-        ("LSO (0–100)", numero(s["lso_0_100"], 1)),
-        ("RVL (%)", numero(s["rvl_pct"], 1)),
-        ("Renda mensal por trabalhador", moeda(s["renda_mensal_trabalhador"])),
-        ("Índice EVTEAS (0–1)", numero(i["indice_evteas"], 3)),
-        ("Score ESG (0–1)", numero(i["esg_score"], 3)),
+        ("Conformidade ambiental (0–10)", num(a["conformidade_0_10"], 2)),
+        ("LSO (0–100)", num(s["lso_0_100"], 1)),
+        ("RVL (%)", num(s["rvl_pct"], 1)),
+        ("Renda mensal por trabalhador", reais(s["renda_mensal_trabalhador"])),
+        ("Índice EVTEAS (0–1)", num(i["indice_evteas"], 3)),
+        ("Score ESG (0–1)", num(i["esg_score"], 3)),
     ]
     if "monte_carlo" in r:
         st = r["monte_carlo"]["estatisticas"]
-        linhas += [("P(VPL > 0) — Monte Carlo", percentual(st["prob_vpl_positivo"])),
-                   ("VPL médio — Monte Carlo", moeda(st["media_vpl"])),
-                   ("P(VPL beneficiário > 0)", percentual(st["prob_vpl_beneficiario_positivo"]))]
+        linhas += [("P(VPL > 0) — Monte Carlo", pct_br(st["prob_vpl_positivo"])),
+                   ("VPL médio — Monte Carlo", reais(st["media_vpl"])),
+                   ("P(VPL beneficiário > 0)", pct_br(st["prob_vpl_beneficiario_positivo"]))]
     return pd.DataFrame(linhas, columns=["Indicador", "Valor"])
 
 
 def tabela_sensibilidade(r: Dict[str, Any]) -> pd.DataFrame:
     """Sensibilidade a ±10%, valor crítico e correlação de Spearman de cada variável, formatadas para o texto."""
-    from .campos_texto import VARIAVEIS_DIST, _critico, _rotulo_var, _sens10, num, reais
+    from .campos_texto import _critico, _rotulo_var, _sens10, num, reais
     sens = _sens10(r)
     imp = r["monte_carlo"]["importancia"].set_index("Variável")["Spearman com VPL"] if "monte_carlo" in r else {}
     linhas = []
@@ -204,8 +206,18 @@ def gerar_graficos(r: Dict[str, Any], pasta="evteas_output/figuras", comparacao:
     pasta.mkdir(parents=True, exist_ok=True)
     figs: Dict[str, str] = {}
 
+    from matplotlib.ticker import ScalarFormatter
+
+    class FormatadorBR(ScalarFormatter):               # vírgula decimal e ponto de milhar nos eixos
+        def __call__(self, x, pos=None):
+            return super().__call__(x, pos).replace(",", "X").replace(".", ",").replace("X", ".")
+
     def salvar(fig, nome):
         p = pasta / nome
+        for ax in fig.axes:
+            for eixo in (ax.xaxis, ax.yaxis):
+                if type(eixo.get_major_formatter()) is ScalarFormatter and eixo.get_scale() == "linear":
+                    eixo.set_major_formatter(FormatadorBR())
         fig.tight_layout()
         fig.savefig(p, bbox_inches="tight")
         plt.close(fig)
@@ -293,7 +305,8 @@ def gerar_graficos(r: Dict[str, Any], pasta="evteas_output/figuras", comparacao:
     if "sensibilidade" in r:
         s = r["sensibilidade"]; s = s[s["Amplitude"] == s["Amplitude"].min()].copy()
         s = s.sort_values("Amplitude do efeito")
-        rotulo = s["Variável"].str.split(".").str[1]
+        from .campos_texto import _rotulo_var
+        rotulo = s["Variável"].map(_rotulo_var)
         fig, ax = plt.subplots(figsize=(8, 4.2))
         ax.barh(rotulo, s["Δ VPL (−)"] / 1000, color=LARANJA, label="−10%")
         ax.barh(rotulo, s["Δ VPL (+)"] / 1000, color=AZUL, label="+10%")
@@ -303,9 +316,11 @@ def gerar_graficos(r: Dict[str, Any], pasta="evteas_output/figuras", comparacao:
         salvar(fig, "07_tornado.png")
 
     if comparacao is not None:
+        import textwrap
         rk = comparacao["ranking"]
-        fig, ax = plt.subplots(figsize=(7, 3.2))
-        ax.barh(rk["Alternativa"], rk["TOPSIS"], color=[VERDE, AZUL, CINZA][: len(rk)])
+        fig, ax = plt.subplots(figsize=(7, 1.4 + 0.55 * len(rk)))
+        nomes_alt = [textwrap.fill(str(a), 30) for a in rk["Alternativa"]]
+        ax.barh(nomes_alt, rk["TOPSIS"], color=[VERDE, AZUL, CINZA][: len(rk)])
         for y, v in enumerate(rk["TOPSIS"]):
             ax.text(v + 0.01, y, f"{v:.3f}".replace(".", ","), va="center")
         ax.set_xlim(0, 1); ax.invert_yaxis(); ax.set_xlabel("Proximidade relativa à solução ideal (TOPSIS)")
@@ -324,7 +339,7 @@ def diagrama_arquitetura(caminho="evteas_output/figuras/00_arquitetura.png") -> 
         (2.6, 3.3, 2.2, 1.4, "Motor vetorizado\ntécnico → econômico\n→ ambiental → social", "#fde8d0"),
         (5.3, 3.3, 2.0, 1.4, "Normalização\npesos (preset/\nLikert/AHP)", "#e3f1e6"),
         (7.8, 3.3, 2.1, 1.4, "Índice EVTEAS\nESG, ODS\nregra de decisão", "#eee"),
-        (2.6, 0.6, 2.2, 1.6, "Incerteza\nMonte Carlo (n = 10.000)\nsensibilidade, cenários,\nvalores críticos", "#fde8d0"),
+        (2.6, 0.6, 2.2, 1.6, "Incerteza\nMonte Carlo (n iterações)\nsensibilidade, cenários,\nvalores críticos", "#fde8d0"),
         (5.3, 0.6, 2.0, 1.6, "Verificação (V&V)\ninvariantes e\ntestes automatizados", "#e3f1e6"),
         (7.8, 0.6, 2.1, 1.6, "Saídas\nExcel, JSON,\nrelatório e figuras\nTOPSIS", "#eee"),
     ]

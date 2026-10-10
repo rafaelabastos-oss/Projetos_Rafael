@@ -321,7 +321,7 @@ APRENDIZAGENS: Tuple[Aprendizagem, ...] = (
     Aprendizagem(1, "Na implementação inicial, a média do VPL simulado ficava acima do VPL determinístico, mesmo com riscos "
                     "desfavoráveis.",
                  "Monte Carlo usava um modelo anual simplificado, diferente do modelo mensal determinístico.",
-                 "Motor único vetorizado: o mesmo código produz o resultado pontual (n = 1) e a simulação (n = 10.000).",
+                 "Motor único vetorizado: o mesmo código produz o resultado pontual (n = 1) e a simulação (n = número de iterações).",
                  "test_evteas.py::test_monte_carlo_degenerado_igual_deterministico"),
     Aprendizagem(2, "TIR reportada como −0,95 em fluxos sem raiz, confundida com um resultado.",
                  "A bisseção devolvia o limite do intervalo quando não havia troca de sinal.",
@@ -360,7 +360,7 @@ APRENDIZAGENS: Tuple[Aprendizagem, ...] = (
                  "Ponto seguido de grupos de três dígitos é lido como milhar, e o valor interpretado é mostrado.",
                  "test_entradas_robustez.py::test_ponto_de_milhar_e_formato_sem_notacao_cientifica"),
     Aprendizagem(11, "Um arquivo de entradas incompleto ou de outro tipo era completado com o caso ilustrativo.",
-                 "Os valores padrão das estruturas de configuração eram os do caso-base.",
+                 "Os valores padrão das estruturas de configuração eram os do caso ilustrativo.",
                  "Leitura a partir de configuração em branco: o que falta vira pendência e obriga a revisão.",
                  "test_entradas_robustez.py::test_campos_ausentes_nao_viram_caso_ilustrativo"),
     Aprendizagem(12, "Incerteza informada em parâmetros que o motor não amostra não chegava ao resultado.",

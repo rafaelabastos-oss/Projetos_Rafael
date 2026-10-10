@@ -27,7 +27,7 @@ def test_novo_projeto_reproduz_caso_base(tmp_path):
     a, b = motor(cfg, None, 1)["economico"], motor(ref, None, 1)["economico"]
     assert a["vpl"][0] == pytest.approx(b["vpl"][0], rel=1e-6)
     assert a["receita_regime"][0] == pytest.approx(b["receita_regime"][0], rel=1e-9)
-    assert list(tmp_path.glob("entradas_Caso_base_PGTR_de_piscicultura_de_tilapia*.json"))
+    assert list(tmp_path.glob("entradas_Caso_ilustrativo_PGTR_de_piscicultura_de_tilapia*.json"))
 
 
 def test_monte_carlo_da_entrada_igual_ao_caso_base(tmp_path):

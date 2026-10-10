@@ -1,6 +1,6 @@
-"""Configurações de referência: caso-base ilustrativo e alternativas.
+"""Configurações de referência: caso ilustrativo e alternativas.
 
-O caso-base representa um Projeto de Geração de Trabalho e Renda (PGTR) de
+O caso ilustrativo representa um Projeto de Geração de Trabalho e Renda (PGTR) de
 piscicultura de tilápia em viveiros escavados, conduzido por cooperativa de
 pescadores artesanais. Os valores são estimativas ilustrativas, registradas
 com sua origem; não constituem dados de um empreendimento real e devem ser
@@ -19,7 +19,7 @@ REF_COTACAO = "Estimativa ilustrativa; substituir por cotação regional atualiz
 
 
 def criar_config_caso_base() -> EVTEASConfig:
-    cfg = EVTEASConfig(projeto="Caso-base — PGTR de piscicultura de tilápia em viveiros escavados")
+    cfg = EVTEASConfig(projeto="Caso ilustrativo — PGTR de piscicultura de tilápia em viveiros escavados")
     cfg.tecnico = TecnicoConfig()
     cfg.economico = EconomicoConfig()
     cfg.ambiental = AmbientalConfig()

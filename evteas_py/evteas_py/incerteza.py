@@ -145,7 +145,7 @@ def sensibilidade(cfg: EVTEASConfig, variaveis: Optional[List[str]] = None,
 
 
 def valores_criticos(cfg: EVTEASConfig, variaveis: Optional[List[str]] = None) -> pd.DataFrame:
-    """Valor de cada variável que zera o VPL (demais premissas no caso-base)."""
+    """Valor de cada variável que zera o VPL (demais premissas nos valores informados)."""
     variaveis = variaveis or [v for v in VARIAVEIS_SENSIBILIDADE if v != "economico.tma_aa_pct"]
     linhas = []
     for var in variaveis:

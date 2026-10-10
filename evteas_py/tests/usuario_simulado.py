@@ -1,6 +1,6 @@
 """Usuário simulado que responde ao wizard do EVTEAS-Py como uma pessoa digitaria.
 
-As respostas reproduzem o caso-base da dissertação (``criar_config_caso_base``),
+As respostas reproduzem o caso ilustrativo do pacote (``criar_config_caso_base``),
 de modo que a análise obtida pela entrada interativa possa ser comparada com a
 configuração de referência. Usado nos testes e na verificação do notebook.
 """
@@ -53,16 +53,16 @@ class UsuarioSimulado:
 
 
 def respostas_caso_base() -> List[tuple]:
-    """Respostas que reproduzem o caso-base ilustrativo."""
+    """Respostas que reproduzem o caso ilustrativo do pacote."""
     R = [
         # ---------------------------------------------------------------- menus gerais
         (r"Como deseja informar os dados", "1"),
         (r"O que deseja fazer\?", "1"),
         (r"^Origem dos dados informados no bloco", "8"),
-        (r"^Referência \(documento", "Caso-base ilustrativo da dissertação"),
+        (r"^Referência \(documento", "Caso ilustrativo do EVTEAS-Py"),
         (r"Algum parâmetro deste bloco tem origem diferente", "n"),
         # ---------------------------------------------------------------- identificação
-        (r"^Nome do projeto", "Caso-base — PGTR de piscicultura de tilápia em viveiros escavados"),
+        (r"^Nome do projeto", "Caso ilustrativo — PGTR de piscicultura de tilápia em viveiros escavados"),
         (r"^Responsável pelo estudo", "Rafael Alves Bastos"),
         (r"Tipo de pessoa jurídica", "3"),
         # ---------------------------------------------------------------- técnico

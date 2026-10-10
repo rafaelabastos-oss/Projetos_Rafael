@@ -173,16 +173,21 @@ def classificar(cfg: EVTEASConfig, vpl: float, indice: float, lso: float, vetos_
     do mínimo impedem a classificação "VIÁVEL", qualquer que seja o índice.
     """
     d = cfg.decisao
+
+    def br(x, casas):                               # número no padrão brasileiro (mensagens vão para o texto)
+        return f"{float(x):.{casas}f}".replace(".", ",")
+
     motivos = []
     if d.aplicar_vetos:
         if vpl < 0:
             motivos.append("VPL negativo (veto econômico)")
         motivos += [f"Item eliminatório não atendido: {v}" for v in vetos_ambientais]
         if lso < d.lso_minimo:
-            motivos.append(f"LSO abaixo do mínimo ({lso:.0f} < {d.lso_minimo:.0f})")
+            motivos.append(f"LSO abaixo do mínimo ({br(lso, 1)} < {br(d.lso_minimo, 0)})")
     ressalvas = []
     if prob_vpl_positivo is not None and prob_vpl_positivo < d.prob_vpl_positivo_minima:
-        ressalvas.append(f"P(VPL > 0) = {prob_vpl_positivo:.0%} abaixo de {d.prob_vpl_positivo_minima:.0%}")
+        ressalvas.append(f"P(VPL > 0) de {br(100 * prob_vpl_positivo, 1)}%, abaixo do mínimo de "
+                         f"{br(100 * d.prob_vpl_positivo_minima, 0)}%")
     if motivos:
         classe = "NÃO VIÁVEL"
     elif indice >= d.limiar_indice_viavel and not ressalvas:
@@ -190,10 +195,10 @@ def classificar(cfg: EVTEASConfig, vpl: float, indice: float, lso: float, vetos_
     elif indice >= d.limiar_indice_ressalvas:
         classe = "VIÁVEL COM RESSALVAS"
         if indice < d.limiar_indice_viavel:
-            ressalvas.append(f"Índice EVTEAS {indice:.3f} abaixo do limiar {d.limiar_indice_viavel:.2f}")
+            ressalvas.append(f"índice EVTEAS de {br(indice, 3)}, abaixo do limiar de {br(d.limiar_indice_viavel, 2)}")
     else:
         classe = "NÃO VIÁVEL"
-        motivos.append(f"Índice EVTEAS {indice:.3f} abaixo de {d.limiar_indice_ressalvas:.2f}")
+        motivos.append(f"índice EVTEAS de {br(indice, 3)}, abaixo de {br(d.limiar_indice_ressalvas, 2)}")
     return {"classificacao": classe, "vetos": motivos, "ressalvas": ressalvas}
 
 
